@@ -28,6 +28,10 @@ export class FieldEditorComponent implements OnInit {
     this.originalObject = JSON.parse(JSON.stringify(this.objToEdit));
   }
 
+  trackByIndex(index: number, _: any): number {
+    return index;
+  }
+
   toggleExpand(key: string): void {
     this.expandedFields[key] = !this.expandedFields[key];
   }

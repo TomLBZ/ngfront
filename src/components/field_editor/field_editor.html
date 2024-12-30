@@ -59,7 +59,7 @@
           <!-- If it's an array, render each element in a sub-section -->
           <div *ngIf="isArrayType(objToEdit[key])">
             <ul>
-              <li *ngFor="let item of objToEdit[key]; let i = index">
+              <li *ngFor="let item of objToEdit[key]; let i = index; trackBy: trackByIndex">
                 <div class="array-item">
                   <!-- If item is object or another array, recursively edit -->
                   <field-editor
