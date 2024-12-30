@@ -1,0 +1,17 @@
+name: ngfront
+services:
+  ngfront:
+    image: ngfront
+    build: .
+    container_name: ngfront
+    restart: always
+    ports:
+      - "14200:4200"
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/app
+    # production command
+    # command: npm install && npm start
+    # development command, halt the container
+    command: /bin/bash

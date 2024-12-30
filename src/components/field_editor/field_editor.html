@@ -1,0 +1,137 @@
+<div class="field-editor-container">
+  <div class="field-row" *ngFor="let key of fieldKeys">
+    <!-- Property name -->
+    <div class="field-name">
+      {{ key }}
+    </div>
+
+    <!-- Property value editor -->
+    <div class="field-value">
+      <!-- String -->
+      <input
+        *ngIf="isStringType(objToEdit[key])"
+        type="text"
+        [ngModel]="objToEdit[key]"
+        (ngModelChange)="onFieldChange(key, $event)"
+      />
+
+      <!-- Number -->
+      <input
+        *ngIf="isNumberType(objToEdit[key])"
+        type="number"
+        [ngModel]="objToEdit[key]"
+        (ngModelChange)="onFieldChange(key, $event)"
+      />
+
+      <!-- Boolean -->
+      <input
+        *ngIf="isBooleanType(objToEdit[key])"
+        type="checkbox"
+        [ngModel]="objToEdit[key]"
+        (ngModelChange)="onFieldChange(key, $event)"
+      />
+
+      <!-- Date -->
+      <input
+        *ngIf="isDateType(objToEdit[key])"
+        type="date"
+        [ngModel]="objToEdit[key] | date:'yyyy-MM-dd'"
+        (ngModelChange)="onFieldChange(key, parseDate($event))"
+      />
+
+      <!-- For each Object or Array, show a toggle button -->
+      <ng-container *ngIf="isObjectType(objToEdit[key]) || isArrayType(objToEdit[key])">
+        <button class="toggle-btn" (click)="toggleExpand(key)">
+          {{ expandedFields[key] ? '−' : '+' }}
+        </button>
+        <span class="object-label">
+          {{ isObjectType(objToEdit[key]) ? 'Object' : 'Array' }}
+        </span>
+        
+        <!-- Only show the nested field-editor if expanded -->
+        <div *ngIf="expandedFields[key]" class="child-container">
+          <!-- If this field itself is an object (and not a Date/Array), recursively edit it -->
+          <field-editor
+            *ngIf="isObjectType(objToEdit[key])"
+            [objToEdit]="objToEdit[key]"
+            (fieldChanged)="onSubFieldChanged($event, key)"
+          ></field-editor>
+          <!-- If it's an array, render each element in a sub-section -->
+          <div *ngIf="isArrayType(objToEdit[key])">
+            <ul>
+              <li *ngFor="let item of objToEdit[key]; let i = index">
+                <div class="array-item">
+                  <!-- If item is object or another array, recursively edit -->
+                  <field-editor
+                    *ngIf="isObjectType(item) || isArrayType(item)"
+                    [objToEdit]="item"
+                    (fieldChanged)="onArraySubFieldChanged($event, key, i)"
+                  ></field-editor>
+                  <!-- If item is string -->
+                  <input
+                    *ngIf="isStringType(item)"
+                    type="text"
+                    [ngModel]="item"
+                    (ngModelChange)="onArrayItemChange(key, i, $event)"
+                  />
+                  <!-- If item is number -->
+                  <input
+                    *ngIf="isNumberType(item)"
+                    type="number"
+                    [ngModel]="item"
+                    (ngModelChange)="onArrayItemChange(key, i, $event)"
+                  />
+                  <!-- If item is boolean -->
+                  <input
+                    *ngIf="isBooleanType(item)"
+                    type="checkbox"
+                    [ngModel]="item"
+                    (ngModelChange)="onArrayItemChange(key, i, $event)"
+                  />
+                  <!-- If item is date -->
+                  <input
+                    *ngIf="isDateType(item)"
+                    type="date"
+                    [ngModel]="item | date: 'yyyy-MM-dd'"
+                    (ngModelChange)="onArrayItemChange(key, i, parseDate($event))"
+                  />
+                  <!-- Unsupported type in array -->
+                  <span
+                    *ngIf="
+                      !isObjectType(item) &&
+                      !isArrayType(item) &&
+                      !isStringType(item) &&
+                      !isNumberType(item) &&
+                      !isBooleanType(item) &&
+                      !isDateType(item)
+                    "
+                  >
+                    Unsupported array item type
+                  </span>
+                  <!-- Button to remove item -->
+                  <button (click)="removeArrayItem(key, i)">Remove</button>
+                </div>
+              </li>
+            </ul>
+            <!-- Button to add a new array item -->
+            <button (click)="addArrayItem(key)">Add new item</button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Unsupported type -->
+      <span
+        *ngIf="
+          !isStringType(objToEdit[key]) &&
+          !isNumberType(objToEdit[key]) &&
+          !isBooleanType(objToEdit[key]) &&
+          !isDateType(objToEdit[key]) &&
+          !isObjectType(objToEdit[key]) &&
+          !isArrayType(objToEdit[key])
+        "
+      >
+        Unsupported field type
+      </span>
+    </div>
+  </div>
+</div>

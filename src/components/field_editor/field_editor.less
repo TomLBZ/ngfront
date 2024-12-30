@@ -1,0 +1,36 @@
+.field-editor-container {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.field-name {
+  min-width: 150px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.field-value {
+  flex: 1;
+
+  input[type='text'],
+  input[type='number'],
+  input[type='date'] {
+    width: 200px;
+    padding: 4px;
+    font-size: 14px;
+  }
+  
+  input[type='checkbox'] {
+    transform: scale(1.2);
+    margin-top: 2px;
+  }
+}
