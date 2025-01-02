@@ -1,0 +1,39 @@
+<div class="value-editor">
+    <div class="value-editor-label">
+        {{ itemName ? itemName : '\<Value\>' }}
+    </div>
+    <div class="value-editor-input">
+        <!-- String -->
+        @if (isStringType(itemToEdit)) {
+            <input
+                type="text"
+                [value]="itemToEdit"
+                (input)="onItemChange($event)"
+            />  
+        }
+        @else if (isNumberType(itemToEdit)) {
+            <input
+                type="number"
+                [value]="itemToEdit"
+                (input)="onItemChange($event)"
+            />
+        }
+        @else if (isBooleanType(itemToEdit)) {
+            <input
+                type="checkbox"
+                [checked]="itemToEdit"
+                (change)="onItemChange($event)"
+            />
+        }
+        @else if (isDateType(itemToEdit)) {
+            <input
+                type="date"
+                [value]="formatDateForInput(itemToEdit)"
+                (input)="onItemChange($event)"
+            />
+        }
+        @else {
+            Unsupported item type
+        }
+    </div>
+</div>

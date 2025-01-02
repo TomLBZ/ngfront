@@ -1,0 +1,26 @@
+.value-editor {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.value-editor-label {
+    min-width: 80px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.value-editor-input {
+    flex: 1;
+    input[type='text'],
+    input[type='number'],
+    input[type='date'] {
+        width: 200px;
+        padding: 4px;
+        font-size: 14px;
+    }
+    input[type='checkbox'] {
+        transform: scale(1.2);
+        margin-top: 2px;
+    }
+}

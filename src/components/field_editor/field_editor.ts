@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, EventEmitter, Output} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ValueEditorComponent } from '../value_editor/value_editor';
 
 interface FieldChange {
   key: string;
@@ -13,7 +14,7 @@ interface FieldChange {
   selector: 'field-editor',
   templateUrl: './field_editor.html',
   styleUrls: ['./field_editor.less'],
-  imports: [CommonModule, FormsModule]
+  imports: [CommonModule, FormsModule, ValueEditorComponent]
 })
 export class FieldEditorComponent implements OnInit {
   @Input() objToEdit: { [key: string]: any } = {};
@@ -76,6 +77,10 @@ export class FieldEditorComponent implements OnInit {
       this.fieldChanged.emit({ key, oldValue, newValue });
       this.originalObject[key] = newValue;
     }
+  }
+
+  onItemChange(change: FieldChange): void {
+    this.fieldChanged.emit(change);
   }
 
   onSubFieldChanged(change: FieldChange, parentKey: string): void {
