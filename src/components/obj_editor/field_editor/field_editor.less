@@ -1,17 +1,13 @@
-.field-editor-container {
+.field-editor {
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.field-row {
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.field-subrow {
+.field-header {
   display: flex;
   align-items: center;
 }
@@ -20,4 +16,18 @@
   min-width: 80px;
   font-weight: bold;
   margin-right: 10px;
+}
+
+.field-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+button {
+  cursor: pointer;
+}
+
+.remove-button {
+  margin-left: 10px;
 }

@@ -1,0 +1,48 @@
+<div class="field-editor">
+  @let isArray = isArrayType(objToEdit);
+  @let isObject = isObjectType(objToEdit);
+  @if (isArray || isObject) {
+    <!-- Name -->
+    <div class="field-header">
+      <div class="field-name">
+        {{ objName }}
+      </div>
+      <button (click)="toggleSelfExpand()">
+        {{ expanded ? '−' : '+' }}
+      </button>
+    </div>
+    <!-- Fields -->
+    @if (expanded) {
+      @if (isArray) {
+        @for (item of objToEdit; track item) {
+          <field-editor
+            [objToEdit]="objToEdit[$index]"
+            [objName]="'[' + $index + ']'"
+            (fieldChanged)="onArrayChanged($event)"
+          ></field-editor>
+        }
+      }
+      @else if (isObject) {
+        @for (key of getObjKeys(); track key) {
+          <field-editor
+            [objToEdit]="objToEdit[key]"
+            [objName]="key"
+            (fieldChanged)="onFieldChanged($event)"
+          ></field-editor> 
+        }
+      }
+    }
+    @else {
+      <span class="object-label">
+        {{ isObjectType(objToEdit) ? '\<Object\>' : '\[Array\]' }}
+      </span>
+    }
+  }
+  @else {
+    <value-editor
+      [itemToEdit]="objToEdit"
+      [itemName]="objName"
+      (itemChanged)="onItemChanged($event)"
+    ></value-editor>
+  }
+</div>

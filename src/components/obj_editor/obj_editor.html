@@ -1,0 +1,26 @@
+<div class="object-editor">
+    <field-editor 
+        [objToEdit]="objToEdit"
+        [objName]="'\<' + 'ROOT' + '\>'"
+        [expanded]="true"
+        (fieldChanged)="onFieldChange($event)"
+    ></field-editor>
+    @if (textMode) {
+        <textarea class="textbox"
+            [value]="getObjStr()"
+            (input)="onTextChange($event)"
+        ></textarea>
+    }
+</div>
+<div class="controls">
+    <Label>
+        <input 
+            type="checkbox"
+            [checked]="textMode"
+            (change)="toggleText()"
+        >
+        Toggle Text
+    </Label>
+    <button (click)="reset()">Reset</button>
+    <button (click)="save()">Save</button>
+</div>

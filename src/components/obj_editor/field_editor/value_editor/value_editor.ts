@@ -1,6 +1,6 @@
-import { Component, Input, Output, EventEmitter, OnInit } from "@angular/core";
+import { Component, Input, Output, EventEmitter } from "@angular/core";
 
-interface ValueChange {
+export interface Change {
     key: string;
     oldValue: any;
     newValue: any;
@@ -12,15 +12,10 @@ interface ValueChange {
     templateUrl: "./value_editor.html",
     styleUrls: ["./value_editor.less"]
 })
-export class ValueEditorComponent implements OnInit {
+export class ValueEditorComponent {
     @Input() itemName: string = "";
     @Input() itemToEdit: any = {};
-    @Output() itemChanged = new EventEmitter<ValueChange>();
-    private originalItem: any = {};
-
-    ngOnInit(): void {
-        this.originalItem = JSON.parse(JSON.stringify(this.itemToEdit));
-    }
+    @Output() itemChanged = new EventEmitter<Change>();
 
     isStringType(value: any): boolean {
         return typeof value === "string";
@@ -43,14 +38,17 @@ export class ValueEditorComponent implements OnInit {
     parseDate(value: string): Date | null {
         if (!value) return null;
         const timestamp = Date.parse(value);
-        return isNaN(timestamp) ? null : new Date(timestamp);
+        if (!isNaN(timestamp)) return new Date(timestamp);
+        const dateStringRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
+        if (dateStringRegex.test(value)) return new Date(value);
+        return null;
     }
 
     onItemChange(event: any): void {
         const targetValue: string = event.target.value;
         let newValue: any;
         if (this.isNumberType(this.itemToEdit)) {
-            newValue = parseFloat(targetValue);
+            newValue = targetValue ? parseFloat(targetValue) : 0;
         } else if (this.isBooleanType(this.itemToEdit)) {
             newValue = event.target.checked;
         } else if (this.isDateType(this.itemToEdit)) {
@@ -58,11 +56,10 @@ export class ValueEditorComponent implements OnInit {
         } else {
             newValue = targetValue;
         }
-        const oldValue = this.originalItem;
-        if (oldValue !== newValue) {
+        if (this.itemToEdit !== newValue) {
+            const oldValue = this.itemToEdit;
             this.itemToEdit = newValue;
             this.itemChanged.emit({ key: this.itemName, oldValue, newValue });
-            this.originalItem = newValue;
         }
     }
 
