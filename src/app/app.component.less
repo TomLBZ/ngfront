@@ -1,0 +1,34 @@
+@primary-color: #007bff;
+@secondary-color: #6c757d;
+@light-gray: #f8f9fa;
+@dark-gray: #333;
+@white: #fff;
+
+button {
+    font-size: 18px;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: @light-gray;
+    }
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    background-color: @primary-color;
+    color: @white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: darken(@primary-color, 10%);
+    }
+}
