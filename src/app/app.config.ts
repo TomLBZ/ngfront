@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 // import all the environment variables from the config file using a local namespace
-import * as Config from '../assets/config';
+import * as Config from '../configs/config';
 
 export const appConfig: ApplicationConfig = {
   providers: [

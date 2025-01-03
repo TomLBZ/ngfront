@@ -42,4 +42,4 @@ testem.log
 Thumbs.db
 
 # Secret files
-src/assets/config.ts
+src/configs/config.ts
