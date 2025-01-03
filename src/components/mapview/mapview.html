@@ -1,0 +1,52 @@
+<mgl-map
+    [style]="mapStyle"
+    [zoom]="[zoom]"
+    [center]="[centerLat, centerLng]"
+    [preserveDrawingBuffer]="true"
+>
+    <mgl-image
+        id="img"
+        [data]="{
+            width: imgSize,
+            height: imgSize,
+            data: imgData
+        }"
+    ></mgl-image>
+
+    <mgl-geojson-source id="pointsrc">
+        @for (coords of markerCoords; track $index) {
+            <mgl-feature
+                [geometry]="{
+                    type: 'Point',
+                    coordinates: coords
+                }"
+                [properties]="{
+                    index: $index,
+                    description: 'marker ' + $index
+                }"
+            ></mgl-feature>
+        }
+    </mgl-geojson-source>
+    <mgl-layer
+        id="points"
+        type="symbol"
+        source="pointsrc"
+        [layout]="{
+            'icon-image': 'img',
+            'icon-size': 1.0
+        }"
+        (layerClick)="onMarkerClick($event)"
+    >
+    </mgl-layer>
+</mgl-map>
+<div class="floaty">
+    <dropselect
+        [items]="layerModes"
+        [title]="'Select Layer Mode'"
+        [indexMode]="false"
+        [hoverMode]="true"
+        [multiSelect]="false"
+        [fixDropdown]="false"
+        (selectionChanged)="onSelectT($event)"
+    ></dropselect>
+</div>

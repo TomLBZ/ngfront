@@ -16,5 +16,5 @@ export const appConfig: ApplicationConfig = {
 export const env = {
   production: false,
   apiUrl: Config.API_URL,
-  mapStyle: Config.MAP_STYLE
+  mapKey: Config.MAP_KEY
 };
