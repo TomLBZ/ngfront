@@ -1,0 +1,42 @@
+<header>
+    <div class="header-content">
+        <!--icon-->
+        <svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+            <!-- Draw the box frame -->
+            <rect x="3" y="3" width="34" height="34" fill="none" stroke="black" stroke-width="2"/>
+            <!-- Draw the cross -->
+            <line x1="3" y1="3" x2="37" y2="37" stroke="black" stroke-width="2"/>
+            <line x1="3" y1="37" x2="37" y2="3" stroke="black" stroke-width="2"/>
+            Sorry, your browser does not support inline SVG.
+        </svg> 
+        <span class="bigtext">Basic Frontend Boilerplate in Angular</span>
+        <!--button-->
+        <button>Placeholder Button</button>
+        <!--dropdown-->
+        <div class="dropdown">
+            <button class="dropbtn">Placeholder Dropdown</button>
+            <div class="dropdown-content">
+            <a href="#">Placeholder Link 1</a>
+            <a href="#">Placeholder Link 2</a>
+            <a href="#">Placeholder Link 3</a>
+            </div>
+        </div>
+        <span>Placehodler Text</span>
+    </div>
+</header>
+  
+<div class="main-container">
+    <nav class="left-pane">
+      <ul>
+        @for (tab of tabs; track $index) {
+            <li>
+                <a [routerLink]="[tab.path]">{{ tab.label }}</a>
+            </li>
+        }
+      </ul>
+    </nav>
+    <div class="right-pane">
+      <router-outlet></router-outlet>
+    </div>
+</div>
+  
