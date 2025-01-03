@@ -1,11 +1,19 @@
+// library imports
 import { Component } from "@angular/core";
+import { MapComponent } from "@maplibre/ngx-maplibre-gl";
+// custom components
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
+import { env } from "../../app.config";
 
 @Component({
     selector: "app-playground",
     standalone: true,
-    imports: [ObjEditorComponent, DropSelectComponent],
+    imports: [
+        MapComponent,
+        ObjEditorComponent, 
+        DropSelectComponent
+    ],
     templateUrl: "./playground.component.html",
     styleUrls: ["./playground.component.less"]
 })
@@ -25,6 +33,9 @@ export class PlaygroundComponent {
     private selIndexR: number = -1;
     get selObjR() {
         return this.selIndexR >= 0 ? this.objList[this.selIndexR] : null;
+    }
+    get mapStyle() {
+        return env.mapStyle;
     }
 
     onUpdate(obj: any) {
