@@ -1,0 +1,56 @@
+<div class="dropselect-container"
+    (mouseenter)="onMouseEnter()"
+    (mouseleave)="onMouseLeave()">
+
+    <div class="dropselect-search">
+        <input
+            type="text"
+            [value]="searchTerm"
+            [placeholder]="searchTerm ? '' : placeholder"
+            (input)="onSearchChanged($event)"
+            (focus)="onSearchFocus()"
+            (blur)="onSearchBlur()"
+        />
+        @if (searchTerm) {
+            <button
+                class="clear-btn"
+                (click)="clearSearch()">
+                ✕
+            </button>
+        }
+    </div>
+
+    @let filtered = filteredItems;
+    @let shown = fixDropdown || showDropdown;
+    @if (shown && filtered.length > 0) {
+        <ul class="dropselect-dropdown">
+            @for (item of filtered; track $index) {
+                @let i = getIndex(item);
+                @if (multiSelect) {
+                    <li>
+                        <label class="multi-select-item">
+                            <input
+                                type="checkbox"
+                                [checked]="isItemSelected(i)"
+                                (change)="onSelectItem(i)"
+                            />
+                            {{ representation(item) }}
+                        </label>
+                    </li>
+                } @else {
+                    <li
+                        (click)="onSelectItem(i)">
+                        {{ representation(item) }}
+                    </li>
+                }
+            }
+        </ul>
+    }
+
+    @if (shown && filteredItems.length === 0) {
+        <!-- No items match the searchTerm -->
+        <div class="no-items">
+            No matching items
+        </div>
+    }
+</div>

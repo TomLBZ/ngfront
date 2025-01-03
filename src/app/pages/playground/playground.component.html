@@ -1,7 +1,38 @@
-<div class="playground">
-    <obj-editor 
-        [objToEdit]="myObj"
-        [textMode]="textMode" 
-        (updated)="onUpdate($event)"
-    ></obj-editor>
+<div class="vhalf-child">
+
+</div>
+<div class="vhalf-child">
+    <div class="hhalf-child"> 
+        <div class="playground">
+            <label> Multiselect Objects </label>
+            <dropselect
+                [items]="objList"
+                [indexMode]="true"
+                [hoverMode]="true"
+                [multiSelect]="true"
+                [fixDropdown]="true"
+                [representation]="dropRepr"
+                (selectionChanged)="onSelectL($event)"
+            ></dropselect>
+        </div>
+    </div>
+    <div class="hhalf-child">
+        <div class="playground">
+            <label> Select Single Object to Edit </label>
+            <dropselect
+                [items]="objList"
+                [indexMode]="true"
+                [hoverMode]="true"
+                [multiSelect]="false"
+                [fixDropdown]="false"
+                [representation]="dropRepr"
+                (selectionChanged)="onSelectR($event)"
+            ></dropselect>
+            <obj-editor 
+                [objToEdit]="selObjR"
+                [textMode]="textModeR" 
+                (updated)="onUpdate($event)"
+            ></obj-editor>
+        </div>
+    </div>
 </div>

@@ -1,50 +1,45 @@
 import { Component } from "@angular/core";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
+import { DropSelectComponent } from "../../../components/dropselect/dropselect";
 
 @Component({
     selector: "app-playground",
     standalone: true,
-    imports: [ObjEditorComponent],
+    imports: [ObjEditorComponent, DropSelectComponent],
     templateUrl: "./playground.component.html",
     styleUrls: ["./playground.component.less"]
 })
 export class PlaygroundComponent {
-
-    myObj: any = {
-        name: 'Alice',
-        age: 30,
-        isActive: true,
-        startDate: new Date(Date.now()),
-        numlist: [1, 2, 3],
-        obj: {
-            key: 'value',
-            name: 'Bob',
-            numlist: [4, 5, 6]
-        },
-        objlist: [
-            { name: 'Charlie', age: 25 },
-            { name: 'David', age: 35 }
-        ],
-        nested: {
-            key: 'value',
-            name: 'Eve',
-            inner: {
-                key: 'value',
-                name: 'Frank'
-            }
-        },
-        listoflists: [
-            [1, 2, 3],
-            [
-                [7, 8, 9],
-                [10, 11, 12]
-            ]
-        ]
+    // objects
+    objList: Array<any> = [
+        { name: 'Alice', age: 30 },
+        { name: 'Bob', age: 35 },
+        { name: 'Charlie', age: 40 },
+        { name: 'David', age: 45 }
+    ];
+    dropRepr: Function = (obj: any) => obj.name;
+    // left pane
+    selIndicesL: Array<number> = [];
+    // right pane
+    textModeR: boolean = false;
+    private selIndexR: number = -1;
+    get selObjR() {
+        return this.selIndexR >= 0 ? this.objList[this.selIndexR] : null;
     }
-    textMode: boolean = false;
-    teststr = "test";
 
     onUpdate(obj: any) {
         console.log(obj);
+    }
+
+    onSelectR(obj: any) {
+        if (typeof obj === 'number') {
+            this.selIndexR = obj;
+        }
+    }
+
+    onSelectL(obj: any) {
+        if (Array.isArray(obj)) {
+            this.selIndicesL = obj;
+        }
     }
 }

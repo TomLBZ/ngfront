@@ -1,0 +1,17 @@
+<div class="page">
+    <label> Select Single Object to Edit </label>
+    <dropselect
+        [items]="objList"
+        [indexMode]="true"
+        [hoverMode]="true"
+        [multiSelect]="false"
+        [fixDropdown]="false"
+        [representation]="dropRepr"
+        (selectionChanged)="onSelect($event)"
+    ></dropselect>
+    <obj-editor 
+        [objToEdit]="selObj"
+        [textMode]="textMode" 
+        (updated)="onUpdate($event)"
+    ></obj-editor>
+</div>
