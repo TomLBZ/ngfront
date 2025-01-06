@@ -1,0 +1,11 @@
+import { Routes } from '@angular/router';
+import { PlaygroundComponent } from './playground/playground.component';
+import { ObjEditingPage } from './obj_editing/obj_editing';
+import { DropSelectPage } from './drop_select/drop_select';
+
+export const routes : Routes = [
+    {path: '', redirectTo: 'playground', pathMatch: 'full'},
+    {path: 'playground', component: PlaygroundComponent},
+    {path: 'object-editing', component: ObjEditingPage},
+    {path: 'drop-select', component: DropSelectPage},
+]
