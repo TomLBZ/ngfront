@@ -28,6 +28,7 @@ export class cloneable {
 export class ObjEditorComponent implements OnInit {
     @Input() textMode: boolean = true;
     @Input() objToEdit: any = {};
+    @Input() includeFilter: (key: string) => boolean = () => true;
     @Output() updated = new EventEmitter<any>();
     private _objCopy: any = {};
 

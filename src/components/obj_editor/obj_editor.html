@@ -4,6 +4,7 @@
             [objToEdit]="objToEdit"
             [objName]="'\<' + 'ROOT' + '\>'"
             [expanded]="true"
+            [includeFilter]="includeFilter"
             (fieldChanged)="onFieldChange($event)"
         ></field-editor>
         @if (textMode) {

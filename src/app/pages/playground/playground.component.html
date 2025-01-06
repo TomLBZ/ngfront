@@ -1,21 +1,20 @@
 <div class="vhalf-child">
     <mapview
-        [markerCoords]="markerCoords"
-        [imgData]="imageData"
-        [imgSize]="imgSize"
+        [geoObjects]="planeObjects"
         [apiKey]="apiKey"
         [zoom]="zoom"
         [centerLat]="center[0]"
         [centerLng]="center[1]"
         (layerModeChanged)="onLayerModeChanged($event)"
+        (objectClicked)="onObjectClicked($event)"
     ></mapview>
 </div>
 <div class="vhalf-child">
     <div class="hhalf-child"> 
         <div class="playground">
             <dropselect
-                [items]="objList"
-                [title]="'Multiselect Objects'"
+                [items]="planeObjects"
+                [title]="'Multiselect Planes to Launch'"
                 [indexMode]="true"
                 [hoverMode]="true"
                 [multiSelect]="true"
@@ -28,8 +27,8 @@
     <div class="hhalf-child">
         <div class="playground">
             <dropselect
-                [items]="objList"
-                [title]="'Select Single Object to Edit'"
+                [items]="planeObjects"
+                [title]="'Select Single Plane to Edit'"
                 [indexMode]="true"
                 [hoverMode]="true"
                 [multiSelect]="false"
@@ -40,6 +39,7 @@
             <obj-editor 
                 [objToEdit]="selObjR"
                 [textMode]="textModeR" 
+                [includeFilter]="includeFilter"
                 (updated)="onUpdate($event)"
             ></obj-editor>
         </div>

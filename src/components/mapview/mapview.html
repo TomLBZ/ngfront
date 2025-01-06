@@ -3,41 +3,58 @@
     [zoom]="[zoom]"
     [center]="[centerLat, centerLng]"
     [preserveDrawingBuffer]="true"
+    (mapLoad)="mapLoaded = true"
 >
-    <mgl-image
-        id="img"
-        [data]="{
-            width: imgSize,
-            height: imgSize,
-            data: imgData
-        }"
-    ></mgl-image>
-
-    <mgl-geojson-source id="pointsrc">
-        @for (coords of markerCoords; track $index) {
-            <mgl-feature
-                [geometry]="{
-                    type: 'Point',
-                    coordinates: coords
-                }"
-                [properties]="{
-                    index: $index,
-                    description: 'marker ' + $index
-                }"
-            ></mgl-feature>
-        }
-    </mgl-geojson-source>
-    <mgl-layer
-        id="points"
-        type="symbol"
-        source="pointsrc"
-        [layout]="{
-            'icon-image': 'img',
-            'icon-size': 1.0
-        }"
-        (layerClick)="onMarkerClick($event)"
-    >
-    </mgl-layer>
+    @if (mapLoaded) {
+        <mgl-geojson-source id="pointsrc">
+            @for (geoObj of geoObjects; track $index) {
+                <mgl-image
+                    [id]="geoObj.icon"
+                    [data]="{
+                        width: geoObj.iconSize,
+                        height: geoObj.iconSize,
+                        data: geoObj.iconData
+                    }"
+                ></mgl-image>
+                <mgl-feature
+                    [geometry]="{
+                        type: 'Point',
+                        coordinates: [geoObj.lng, geoObj.lat]
+                    }"
+                    [properties]="{
+                        index: $index,
+                        icon: geoObj.icon
+                    }"
+                ></mgl-feature>
+            }
+        </mgl-geojson-source>
+        <mgl-layer
+            id="points"
+            type="symbol"
+            source="pointsrc"
+            [layout]="{
+                'icon-image': ['get', 'icon'],
+                'icon-size': 1.0,
+                'symbol-sort-key': ['get', 'index'],
+                'symbol-z-order': 'source'
+            }"
+            (layerClick)="onMarkerClick($event)"
+            (layerMouseEnter)="onMarkerEnter($event)"
+            (layerMouseLeave)="onMarkerLeave($event)"
+        >
+            @if (popupVisible) {
+                <mgl-popup
+                    [lngLat]="popupLngLat"
+                    [closeOnClick]="false"
+                    [closeButton]="false"
+                >
+                    <div class="popup">
+                        <p>{{popupText}}</p>
+                    </div>
+                </mgl-popup>
+            }
+        </mgl-layer>
+    }
 </mgl-map>
 <div class="floaty">
     <dropselect

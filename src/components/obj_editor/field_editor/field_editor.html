@@ -27,6 +27,7 @@
           <field-editor
             [objToEdit]="objToEdit[key]"
             [objName]="key"
+            [includeFilter]="includeFilter"
             (fieldChanged)="onFieldChanged($event)"
           ></field-editor> 
         }

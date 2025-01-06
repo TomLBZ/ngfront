@@ -12,12 +12,15 @@ export class FieldEditorComponent {
   @Input() objToEdit: any = {};
   @Input() objName: string = '';
   @Input() expanded: boolean = false;
+  @Input() includeFilter: (key: string) => boolean = () => true;
   @Output() fieldChanged = new EventEmitter<Change>();
 
   expandedFields: { [key: string]: boolean } = {};
 
   getObjKeys(): string[] {
-    return Object.keys(this.objToEdit);
+    const keys = Object.keys(this.objToEdit);
+    const includedKeys = keys.filter(this.includeFilter);
+    return includedKeys;
   }
 
   toggleSelfExpand(): void {
