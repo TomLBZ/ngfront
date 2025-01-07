@@ -56,6 +56,12 @@ export class PlaygroundComponent {
     get selObjR() {
         return this.selIndexR >= 0 ? this.markers[this.selIndexR] : null;
     }
+    get objNameR() {
+        const obj = this.selIndexR >= 0 ? this.markers[this.selIndexR] : null;
+        if (!obj) return "Null";
+        const name = obj.name;
+        return name ? name : "Object";
+    }
 
     onUpdate(obj: any) {
         console.log(obj);

@@ -2,7 +2,7 @@
     <div class="object-editor">
         <field-editor 
             [objToEdit]="objToEdit"
-            [objName]="'\<' + 'ROOT' + '\>'"
+            [objName]="objName"
             [expanded]="true"
             [includeFilter]="includeFilter"
             (fieldChanged)="onFieldChange($event)"
