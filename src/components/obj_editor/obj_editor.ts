@@ -47,8 +47,8 @@ export class ObjEditorComponent implements OnInit {
 
     onFieldChange(change: Change): void {
         let change_key = change.key;
-        if (change_key.startsWith('<ROOT>.')) {
-            change_key = change_key.slice(7);
+        if (change_key.startsWith(this.objName)) {
+            change_key = change_key.slice(this.objName.length + 1);
         }
         const segments = change_key.split('.');
         const tokens: Array<string | number> = [];
