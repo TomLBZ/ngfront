@@ -7,6 +7,7 @@ import { MapLayerMouseEvent } from 'maplibre-gl';
 export interface GeoObject {
     lat: number;
     lng: number;
+    heading: number;
     description: string;
     icon: string;
     iconSize: number;
@@ -30,6 +31,7 @@ export class MapViewComponent {
     @Input() zoom: number = 12;
     @Input() centerLat: number = 103.822872;
     @Input() centerLng: number = 1.364917;
+    @Input() iconScale: number = 1.0;
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<GeoObject>();
 
@@ -53,6 +55,8 @@ export class MapViewComponent {
         }
         return this._cachedStyles[this.layerModeT];
     }
+    // marker
+    selectedMarkerIndex: number = -1;
 
     private getStyle() {
         const url = `https://api.maptiler.com/maps/${this.layerModeT}/style.json?key=${this.apiKey}`;
@@ -77,6 +81,8 @@ export class MapViewComponent {
             const idx = features[0].properties['index'];
             if (idx !== undefined) {
                 this.objectClicked.emit(this.geoObjects[idx]);
+                if (this.selectedMarkerIndex !== idx) this.selectedMarkerIndex = idx;
+                else this.selectedMarkerIndex = -1;
             }
         }
     }

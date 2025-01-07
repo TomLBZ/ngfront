@@ -23,20 +23,34 @@
                     }"
                     [properties]="{
                         index: $index,
-                        icon: geoObj.icon
+                        icon: geoObj.icon,
+                        iconSize: geoObj.iconSize,
+                        heading: geoObj.heading
                     }"
                 ></mgl-feature>
             }
         </mgl-geojson-source>
+        <mgl-layer
+            id="marker-border"
+            type="circle"
+            source="pointsrc"
+            [filter]="['==', ['get', 'index'], selectedMarkerIndex]"
+            [paint]="{
+                'circle-radius': ['*', ['get', 'iconSize'], 0.5 * iconScale],
+                'circle-color': 'rgba(0, 0, 0, 0.2)',
+                'circle-stroke-width': 2 * iconScale,
+                'circle-stroke-color': 'rgba(255, 127, 0, 1)',
+            }"
+        ></mgl-layer>
         <mgl-layer
             id="points"
             type="symbol"
             source="pointsrc"
             [layout]="{
                 'icon-image': ['get', 'icon'],
-                'icon-size': 1.0,
+                'icon-size': iconScale,
+                'icon-rotate': ['get', 'heading'],
                 'symbol-sort-key': ['get', 'index'],
-                'symbol-z-order': 'source'
             }"
             (layerClick)="onMarkerClick($event)"
             (layerMouseEnter)="onMarkerEnter($event)"
