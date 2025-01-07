@@ -5,8 +5,8 @@ import { RouterModule, RouterOutlet } from '@angular/router';
   selector: 'app-pages',
   standalone: true,
   imports: [RouterOutlet, RouterModule],
-  templateUrl: './pages.component.html',
-  styleUrl: './pages.component.less'
+  templateUrl: './pages.html',
+  styleUrl: './pages.less'
 })
 export class PagesComponent {
   tabs = [

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { PagesComponent } from './pages/pages.component';
+import { PagesComponent } from './pages/pages';
 import { LoginComponent } from '../components/login/login';
 import { canActivateLoginGuard } from '../components/login/login.guard';
 import { routes as pageRoutes } from './pages/pages.routes';
