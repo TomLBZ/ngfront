@@ -15,8 +15,8 @@ import { CircleMarker } from "./marker";
         DropSelectComponent,
         MapViewComponent
     ],
-    templateUrl: "./playground.component.html",
-    styleUrls: ["./playground.component.less"]
+    templateUrl: "./playground.html",
+    styleUrls: ["./playground.less"]
 })
 export class PlaygroundComponent {
     // top pane

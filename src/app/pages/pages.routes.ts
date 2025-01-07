@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { PlaygroundComponent } from './playground/playground.component';
+import { PlaygroundComponent } from './playground/playground';
 import { ObjEditingPage } from './obj_editing/obj_editing';
 import { DropSelectPage } from './drop_select/drop_select';
 
