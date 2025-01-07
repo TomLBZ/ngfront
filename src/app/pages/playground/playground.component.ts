@@ -3,48 +3,9 @@ import { Component } from "@angular/core";
 // custom components
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
-import { MapViewComponent, GeoObject } from "../../../components/mapview/mapview";
+import { MapViewComponent, Marker } from "../../../components/mapview/mapview";
 import { env } from "../../app.config";
-
-class PlaneObject implements GeoObject {
-    private readonly _iconData: Uint8Array;
-    public icon: string;
-    constructor(
-        public lat: number, 
-        public lng: number, 
-        public alt: number,
-        public heading: number,
-        public name: string,
-        public id: number,
-        public iconSize: number = 16,
-    ) {
-        this._iconData = this.getIconData();
-        this.icon = `${this.id}`;
-    }
-    get iconData() { return this._iconData; }
-    get description() { 
-        return `Plane ${this.name} at (Lng: ${this.lng}, Lat: ${this.lat})\nAltitude: ${this.alt}m; Heading: ${this.heading} degrees.`;
-    }
-
-    getIconData() { 
-        const bpp = 4;
-        const w = this.iconSize, h = this.iconSize;
-        const data = new Uint8Array(w * h * bpp);
-        // draw a plane icon rotated by degrees
-        for (let i = 0; i < w * h; i++) {
-            const x = i % w, y = Math.floor(i / w);
-            const dx = x - w / 2, dy = y - h / 2;
-            const r = Math.sqrt(dx * dx + dy * dy);
-            const a = Math.atan2(dy, dx) + this.heading / 180 * Math.PI;
-            const j = i * bpp;
-            data[j] = 255;
-            data[j + 1] = 255;
-            data[j + 2] = 255;
-            data[j + 3] = r < w / 2 ? 255 : 0;
-        }
-        return data;
-    }
-}
+import { CircleMarker } from "./marker";
 
 @Component({
     selector: "app-playground",
@@ -59,15 +20,16 @@ class PlaneObject implements GeoObject {
 })
 export class PlaygroundComponent {
     // top pane
-    planeObjects: Array<PlaneObject> = [
-        new PlaneObject(1.36, 103.82, 1000, 0, 'A', 1),
-        new PlaneObject(1.36, 103.83, 2000, 45, 'B', 2),
-        new PlaneObject(1.37, 103.82, 3000, 90, 'C', 3),
-        new PlaneObject(1.37, 103.83, 4000, 135, 'D', 4),
+    markers: Array<Marker> = [
+        new CircleMarker(1.36, 103.82, 0, 1),
+        new CircleMarker(1.37, 103.83, 45, 2),
+        new CircleMarker(1.36, 103.83, 90, 3),
+        new CircleMarker(1.37, 103.82, 135, 4)
     ];
     apiKey = env.mapKey;
     zoom = 12;
     center = [103.822872, 1.364917];
+    iconScale = 1.5;
     includeFilter = (key: string) => {
         if (key.startsWith("_")) return false;
         const excludedFields = ["description", "icon", "iconData"];
@@ -78,19 +40,21 @@ export class PlaygroundComponent {
         console.log(obj);
     }
 
-    onObjectClicked(obj: GeoObject) {
+    onObjectClicked(obj: Marker) {
         console.log(obj);
     }
 
     // bottom pane
-    dropRepr: Function = (obj: any) => `Plane ${obj.name}`;
+    dropRepr: Function = (obj: any) => obj.name;
     // left pane
+    titleL = "Multiselect Markers";
     selIndicesL: Array<number> = [];
     // right pane
+    titleR = "Select a Single Marker to Edit";
     textModeR: boolean = false;
     private selIndexR: number = -1;
     get selObjR() {
-        return this.selIndexR >= 0 ? this.planeObjects[this.selIndexR] : null;
+        return this.selIndexR >= 0 ? this.markers[this.selIndexR] : null;
     }
 
     onUpdate(obj: any) {

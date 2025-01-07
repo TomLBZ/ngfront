@@ -4,10 +4,11 @@ import { MapComponent, ImageComponent, LayerComponent } from "@maplibre/ngx-mapl
 import { DropSelectComponent } from '../dropselect/dropselect';
 import { MapLayerMouseEvent } from 'maplibre-gl';
 
-export interface GeoObject {
+export interface Marker {
     lat: number;
     lng: number;
     heading: number;
+    name: string;
     description: string;
     icon: string;
     iconSize: number;
@@ -26,14 +27,14 @@ export interface GeoObject {
     styleUrls: ['./mapview.less']
 })
 export class MapViewComponent {
-    @Input() geoObjects: Array<GeoObject> = [];
+    @Input() geoObjects: Array<Marker> = [];
     @Input() apiKey: string = '';
     @Input() zoom: number = 12;
     @Input() centerLat: number = 103.822872;
     @Input() centerLng: number = 1.364917;
     @Input() iconScale: number = 1.0;
     @Output() layerModeChanged = new EventEmitter<string>();
-    @Output() objectClicked = new EventEmitter<GeoObject>();
+    @Output() objectClicked = new EventEmitter<Marker>();
 
     // dropselect
     layerModeT: string = 'bright-v2';
