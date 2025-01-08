@@ -17,4 +17,11 @@ export class AppService {
     rootGet(): Observable<any> {
         return this.http.get(`${this.apiUrl}`);
     }
+
+    call(op: string, next: (d: any) => void, data: any = {}, error: (e: any) => void = console.error): void {
+        this.uniPost(op, data).subscribe({
+            next,
+            error
+        });
+    }
 }
