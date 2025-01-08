@@ -3,7 +3,7 @@
     [zoom]="[zoom]"
     [center]="[centerLat, centerLng]"
     [preserveDrawingBuffer]="true"
-    (mapLoad)="mapLoaded = true"
+    (mapLoad)="onMapLoad($event)"
 >
     @if (mapLoaded) {
         <mgl-geojson-source id="pointsrc" [data]="featureCollection">

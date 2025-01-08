@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
 import { NgxMapLibreGLModule } from "@maplibre/ngx-maplibre-gl";
 import { MapComponent, ImageComponent, LayerComponent } from "@maplibre/ngx-maplibre-gl";
 import { DropSelectComponent } from '../dropselect/dropselect';
@@ -35,6 +35,9 @@ export class MapViewComponent {
     @Input() iconScale: number = 1.0;
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<Marker>();
+
+    // child map
+    @ViewChild(MapComponent) _innerMap!: MapComponent;
 
     // dropselect
     layerModeT: string = 'bright-v2';
@@ -83,7 +86,6 @@ export class MapViewComponent {
     }
     // marker
     selectedMarkerIndex: number = -1;
-
     private getStyle() {
         const url = `https://api.maptiler.com/maps/${this.layerModeT}/style.json?key=${this.apiKey}`;
         const xhr = new XMLHttpRequest();
@@ -91,12 +93,17 @@ export class MapViewComponent {
         xhr.send();
         return JSON.parse(xhr.responseText);
     }
-
+    onMapLoad(mapInstance: any) { // triggers only once, gives the child map instance
+        this.mapLoaded = true;
+    }
     onSelectT(obj: any) {
         if (typeof obj === 'string') {
             this.mapLoaded = false;
             this.layerModeT = obj;
             this.layerModeChanged.emit(obj);
+            this._innerMap.mapInstance.once('idle', () => {
+                this.mapLoaded = true;
+            });
         }
         else throw new Error('Invalid selection');
     }
