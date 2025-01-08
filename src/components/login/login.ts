@@ -21,8 +21,8 @@ export class LoginComponent {
     login(): void {
         this.authService.login(this.username, this.password).subscribe({
             next: (res) => {
-                console.log(res);
                 if (res.success) {
+                    console.log('Logged in as ' + res.user);
                     this.authService.setLoggedIn(res.salt);
                     this.router.navigate(['/pages']);
                 } else {
