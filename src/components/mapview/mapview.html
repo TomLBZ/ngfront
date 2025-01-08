@@ -6,7 +6,7 @@
     (mapLoad)="mapLoaded = true"
 >
     @if (mapLoaded) {
-        <mgl-geojson-source id="pointsrc">
+        <mgl-geojson-source id="pointsrc" [data]="featureCollection">
             @for (geoObj of geoObjects; track $index) {
                 <mgl-image
                     [id]="geoObj.icon"
@@ -16,18 +16,6 @@
                         data: geoObj.iconData
                     }"
                 ></mgl-image>
-                <mgl-feature
-                    [geometry]="{
-                        type: 'Point',
-                        coordinates: [geoObj.lng, geoObj.lat]
-                    }"
-                    [properties]="{
-                        index: $index,
-                        icon: geoObj.icon,
-                        iconSize: geoObj.iconSize,
-                        heading: geoObj.heading
-                    }"
-                ></mgl-feature>
             }
         </mgl-geojson-source>
         <mgl-layer

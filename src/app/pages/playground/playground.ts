@@ -1,5 +1,5 @@
 // library imports
-import { Component } from "@angular/core";
+import { Component, ViewChild } from "@angular/core";
 // custom components
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
@@ -63,8 +63,12 @@ export class PlaygroundComponent {
         return name ? name : "Object";
     }
 
+    @ViewChild(MapViewComponent) mapView: MapViewComponent | undefined;
     onUpdate(obj: any) {
         console.log(obj);
+        if (this.mapView) {
+            this.mapView.isFeaturesCached = false;
+        }
     }
 
     onSelectR(obj: any) {

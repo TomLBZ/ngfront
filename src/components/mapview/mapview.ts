@@ -56,6 +56,31 @@ export class MapViewComponent {
         }
         return this._cachedStyles[this.layerModeT];
     }
+    // feature collection
+    isFeaturesCached: boolean = false;
+    private _cachedFeatures: any = {};
+    get featureCollection() {
+        if (!this.isFeaturesCached) {
+            this._cachedFeatures = {
+                type: 'FeatureCollection' as const,
+                features: this.geoObjects.map((obj, idx) => ({
+                    type: 'Feature' as const,
+                    geometry: {
+                        type: 'Point' as const,
+                        coordinates: [obj.lng, obj.lat]
+                    },
+                    properties: {
+                        index: idx,
+                        icon: obj.icon,
+                        iconSize: obj.iconSize,
+                        heading: obj.heading,
+                    }
+                }))
+            };
+            this.isFeaturesCached = true;
+        };
+        return this._cachedFeatures;
+    }
     // marker
     selectedMarkerIndex: number = -1;
 
