@@ -116,7 +116,7 @@ export class ObjEditorComponent implements OnInit {
         this.objToEdit = cloneable.deepCopy(this._objCopy);
     }
 
-    save(): void {
+    apply(): void {
         this._objCopy = cloneable.deepCopy(this.objToEdit);
         this.updated.emit(cloneable.deepCopy(this.objToEdit)); // another copy
     }
