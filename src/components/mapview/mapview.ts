@@ -5,12 +5,11 @@ import { DropSelectComponent } from '../dropselect/dropselect';
 import { MapLayerMouseEvent } from 'maplibre-gl';
 
 export interface Marker {
+    id: number;
     lat: number;
     lng: number;
     heading: number;
-    name: string;
-    description: string;
-    icon: string;
+    popupText: string;
     iconSize: number;
     iconData: Uint8Array;
 }
@@ -74,7 +73,7 @@ export class MapViewComponent {
                     },
                     properties: {
                         index: idx,
-                        icon: obj.icon,
+                        icon: obj.id.toString(),
                         iconSize: obj.iconSize,
                         heading: obj.heading,
                     }
@@ -128,7 +127,7 @@ export class MapViewComponent {
         if (idx === undefined) return;
         const lat = this.geoObjects[idx].lat;
         const lng = this.geoObjects[idx].lng;
-        const desc = this.geoObjects[idx].description;
+        const desc = this.geoObjects[idx].popupText;
         this.popupLngLat = [lng, lat];
         this.popupText = desc;
         this.popupVisible = true;

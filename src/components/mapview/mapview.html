@@ -6,57 +6,56 @@
     (mapLoad)="onMapLoad($event)"
 >
     @if (mapLoaded) {
-        <mgl-geojson-source id="pointsrc" [data]="featureCollection">
-            @for (geoObj of geoObjects; track $index) {
-                <mgl-image
-                    [id]="geoObj.icon"
-                    [data]="{
-                        width: geoObj.iconSize,
-                        height: geoObj.iconSize,
-                        data: geoObj.iconData
-                    }"
-                ></mgl-image>
-            }
-        </mgl-geojson-source>
-        <mgl-layer
-            id="marker-border"
-            type="circle"
-            source="pointsrc"
-            [filter]="['==', ['get', 'index'], selectedMarkerIndex]"
-            [paint]="{
-                'circle-radius': ['*', ['get', 'iconSize'], 0.5 * iconScale],
-                'circle-color': 'rgba(0, 0, 0, 0.2)',
-                'circle-stroke-width': 2 * iconScale,
-                'circle-stroke-color': 'rgba(255, 127, 0, 1)',
-            }"
-        ></mgl-layer>
-        <mgl-layer
-            id="points"
-            type="symbol"
-            source="pointsrc"
-            [layout]="{
-                'icon-image': ['get', 'icon'],
-                'icon-size': iconScale,
-                'icon-rotate': ['get', 'heading'],
-                'symbol-sort-key': ['get', 'index'],
-            }"
-            (layerClick)="onMarkerClick($event)"
-            (layerMouseEnter)="onMarkerEnter($event)"
-            (layerMouseLeave)="onMarkerLeave($event)"
-        >
-            @if (popupVisible) {
-                <mgl-popup
-                    [lngLat]="popupLngLat"
-                    [closeOnClick]="false"
-                    [closeButton]="false"
-                >
-                    <div class="popup">
-                        <p>{{popupText}}</p>
-                    </div>
-                </mgl-popup>
-            }
-        </mgl-layer>
+        @for (geoObj of geoObjects; track $index) {
+            <mgl-image
+                [id]="geoObj.id.toString()"
+                [data]="{
+                    width: geoObj.iconSize,
+                    height: geoObj.iconSize,
+                    data: geoObj.iconData
+                }"
+            ></mgl-image>
+        }
+        <mgl-geojson-source id="pointsrc" [data]="featureCollection"></mgl-geojson-source>
     }
+    <mgl-layer
+        id="marker-border"
+        type="circle"
+        source="pointsrc"
+        [filter]="['==', ['get', 'index'], selectedMarkerIndex]"
+        [paint]="{
+            'circle-radius': ['*', ['get', 'iconSize'], 0.5 * iconScale],
+            'circle-color': 'rgba(0, 0, 0, 0.2)',
+            'circle-stroke-width': 2 * iconScale,
+            'circle-stroke-color': 'rgba(255, 127, 0, 1)',
+        }"
+    ></mgl-layer>
+    <mgl-layer
+        id="points"
+        type="symbol"
+        source="pointsrc"
+        [layout]="{
+            'icon-image': ['get', 'icon'],
+            'icon-size': iconScale,
+            'icon-rotate': ['get', 'heading'],
+            'symbol-sort-key': ['get', 'index'],
+        }"
+        (layerClick)="onMarkerClick($event)"
+        (layerMouseEnter)="onMarkerEnter($event)"
+        (layerMouseLeave)="onMarkerLeave($event)"
+    >
+        @if (popupVisible) {
+            <mgl-popup
+                [lngLat]="popupLngLat"
+                [closeOnClick]="false"
+                [closeButton]="false"
+            >
+                <div class="popup">
+                    <p>{{popupText}}</p>
+                </div>
+            </mgl-popup>
+        }
+    </mgl-layer>
 </mgl-map>
 <div class="floaty">
     <dropselect
