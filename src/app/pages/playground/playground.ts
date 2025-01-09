@@ -59,7 +59,7 @@ export class PlaygroundComponent {
     get objNameR() {
         const obj = this.selIndexR >= 0 ? this.markers[this.selIndexR] : null;
         if (!obj) return "Null";
-        const name = obj.name;
+        const name = (obj as CircleMarker).name;
         return name ? name : "Object";
     }
 

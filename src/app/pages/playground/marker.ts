@@ -25,7 +25,7 @@ export class CircleMarker implements Marker {
         return `CircleMarker ${this.icon}`;
     }
 
-    get description() {
+    get popupText() {
         return `CircleMarker ${this.icon} at (Lng: ${this.lng}, Lat: ${this.lat})\nHeading: ${this.heading} degrees.`;
     }
 
