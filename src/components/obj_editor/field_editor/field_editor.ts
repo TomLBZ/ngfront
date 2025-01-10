@@ -31,13 +31,19 @@ export class FieldEditorComponent {
     this.expandedFields[key] = !this.expandedFields[key];
   }
 
+  private _isArray(value: any): boolean {
+    const isArr = Array.isArray(value);
+    const isTypedArr = ArrayBuffer.isView(value);
+    return isArr || isTypedArr;
+  }
+
   isObjectType(value: any): boolean {
     return value && typeof value === 'object' &&
-      !Array.isArray(value) && !(value instanceof Date);
+      !this._isArray(value) && !(value instanceof Date);
   }
 
   isArrayType(value: any): boolean {
-    return Array.isArray(value);
+    return this._isArray(value);
   }
 
   onArrayChanged(change: Change): void {

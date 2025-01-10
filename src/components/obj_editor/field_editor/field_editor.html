@@ -14,7 +14,7 @@
     <!-- Fields -->
     @if (expanded) {
       @if (isArray) {
-        @for (item of objToEdit; track item) {
+        @for (item of objToEdit; track $index) {
           <field-editor
             [objToEdit]="objToEdit[$index]"
             [objName]="'[' + $index + ']'"

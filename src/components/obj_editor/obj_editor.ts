@@ -86,7 +86,7 @@ export class ObjEditorComponent implements OnInit {
         }
     }
 
-    updateObj(originalobj: any, targetobj: any, key: string = "<ROOT>"): void {
+    updateObj(originalobj: any, targetobj: any, key: string = "Object"): void {
         if (Object.keys(targetobj).length === 0) {
             const oldValue = originalobj;
             originalobj = targetobj;
