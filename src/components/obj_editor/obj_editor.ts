@@ -6,6 +6,8 @@ export class cloneable {
     public static deepCopy<T>(source: T): T {
       return Array.isArray(source)
       ? source.map(item => this.deepCopy(item))
+      : ArrayBuffer.isView(source)
+      ? structuredClone(source)
       : source instanceof Date
       ? new Date(source.getTime())
       : source && typeof source === 'object'
@@ -95,7 +97,7 @@ export class ObjEditorComponent implements OnInit {
             }
         }
         else {
-            const isArray = Array.isArray(targetobj);
+            const isArray = Array.isArray(targetobj) || ArrayBuffer.isView(targetobj);
             const isObject = typeof targetobj === 'object' && !isArray;
             const local_keys = Object.keys(originalobj);
             for (let i = 0; i < local_keys.length; i++) {
