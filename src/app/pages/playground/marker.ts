@@ -9,7 +9,7 @@ export class CircleMarker implements Marker {
     constructor(
         public lat: number, 
         public lng: number, 
-        public heading: number,
+        public hdg: number,
         public id: number,
         public iconSize: number = 16,
     ) {
@@ -26,7 +26,7 @@ export class CircleMarker implements Marker {
     }
 
     get popupText() {
-        return `CircleMarker ${this.icon} at (Lng: ${this.lng}, Lat: ${this.lat})\nHeading: ${this.heading} degrees.`;
+        return `CircleMarker ${this.icon} at (Lng: ${this.lng}, Lat: ${this.lat})\nHeading: ${this.hdg} degrees.`;
     }
 
     static getIconData(iconSize: number) { // generated only once
