@@ -31,8 +31,7 @@ export class PlaygroundComponent {
     center = [103.822872, 1.364917];
     iconScale = 1.5;
     includeFilter = (key: string) => {
-        if (key.startsWith("_")) return false;
-        const excludedFields = ["description", "icon", "iconData"];
+        const excludedFields = ["icon", "iconData"];
         return !excludedFields.includes(key);
     }
 
@@ -65,9 +64,8 @@ export class PlaygroundComponent {
 
     @ViewChild(MapViewComponent) mapView: MapViewComponent | undefined;
     onUpdate(obj: any) {
-        console.log(obj);
         if (this.mapView) {
-            this.mapView.isFeaturesCached = false;
+            this.mapView.refresh(obj as Marker);
         }
     }
 
