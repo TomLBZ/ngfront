@@ -1,14 +1,14 @@
-import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
-import { NgxMapLibreGLModule } from "@maplibre/ngx-maplibre-gl";
-import { MapComponent, ImageComponent, LayerComponent } from "@maplibre/ngx-maplibre-gl";
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { MapComponent, LayerComponent, GeoJSONSourceComponent, 
+    FeatureComponent, ImageComponent, PopupComponent } from "@maplibre/ngx-maplibre-gl";
 import { DropSelectComponent } from '../dropselect/dropselect';
-import { MapLayerMouseEvent } from 'maplibre-gl';
+import { Map, MapLayerMouseEvent } from 'maplibre-gl';
 
 export interface Marker {
     id: number;
     lat: number;
     lng: number;
-    heading: number;
+    hdg: number;
     popupText: string;
     iconSize: number;
     iconData: Uint8Array;
@@ -18,8 +18,12 @@ export interface Marker {
     selector: 'mapview',
     standalone: true,
     imports: [
-        NgxMapLibreGLModule,
-        MapComponent, ImageComponent, LayerComponent,
+        MapComponent, 
+        LayerComponent, 
+        GeoJSONSourceComponent, 
+        FeatureComponent, 
+        ImageComponent,
+        PopupComponent,
         DropSelectComponent
     ],
     templateUrl: './mapview.html',
@@ -35,8 +39,40 @@ export class MapViewComponent {
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<Marker>();
 
-    // child map
-    @ViewChild(MapComponent) _innerMap!: MapComponent;
+    // mapstyle
+    map!: Map;
+    onMapLoad(map: Map) {
+        this.map = map;
+    }
+    private _cachedStyles: any = {};
+    private _getStyle() {
+        const url = `https://api.maptiler.com/maps/${this.layerModeT}/style.json?key=${this.apiKey}`;
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, false);
+        xhr.send();
+        return JSON.parse(xhr.responseText);
+    }
+    private _initialMapStyle: any = undefined;
+    get initialMapStyle() {
+        if (!this._initialMapStyle) {
+            this._cachedStyles[this.layerModeT] = this._getStyle();
+            this._initialMapStyle = this._cachedStyles[this.layerModeT];
+        }
+        return this._initialMapStyle;
+    }
+    getMapStyle() {
+        const keys = Object.keys(this._cachedStyles);
+        if (keys.length == 0 || !keys.includes(this.layerModeT)) {
+            this._cachedStyles[this.layerModeT] = this._getStyle();
+        }
+        return this._cachedStyles[this.layerModeT];
+    }
+    refresh(m: Marker) {
+        const idx = this.geoObjects.findIndex(obj => obj.id === m.id);
+        if (idx >= 0) {
+            this.geoObjects[idx] = m;
+        }
+    }
 
     // dropselect
     layerModeT: string = 'bright-v2';
@@ -44,98 +80,56 @@ export class MapViewComponent {
         "bright-v2", "dataviz", "landscape", "ocean", "openstreetmap", 
         "outdoor-v2", "satellite", "streets-v2", "toner-v2", "topo-v2", "winter-v2"
     ];
-    // popup
-    popupLngLat: [number, number] = [0, 0];
-    popupVisible: boolean = false;
-    popupText: string = 'Test';
-    // mapstyle
-    mapLoaded: boolean = false;
-    private _cachedStyles: any = {};
-    get mapStyle() {
-        const keys = Object.keys(this._cachedStyles);
-        if (keys.length == 0 || !keys.includes(this.layerModeT)) {
-            this._cachedStyles[this.layerModeT] = this.getStyle();
-        }
-        return this._cachedStyles[this.layerModeT];
-    }
-    // feature collection
-    isFeaturesCached: boolean = false;
-    private _cachedFeatures: any = {};
-    get featureCollection() {
-        if (!this.isFeaturesCached) {
-            this._cachedFeatures = {
-                type: 'FeatureCollection' as const,
-                features: this.geoObjects.map((obj, idx) => ({
-                    type: 'Feature' as const,
-                    geometry: {
-                        type: 'Point' as const,
-                        coordinates: [obj.lng, obj.lat]
-                    },
-                    properties: {
-                        index: idx,
-                        icon: obj.id.toString(),
-                        iconSize: obj.iconSize,
-                        heading: obj.heading,
-                    }
-                }))
-            };
-            this.isFeaturesCached = true;
-        };
-        return this._cachedFeatures;
-    }
-    // marker
-    selectedMarkerIndex: number = -1;
-    private getStyle() {
-        const url = `https://api.maptiler.com/maps/${this.layerModeT}/style.json?key=${this.apiKey}`;
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', url, false);
-        xhr.send();
-        return JSON.parse(xhr.responseText);
-    }
-    onMapLoad(mapInstance: any) { // triggers only once, gives the child map instance
-        this.mapLoaded = true;
-    }
+    selectedMarkerId: number = -1;
     onSelectT(obj: any) {
         if (typeof obj === 'string') {
-            this.mapLoaded = false;
+            if (this.layerModeT === obj) return; // unchanged
             this.layerModeT = obj;
+            if (this.map) {
+                const style = this.getMapStyle();
+                this.map.setStyle(style, { diff: false });
+            }
             this.layerModeChanged.emit(obj);
-            this._innerMap.mapInstance.once('idle', () => {
-                this.mapLoaded = true;
-            });
         }
-        else throw new Error('Invalid selection');
+        else throw new Error('Invalid selection (must be string).');
     }
 
+    // marker
     onMarkerClick(event: MapLayerMouseEvent) {
         const features = event.features;
         if (features && features.length > 0) {
-            const idx = features[0].properties['index'];
+            const idx = features[0].properties['id'];
             if (idx !== undefined) {
-                this.objectClicked.emit(this.geoObjects[idx]);
-                if (this.selectedMarkerIndex !== idx) this.selectedMarkerIndex = idx;
-                else this.selectedMarkerIndex = -1;
+                const obj = this.geoObjects.find(obj => obj.id === idx);
+                if (!obj) return;
+                this.objectClicked.emit(obj);
+                if (this.selectedMarkerId !== idx) this.selectedMarkerId = idx;
+                else this.selectedMarkerId = -1;
             }
         }
     }
-
     onMarkerEnter(event: MapLayerMouseEvent) {
         event.target.getCanvas().style.cursor = 'pointer';
         const features = event.features;
         if (!features || features.length === 0) return;
-        const idx = features[0].properties['index'];
+        const idx = features[0].properties['id'];
         if (idx === undefined) return;
-        const lat = this.geoObjects[idx].lat;
-        const lng = this.geoObjects[idx].lng;
-        const desc = this.geoObjects[idx].popupText;
+        const obj = this.geoObjects.find(obj => obj.id === idx);
+        if (!obj) return;
+        const lat = obj.lat;
+        const lng = obj.lng;
+        const desc = obj.popupText;
         this.popupLngLat = [lng, lat];
         this.popupText = desc;
         this.popupVisible = true;
     }
-
     onMarkerLeave(event: MapLayerMouseEvent) {
         event.target.getCanvas().style.cursor = '';
         this.popupVisible = false;
     }
 
+    // popup
+    popupLngLat: [number, number] = [0, 0];
+    popupVisible: boolean = false;
+    popupText: string = 'Test';
 }
