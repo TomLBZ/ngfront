@@ -8,16 +8,18 @@ import { Input, Component } from '@angular/core';
 })
 export class OutboxComponent {
     @Input() text: string = '';
+    @Input() title: string = 'Outbox';
 
     clear() {
         this.text = '';
     }
 
-    append(str: string) {
-        this.text += str + '\n';
+    append(str: string, newline: boolean = true) {
+        this.text += str;
+        if (newline) this.text += '\n';
     }
 
-    parseAppend(data: any) {
-        this.append(JSON.stringify(data, null, 2));
+    parseAppend(data: any, newline: boolean = true) {
+        this.append(JSON.stringify(data, null, 2), newline);
     }
 }
