@@ -7,7 +7,7 @@ import { Map, MapLayerMouseEvent } from 'maplibre-gl';
 export interface Marker {
     id: number;
     lat: number;
-    lng: number;
+    lon: number;
     hdg: number;
     popupText: string;
     iconSize: number;
@@ -117,9 +117,9 @@ export class MapViewComponent {
         const obj = this.geoObjects.find(obj => obj.id === idx);
         if (!obj) return;
         const lat = obj.lat;
-        const lng = obj.lng;
+        const lon = obj.lon;
         const desc = obj.popupText;
-        this.popupLngLat = [lng, lat];
+        this.popupLonLat = [lon, lat];
         this.popupText = desc;
         this.popupVisible = true;
     }
@@ -129,7 +129,7 @@ export class MapViewComponent {
     }
 
     // popup
-    popupLngLat: [number, number] = [0, 0];
+    popupLonLat: [number, number] = [0, 0];
     popupVisible: boolean = false;
     popupText: string = 'Test';
 }

@@ -19,7 +19,7 @@
             <mgl-feature
                 [geometry]="{
                     type: 'Point',
-                    coordinates: [geoObj.lng, geoObj.lat]
+                    coordinates: [geoObj.lon, geoObj.lat]
                 }"
                 [properties]="{
                     id: geoObj.id,
@@ -63,11 +63,13 @@
     </mgl-layer>
     @if (popupVisible) {
         <mgl-popup
-            [lngLat]="popupLngLat"
+            [lngLat]="popupLonLat"
             [closeOnClick]="false"
             [closeButton]="false"
         >
-            {{popupText}}
+            <div class="popup">
+                {{popupText}}
+            </div>
         </mgl-popup>
     }
 </mgl-map>
