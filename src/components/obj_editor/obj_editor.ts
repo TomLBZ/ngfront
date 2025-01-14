@@ -31,12 +31,14 @@ export class ObjEditorComponent implements OnInit {
     @Input() textMode: boolean = true;
     @Input() objName: string = 'Object';
     @Input() objToEdit: any = {};
+    @Input() readOnly: boolean = false;
     @Input() includeFilter: (key: string) => boolean = () => true;
     @Output() updated = new EventEmitter<any>();
     private _objCopy: any = {};
 
     ngOnInit(): void {
         this._objCopy = cloneable.deepCopy(this.objToEdit);
+        if (this.readOnly) this.textMode = false;
     }
 
     toggleText(): void {

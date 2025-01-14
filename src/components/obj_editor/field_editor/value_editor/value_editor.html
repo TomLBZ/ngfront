@@ -3,37 +3,23 @@
         {{ itemName ? itemName : '\<Value\>' }}
     </div>
     <div class="value-editor-input">
-        <!-- String -->
-        @if (isStringType(itemToEdit)) {
-            <input
-                type="text"
-                [value]="itemToEdit"
-                (input)="onItemChange($event)"
-            />  
-        }
-        @else if (isNumberType(itemToEdit)) {
-            <input
-                type="number"
-                [value]="itemToEdit"
-                (input)="onItemChange($event)"
-            />
-        }
-        @else if (isBooleanType(itemToEdit)) {
-            <input
-                type="checkbox"
-                [checked]="itemToEdit"
-                (change)="onItemChange($event)"
-            />
-        }
-        @else if (isDateType(itemToEdit)) {
-            <input
-                type="date"
-                [value]="formatDateForInput(itemToEdit)"
-                (input)="onItemChange($event)"
-            />
+        @if (readOnly) {
+            <div class="value-editor-readonly">
+                {{ getStringRepresentation() }}
+            </div>
         }
         @else {
-            Unsupported item type
+            @let type = getInputType();
+            @if (type === "unsupported") {
+                Unsupported item type
+            }
+            @else {
+                <input
+                    type="{{type}}"
+                    [value]="itemToEdit"
+                    (input)="onItemChange($event)"
+                />
+            }
         }
     </div>
 </div>

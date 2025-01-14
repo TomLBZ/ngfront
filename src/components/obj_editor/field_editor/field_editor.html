@@ -18,6 +18,7 @@
           <field-editor
             [objToEdit]="objToEdit[$index]"
             [objName]="'[' + $index + ']'"
+            [readOnly]="readOnly"
             (fieldChanged)="onArrayChanged($event)"
           ></field-editor>
         }
@@ -27,6 +28,7 @@
           <field-editor
             [objToEdit]="objToEdit[key]"
             [objName]="key"
+            [readOnly]="readOnly"
             [includeFilter]="includeFilter"
             (fieldChanged)="onFieldChanged($event)"
           ></field-editor> 
@@ -43,6 +45,7 @@
     <value-editor
       [itemToEdit]="objToEdit"
       [itemName]="objName"
+      [readOnly]="readOnly"
       (itemChanged)="onItemChanged($event)"
     ></value-editor>
   }

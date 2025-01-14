@@ -5,6 +5,7 @@
             [objName]="objName"
             [expanded]="true"
             [includeFilter]="includeFilter"
+            [readOnly]="readOnly"
             (fieldChanged)="onFieldChange($event)"
         ></field-editor>
         @if (textMode) {
@@ -14,18 +15,20 @@
             ></textarea>
         }
     </div>
-    <div class="controls">
-        <Label>
-            <input 
-                type="checkbox"
-                [checked]="textMode"
-                (change)="toggleText()"
-            >
-            Toggle Text
-        </Label>
-        <button (click)="reset()">Reset</button>
-        <button (click)="apply()">Apply</button>
-    </div>    
+    @if (!readOnly) {
+        <div class="controls">
+            <Label>
+                <input 
+                    type="checkbox"
+                    [checked]="textMode"
+                    (change)="toggleText()"
+                >
+                Toggle Text
+            </Label>
+            <button (click)="reset()">Reset</button>
+            <button (click)="apply()">Apply</button>
+        </div>    
+    }
 }
 @else {
     <div class="placeholder">No object to edit</div>

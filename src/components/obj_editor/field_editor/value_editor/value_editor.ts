@@ -14,8 +14,22 @@ export interface Change {
 })
 export class ValueEditorComponent {
     @Input() itemName: string = "";
+    @Input() readOnly: boolean = false;
     @Input() itemToEdit: any = {};
     @Output() itemChanged = new EventEmitter<Change>();
+
+    getInputType(): string {
+        if (this.isStringType(this.itemToEdit)) return "text";
+        if (this.isNumberType(this.itemToEdit)) return "number";
+        if (this.isBooleanType(this.itemToEdit)) return "checkbox";
+        if (this.isDateType(this.itemToEdit)) return "date";
+        return "unsupported";
+    }
+
+    getStringRepresentation(): string {
+        if (this.isDateType(this.itemToEdit)) return this.formatDateForInput(this.itemToEdit);
+        return this.itemToEdit.toString();
+    }
 
     isStringType(value: any): boolean {
         return typeof value === "string";
