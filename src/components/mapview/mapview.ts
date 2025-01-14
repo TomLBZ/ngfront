@@ -37,6 +37,7 @@ export class MapViewComponent {
     @Input() centerLat: number = 103.822872;
     @Input() centerLng: number = 1.364917;
     @Input() iconScale: number = 1.0;
+    @Input() fadeDuration: number = 0;
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<Marker>();
 
