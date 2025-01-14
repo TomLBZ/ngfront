@@ -12,6 +12,7 @@ export interface Marker {
     popupText: string;
     iconSize: number;
     iconData: Uint8Array;
+    trackTarget: number;
 }
 
 @Component({

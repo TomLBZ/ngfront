@@ -29,6 +29,12 @@ export class CircleMarker implements Marker {
         return `CircleMarker ${this.icon} at (Lng: ${this.lon}, Lat: ${this.lat})\nHeading: ${this.hdg} degrees.`;
     }
 
+    get trackTarget() {
+        const primes = [2, 3, 5, 7];
+        const features = [this.id, this.lat, this.lon, this.hdg];
+        return features.reduce((acc, val, idx) => acc + primes[idx] * val, 0);
+    }
+
     static getIconData(iconSize: number) { // generated only once
         const greenColor = new Color(0, 255, 0, 255);
         const blueColor = new Color(0, 0, 255, 255);

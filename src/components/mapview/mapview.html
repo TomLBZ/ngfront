@@ -15,7 +15,7 @@
         ></mgl-image>
     }
     <mgl-geojson-source id="markers">
-        @for (geoObj of geoObjects; track geoObj) {
+        @for (geoObj of geoObjects; track geoObj.trackTarget) {
             <mgl-feature
                 [geometry]="{
                     type: 'Point',
