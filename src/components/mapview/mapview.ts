@@ -69,9 +69,8 @@ export class MapViewComponent {
     }
     refresh(m: Marker) {
         const idx = this.geoObjects.findIndex(obj => obj.id === m.id);
-        if (idx >= 0) {
-            this.geoObjects[idx] = m;
-        }
+        if (idx >= 0) this.geoObjects[idx] = m;
+        else this.geoObjects.push(m);
     }
 
     // dropselect
