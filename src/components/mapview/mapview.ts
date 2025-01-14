@@ -38,6 +38,11 @@ export class MapViewComponent {
     @Input() centerLng: number = 1.364917;
     @Input() iconScale: number = 1.0;
     @Input() fadeDuration: number = 0;
+    @Input() mapStyle: string = 'bright-v2';
+    @Input() mapStyles: Array<string> = ['aquarelle', 'backdrop', "basic-v2", 
+        "bright-v2", "dataviz", "landscape", "ocean", "openstreetmap", 
+        "outdoor-v2", "satellite", "streets-v2", "toner-v2", "topo-v2", "winter-v2"
+    ];
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<Marker>();
 
@@ -48,7 +53,7 @@ export class MapViewComponent {
     }
     private _cachedStyles: any = {};
     private _getStyle() {
-        const url = `https://api.maptiler.com/maps/${this.layerModeT}/style.json?key=${this.apiKey}`;
+        const url = `https://api.maptiler.com/maps/${this.mapStyle}/style.json?key=${this.apiKey}`;
         const xhr = new XMLHttpRequest();
         xhr.open('GET', url, false);
         xhr.send();
@@ -57,17 +62,17 @@ export class MapViewComponent {
     private _initialMapStyle: any = undefined;
     get initialMapStyle() {
         if (!this._initialMapStyle) {
-            this._cachedStyles[this.layerModeT] = this._getStyle();
-            this._initialMapStyle = this._cachedStyles[this.layerModeT];
+            this._cachedStyles[this.mapStyle] = this._getStyle();
+            this._initialMapStyle = this._cachedStyles[this.mapStyle];
         }
         return this._initialMapStyle;
     }
     getMapStyle() {
         const keys = Object.keys(this._cachedStyles);
-        if (keys.length == 0 || !keys.includes(this.layerModeT)) {
-            this._cachedStyles[this.layerModeT] = this._getStyle();
+        if (keys.length == 0 || !keys.includes(this.mapStyle)) {
+            this._cachedStyles[this.mapStyle] = this._getStyle();
         }
-        return this._cachedStyles[this.layerModeT];
+        return this._cachedStyles[this.mapStyle];
     }
     refresh(m: Marker) {
         const idx = this.geoObjects.findIndex(obj => obj.id === m.id);
@@ -76,16 +81,11 @@ export class MapViewComponent {
     }
 
     // dropselect
-    layerModeT: string = 'bright-v2';
-    layerModes: Array<string> = ['aquarelle', 'backdrop', "basic-v2", 
-        "bright-v2", "dataviz", "landscape", "ocean", "openstreetmap", 
-        "outdoor-v2", "satellite", "streets-v2", "toner-v2", "topo-v2", "winter-v2"
-    ];
     selectedMarkerId: number = -1;
     onSelectT(obj: any) {
         if (typeof obj === 'string') {
-            if (this.layerModeT === obj) return; // unchanged
-            this.layerModeT = obj;
+            if (this.mapStyle === obj) return; // unchanged
+            this.mapStyle = obj;
             if (this.map) {
                 const style = this.getMapStyle();
                 this.map.setStyle(style, { diff: false });
