@@ -8,7 +8,7 @@
             [readOnly]="readOnly"
             (fieldChanged)="onFieldChange($event)"
         ></field-editor>
-        @if (textMode) {
+        @if (textMode && !readOnly) {
             <textarea class="textbox"
                 [value]="getObjStr()"
                 (input)="onTextChange($event)"

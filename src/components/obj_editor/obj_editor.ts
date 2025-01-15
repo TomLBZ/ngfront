@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FieldEditorComponent } from './field_editor/field_editor';
 import { Change } from './field_editor/value_editor/value_editor';
 
@@ -27,18 +27,20 @@ export class cloneable {
   styleUrls: ['./obj_editor.less'],
   imports: [FieldEditorComponent]
 })
-export class ObjEditorComponent implements OnInit {
+export class ObjEditorComponent {
     @Input() textMode: boolean = true;
     @Input() objName: string = 'Object';
-    @Input() objToEdit: any = {};
     @Input() readOnly: boolean = false;
     @Input() includeFilter: (key: string) => boolean = () => true;
     @Output() updated = new EventEmitter<any>();
-    private _objCopy: any = {};
-
-    ngOnInit(): void {
-        this._objCopy = cloneable.deepCopy(this.objToEdit);
-        if (this.readOnly) this.textMode = false;
+    private _objToEdit: any = {};
+    private _objRef: any = {};
+    get objToEdit() {
+        return this._objToEdit;
+    }
+    @Input() set objToEdit(obj: any) {
+        this._objRef = obj;
+        this._objToEdit = cloneable.deepCopy(obj);
     }
 
     toggleText(): void {
@@ -46,7 +48,7 @@ export class ObjEditorComponent implements OnInit {
     }
 
     getObjStr(): string {
-        return JSON.stringify(this.objToEdit, null, 2);
+        return JSON.stringify(this._objToEdit, null, 2);
     }
 
     onFieldChange(change: Change): void {
@@ -72,7 +74,7 @@ export class ObjEditorComponent implements OnInit {
         if (lastToken === undefined) {
             throw new Error('lastToken is undefined');
         }
-        let parent: any = this.objToEdit;
+        let parent: any = this._objToEdit;
         for (const token of tokens) {
             if (!(token in parent)) {
                 throw new Error('token not in parent');
@@ -86,7 +88,7 @@ export class ObjEditorComponent implements OnInit {
         const value = event.target.value;
         if (typeof value === 'string') {
             const obj = JSON.parse(value);
-            this.updateObj(this.objToEdit, obj);
+            this.updateObj(this._objToEdit, obj);
         }
     }
 
@@ -117,11 +119,11 @@ export class ObjEditorComponent implements OnInit {
     }
 
     reset(): void {
-        this.objToEdit = cloneable.deepCopy(this._objCopy);
+        this._objToEdit = cloneable.deepCopy(this._objRef);
     }
 
     apply(): void {
-        this._objCopy = cloneable.deepCopy(this.objToEdit);
-        this.updated.emit(cloneable.deepCopy(this.objToEdit)); // another copy
+        this.objToEdit = this._objToEdit; // update reference and create deep copy
+        this.updated.emit(cloneable.deepCopy(this._objToEdit)); // emit deep copy
     }
 }
