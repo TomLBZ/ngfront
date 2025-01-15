@@ -14,4 +14,18 @@ export class PagesComponent {
     {label: 'Object Editing', path: 'object-editing'},
     {label: 'Drop Select', path: 'drop-select'}
   ];
+  private helpStrMultiline = `Help
+  Multiline Help Item 1:
+    Left: Do something.
+      Hello World.
+  Multiline Help Item 2: abcd.
+  `;
+  showHelp() {
+    alert(this.helpStrMultiline);
+  }
+  logOut() {
+    alert('Logging out...');
+    localStorage.removeItem('salt');
+    window.location.href = '/';
+  }
 }

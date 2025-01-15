@@ -1,35 +1,38 @@
 <header>
-    <div class="header-content">
-        <!--icon-->
-        <img src="assets/boxcross.svg" alt="logo">
-        <span class="bigtext">Basic Frontend Boilerplate in Angular</span>
-        <!--button-->
-        <button>Placeholder Button</button>
-        <!--dropdown-->
-        <div class="dropdown">
-            <button class="dropbtn">Placeholder Dropdown</button>
-            <div class="dropdown-content">
-            <a href="#">Placeholder Link 1</a>
-            <a href="#">Placeholder Link 2</a>
-            <a href="#">Placeholder Link 3</a>
-            </div>
+  <div class="header-title">
+    <img src="assets/boxcross.svg" alt="logo">
+    <span class="bigtext">Template</span>
+  </div>
+  <div class="header-content">
+    <!--dropdown-->
+    <!-- <div class="dropdown">
+        <button class="dropbtn">Placeholder Dropdown</button>
+        <div class="dropdown-content">
+        <a href="#">Placeholder Link 1</a>
+        <a href="#">Placeholder Link 2</a>
+        <a href="#">Placeholder Link 3</a>
         </div>
-        <span>Placehodler Text</span>
-    </div>
+    </div> -->
+    <!-- <span>Placehodler Text</span> -->
+  </div>
+  <div class="header-toolbox">
+    <button (click)="showHelp()">Help</button>
+    <button (click)="logOut()">Logout</button>
+  </div>
 </header>
   
 <div class="main-container">
-    <nav class="left-pane">
-      <ul>
-        @for (tab of tabs; track $index) {
-            <li>
-                <a [routerLink]="[tab.path]">{{ tab.label }}</a>
-            </li>
-        }
-      </ul>
-    </nav>
-    <div class="right-pane">
-      <router-outlet></router-outlet>
-    </div>
+  <nav class="left-pane">
+    <ul>
+      @for (tab of tabs; track $index) {
+          <li>
+              <a [routerLink]="[tab.path]">{{ tab.label }}</a>
+          </li>
+      }
+    </ul>
+  </nav>
+  <div class="right-pane">
+    <router-outlet></router-outlet>
+  </div>
 </div>
   
