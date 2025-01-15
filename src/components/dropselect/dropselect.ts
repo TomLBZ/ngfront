@@ -81,7 +81,7 @@ export class DropSelectComponent {
         this.showDropdown = this.fixDropdown || this.mouseOver;
     }
 
-    onSelectItem(index: number) {
+    onSelectItem(index: number, isEmitting: boolean = true) {
         if (this.multiSelect) {
             if (this.selectedIndices.includes(index)) {
                 this.selectedIndices = this.selectedIndices.filter((i: number) => i !== index);
@@ -95,7 +95,7 @@ export class DropSelectComponent {
             this.showDropdown = this.fixDropdown;
         }
         this.searchTerm = ''; // clear search after selection
-        this.selectionChanged.emit(this.selected);
+        if (isEmitting) this.selectionChanged.emit(this.selected);
     }
 
     isItemSelected(index: number) {
