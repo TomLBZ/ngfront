@@ -1,0 +1,24 @@
+<div #joystickBase class="joystick-base"
+    [style.width.px]="baseSize"
+    [style.height.px]="baseSize"
+    [style.background-color]="baseColor">
+    <div
+        #joystickKnob
+        [classList]="knobClasses"
+        [style.width.px]="knobSize"
+        [style.height.px]="knobSize"
+        [style.left.px]="knobX"
+        [style.top.px]="knobY"
+        [style.background-color]="knobColor"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+    >
+        {{knobText}}
+    </div>
+</div>
+
+<div class="joystick-values" [style.display]="showValues ? 'flex' : 'none'">
+    <p>x: {{ horizontalValue }}</p>
+    <p>y: {{ verticalValue }}</p>
+</div>
