@@ -4,6 +4,8 @@ import { Component, ViewChild } from "@angular/core";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
 import { MapViewComponent, Marker } from "../../../components/mapview/mapview";
+import { JoystickComponent } from "../../../components/joystick/joystick";
+
 import { env } from "../../app.config";
 import { CircleMarker } from "./marker";
 
@@ -13,7 +15,8 @@ import { CircleMarker } from "./marker";
     imports: [
         ObjEditorComponent, 
         DropSelectComponent,
-        MapViewComponent
+        MapViewComponent,
+        JoystickComponent
     ],
     templateUrl: "./playground.html",
     styleUrls: ["./playground.less"]
@@ -86,5 +89,9 @@ export class PlaygroundComponent {
         if (Array.isArray(obj)) {
             this.selIndicesL = obj;
         }
+    }
+
+    onJoystickChanged(obj: any) {
+        console.log(obj);
     }
 }

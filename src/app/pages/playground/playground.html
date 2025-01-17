@@ -43,8 +43,10 @@
         ></obj-editor>
     </div>
     <div class="flex c hthird border padding">
-        <span class="heading">Keyboard Control</span>
-        <div>
-        </div>
+        <span class="heading">Control</span>
+        <joystick
+            (valueChanged)="onJoystickChanged($event)"
+        ></joystick>
+        
     </div>
 </div>
