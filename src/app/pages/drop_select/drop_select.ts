@@ -25,8 +25,12 @@ export class DropSelectPage {
         return this.selIndex >= 0 ? this.objList[this.selIndex] : null;
     }
 
+    get selName() {
+        return this.selIndex >= 0 ? this.objList[this.selIndex].name : 'Null';
+    }
+
     onUpdate(obj: any) {
-        console.log(obj);
+        this.objList[this.selIndex] = obj;
     }
 
     onSelect(idx: number) {
