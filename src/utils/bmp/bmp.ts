@@ -1,4 +1,4 @@
-import { Vec2 } from "./vec2";
+import { Vec2 } from "../vec/vec2";
 import { SDF } from "./sdf";
 
 export { Vec2, SDF };
