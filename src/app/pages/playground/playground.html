@@ -1,4 +1,4 @@
-<div class="vhalf-child">
+<div class="flex vhalf border">
     <mapview
         [geoObjects]="markers"
         [apiKey]="apiKey"
@@ -10,40 +10,41 @@
         (objectClicked)="onObjectClicked($event)"
     ></mapview>
 </div>
-<div class="vhalf-child">
-    <div class="hhalf-child"> 
-        <div class="playground">
-            <dropselect
-                [items]="markers"
-                [title]="titleL"
-                [indexMode]="true"
-                [hoverMode]="true"
-                [multiSelect]="true"
-                [fixDropdown]="true"
-                [representation]="dropRepr"
-                (selectionChanged)="onSelectL($event)"
-            ></dropselect>
-        </div>
+<div class="flex r vhalf">
+    <div class="flex c hthird border padding"> 
+        <dropselect
+            [items]="markers"
+            [title]="titleL"
+            [indexMode]="true"
+            [hoverMode]="true"
+            [multiSelect]="true"
+            [fixDropdown]="true"
+            [representation]="dropRepr"
+            (selectionChanged)="onSelectL($event)"
+        ></dropselect>
     </div>
-    <div class="hhalf-child">
-        <div class="playground">
-            <dropselect
-                [items]="markers"
-                [title]="titleR"
-                [indexMode]="true"
-                [hoverMode]="true"
-                [multiSelect]="false"
-                [fixDropdown]="false"
-                [representation]="dropRepr"
-                (selectionChanged)="onSelectR($event)"
-            ></dropselect>
-            <obj-editor 
-                [objToEdit]="selObjR"
-                [objName]="objNameR"
-                [textMode]="textModeR" 
-                [includeFilter]="includeFilter"
-                (updated)="onUpdate($event)"
-            ></obj-editor>
+    <div class="flex c hthird border padding">
+        <dropselect
+            [items]="markers"
+            [title]="titleR"
+            [indexMode]="true"
+            [hoverMode]="true"
+            [multiSelect]="false"
+            [fixDropdown]="false"
+            [representation]="dropRepr"
+            (selectionChanged)="onSelectR($event)"
+        ></dropselect>
+        <obj-editor 
+            [objToEdit]="selObjR"
+            [objName]="objNameR"
+            [textMode]="textModeR" 
+            [includeFilter]="includeFilter"
+            (updated)="onUpdate($event)"
+        ></obj-editor>
+    </div>
+    <div class="flex c hthird border padding">
+        <span class="heading">Keyboard Control</span>
+        <div>
         </div>
     </div>
 </div>

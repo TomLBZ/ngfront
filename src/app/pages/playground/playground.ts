@@ -38,9 +38,16 @@ export class PlaygroundComponent {
     onLayerModeChanged(obj: any) {
         console.log(obj);
     }
-
+    @ViewChild(ObjEditorComponent) objEditor: ObjEditorComponent | undefined;
     onObjectClicked(obj: Marker) {
         console.log(obj);
+        const idx = this.markers.findIndex((marker) => marker === obj);
+        if (idx >= 0) {
+            this.selIndexR = idx;
+        }
+        if (this.objEditor) {
+            this.objEditor.objToEdit = obj;
+        }
     }
 
     // bottom pane
