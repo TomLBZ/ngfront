@@ -1,5 +1,6 @@
 <div
     class="slider-container"
+    [class.draggable]="isDraggable"
     [class.vertical]="isVertical"
     [style.width]="isVertical ? width : length"
     [style.height]="isVertical ? length : width"
@@ -10,7 +11,6 @@
     <div
         class="slider-track"
         [style.backgroundColor]="backColor"
-        [class.draggable]="isDraggable"
     >
         <div
             [classList]="isDragging ? 'slider-fill dragging' : 'slider-fill'"

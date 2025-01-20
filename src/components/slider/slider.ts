@@ -42,7 +42,9 @@ export class SliderComponent {
       return this.isReversed ? 1 - this.ratio : this.ratio;
     }
     get displayValue(): string {
-        return this.isPercentage ? Math.round(this.ratio * 100) + '%' : this.value.toString();
+        return this.isPercentage ? 
+            Math.round(this.ratio * 100) + '%' : 
+            this.value.toFixed(2).toString();
     }
   
     onPointerDown(event: PointerEvent): void {
