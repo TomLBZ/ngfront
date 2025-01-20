@@ -1,0 +1,42 @@
+<div
+    class="knob-container"
+    [style.width]="size"
+    [style.height]="size"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+>
+    <div class="knob-ring" 
+        [style.background]="conicGradient"
+        [class.draggable]="isDraggable"
+    >
+        <div class="knob-hole"
+            [style.background]="holeColor"
+            [style.top]="holeWidthPerc + '%'"
+            [style.left]="holeWidthPerc + '%'"
+            [style.right]="holeWidthPerc + '%'"
+            [style.bottom]="holeWidthPerc + '%'"
+        ></div>
+        @if (showNeedle) {
+            <div class="knob-needle"
+                [class.dragging]="isDragging"
+                [style.transform]="needleRotation"
+            ></div>
+        }
+        <div class="knob-hole"
+            [style.background]="holeColor"
+            [style.top]="holeWidthPerc + 10 + '%'"
+            [style.left]="holeWidthPerc + 10 + '%'"
+            [style.right]="holeWidthPerc + 10 + '%'"
+            [style.bottom]="holeWidthPerc + 10 + '%'"
+        ></div>
+        @if (showText) {
+            <div class="knob-text">{{ displayValue }}</div>
+        }
+    </div>
+    @if (showLabel) {
+        <div class="knob-labels">
+            <span class="knob-label-divider">{{ labelValue }}</span>
+        </div>
+    }
+</div>
