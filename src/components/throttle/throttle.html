@@ -1,6 +1,7 @@
 <div class="throttle-wrapper">
     @if (styleIsVertical || styleIsHorizontal) {
         <slider
+            [isEmphasized]="shiftActive"
             [isVertical]="styleIsVertical"
             [length]="'200px'"
             [isDraggable]="true"
@@ -13,6 +14,7 @@
     }
     @else if (styleIsKnob) {
         <knob
+            [isEmphasized]="shiftActive"
             [showLabel]="true"
             [showNeedle]="true"
             [showText]="true"
