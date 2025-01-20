@@ -7,7 +7,12 @@
     (pointermove)="onPointerMove($event)"
     (pointerup)="onPointerUp($event)"
 >
-    <div class="knob-ring" [style.background]="conicGradient">
+    <div class="knob-ring" 
+        [class.dragging]="isDragging"
+        [style.--fillColor]="fillColor"
+        [style.--backColor]="backColor"
+        [style.--degrees]="fillAngle + 'deg'"
+    >
         <div class="knob-hole"
             [style.background]="holeColor"
             [style.top]="holeWidthPerc + '%'"

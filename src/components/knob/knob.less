@@ -22,10 +22,19 @@
         height: 100%;
         position: relative;
         border-radius: 50%;
-        transition: background 0.3s ease; // Smooth transitions except while dragging
+        transition: --degrees 0.3s ease; // Smooth transitions except while dragging
         &.dragging {
           transition: none;
         }
+        @property --degrees {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+        background: conic-gradient(
+          var(--fillColor, #007bff) 0deg var(--degrees, 0deg),
+          var(--backColor, #ccc) var(--degrees, 0deg) 360deg
+        );
       
         .knob-hole {
           position: absolute;
@@ -42,7 +51,6 @@
           background: black;
           transform-origin: 50% 100%; /* bottom center is pivot */
           transition: transform 0.3s ease;
-        
           &.dragging {
             transition: none;
           }
