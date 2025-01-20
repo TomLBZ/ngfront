@@ -18,6 +18,7 @@ export class KnobComponent {
     @Input() showNeedle: boolean = true;
     @Input() showLabel: boolean = false;
     @Input() isPercentage: boolean = false;
+    @Input() isEmphasized: boolean = false;
     @Input() size: string = "100%";
     private _value: number = 0;
     get value(): number {

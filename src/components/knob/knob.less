@@ -7,6 +7,11 @@
     &.draggable {
         cursor: pointer;
     }
+
+    .emphasized {
+      border-color: #ff4081;
+      box-shadow: 0 0 8px rgba(255, 64, 129, 0.7);
+    }
   
     .knob-labels {
         position: absolute;
@@ -22,7 +27,8 @@
         height: 100%;
         position: relative;
         border-radius: 50%;
-        transition: --degrees 0.3s ease; // Smooth transitions except while dragging
+        transition: --degrees 0.3s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        ; // Smooth transitions except while dragging
         &.dragging {
           transition: none;
         }
