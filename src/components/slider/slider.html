@@ -11,6 +11,7 @@
     <div
         class="slider-track"
         [style.backgroundColor]="backColor"
+        [class.emphasized]="isEmphasized"
     >
         <div
             [classList]="isDragging ? 'slider-fill dragging' : 'slider-fill'"

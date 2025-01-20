@@ -19,6 +19,7 @@ export class SliderComponent {
     @Input() isReversed = false;
     @Input() length = '100%';
     @Input() width = '20px';
+    @Input() isEmphasized = false;
     private _value = 0;
     get value(): number {
         return this._value;
