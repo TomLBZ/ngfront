@@ -1,0 +1,34 @@
+<div class="throttle-wrapper">
+    @if (styleIsVertical || styleIsHorizontal) {
+        <slider
+            [isVertical]="styleIsVertical"
+            [length]="'200px'"
+            [isDraggable]="true"
+            [isPercentage]="false"
+            [showLabel]="true"
+            [showText]="true"
+            [value]="value"
+            (valueChanged)="onValueChanged($event)"
+        ></slider>
+    }
+    @else if (styleIsKnob) {
+        <knob
+            [showLabel]="true"
+            [showNeedle]="true"
+            [showText]="true"
+            [isDraggable]="true"
+            [isPercentage]="false"
+            [size]="'100px'"
+            [value]="value"
+            (valueChanged)="onValueChanged($event)"
+        ></knob>
+    }
+    @if (showText) {
+        <div class="text-container">
+            <p>Value: {{ value }}</p>
+            <p>Sensitivity: {{ sensitivity }}</p>
+            <p>Press "{{ upKey }}" or "{{ downKey }}" to change.</p>
+            <p>Hold Shift to adjust sensitivity instead of the value!</p>
+        </div>
+    }
+</div>  

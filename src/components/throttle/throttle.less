@@ -1,0 +1,106 @@
+.throttle-wrapper {
+    margin: 1rem;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 250px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.shift-active {
+    border-color: #ff4081;
+    box-shadow: 0 0 8px rgba(255, 64, 129, 0.7);
+}
+.slider-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    &.vertical {
+        flex-direction: column;
+        .slider-label.top {
+            margin-bottom: 0.25rem;
+        }
+        .slider-label.bottom {
+            margin-top: 0.25rem;
+        }
+    }
+    &.horizontal {
+        flex-direction: row;
+        .slider-label.left {
+            margin-right: 0.5rem;
+        }
+        .slider-label.right {
+            margin-left: 0.5rem;
+        }
+    }
+}
+.slider-label {
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+.throttle-slider {
+    position: relative;
+    background-color: #ddd;
+    border: 1px solid #bbb;
+    overflow: hidden; /* so the fill doesn't overflow the slider */
+    transition: background-color 0.3s;
+    &.vertical {
+        width: 30px;
+        height: 150px;
+        margin: 0.25rem 0;
+    }
+    &.horizontal {
+        width: 200px;
+        height: 20px;
+        margin: 0 0.25rem;
+    }
+}
+.throttle-fill {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    background-color: #007bff; /* blue fill */
+    transition: width 0.2s, height 0.2s, background-color 0.2s;
+  }
+.shift-active .throttle-fill {
+    background-color: #ff4081; /* pink highlight */
+}
+.sensitivity-slider {
+    position: relative;
+    background-color: #eee;
+    border: 1px solid #bbb;
+    overflow: hidden;
+    transition: background-color 0.3s;
+    &.vertical {
+        width: 10px;
+        height: 150px;
+        margin: 0.25rem 0 0.25rem 0.5rem; /* small margin to separate from main slider */
+    }
+    &.horizontal {
+        width: 50px;
+        height: 20px;
+        margin: 0 0.5rem;
+    }
+}
+.sensitivity-fill {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    background-color: #6c757d; /* a different fill color */
+    transition: width 0.2s, height 0.2s, background-color 0.2s;
+}
+.shift-active .sensitivity-fill {
+    background-color: #ff4081;
+}
+.throttle-knob {
+    width: 50px;
+    height: 50px;
+    background: #ddd;
+    border: 2px solid #bbb;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    transition: transform 0.2s;
+}
+p {
+    margin: 0.25rem 0;
+}
