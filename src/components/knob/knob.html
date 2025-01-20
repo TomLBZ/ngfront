@@ -2,14 +2,12 @@
     class="knob-container"
     [style.width]="size"
     [style.height]="size"
+    [class.draggable]="isDraggable"
     (pointerdown)="onPointerDown($event)"
     (pointermove)="onPointerMove($event)"
     (pointerup)="onPointerUp($event)"
 >
-    <div class="knob-ring" 
-        [style.background]="conicGradient"
-        [class.draggable]="isDraggable"
-    >
+    <div class="knob-ring" [style.background]="conicGradient">
         <div class="knob-hole"
             [style.background]="holeColor"
             [style.top]="holeWidthPerc + '%'"

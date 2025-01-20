@@ -3,6 +3,10 @@
     position: relative;
     box-sizing: border-box;
     user-select: none;
+    cursor: default;
+    &.draggable {
+        cursor: pointer;
+    }
   
     .knob-labels {
         position: absolute;
@@ -19,10 +23,6 @@
         position: relative;
         border-radius: 50%;
         transition: background 0.3s ease; // Smooth transitions except while dragging
-        cursor: default;
-        &.draggable {
-          cursor: pointer;
-        }
         &.dragging {
           transition: none;
         }
