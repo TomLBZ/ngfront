@@ -1,0 +1,40 @@
+<div
+    class="slider-container"
+    [class.vertical]="isVertical"
+    [style.width]="isVertical ? width : length"
+    [style.height]="isVertical ? length : width"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+>
+    <div
+        class="slider-track"
+        [style.backgroundColor]="backColor"
+        [class.draggable]="isDraggable"
+    >
+        <div
+            [classList]="isDragging ? 'slider-fill dragging' : 'slider-fill'"
+            [style.backgroundColor]="fillColor"
+            [style.width]="!isVertical ? fillRatio * 100 + '%' : '100%'"
+            [style.height]="isVertical ? fillRatio * 100 + '%' : '100%'"
+            [style.bottom]="isVertical && !isReversed? '0' : 'auto'"
+            [style.top]="isVertical && isReversed? '0' : 'auto'"
+        >
+        </div>
+    </div>
+
+    @if (showLabel) {
+        <div class="slider-label slider-label-min">
+            {{ minValue }}
+        </div>
+        <div class="slider-label slider-label-max">
+            {{ maxValue }}
+        </div>
+    }
+
+    @if (showText) {
+        <div class="slider-value">
+            {{ displayValue }}
+        </div>
+    }
+</div>
