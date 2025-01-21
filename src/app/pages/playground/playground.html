@@ -47,8 +47,6 @@
         <joystick
             (valueChanged)="onJoystickChanged($event)"
         ></joystick>
-        <throttle [value]="ctrlValue" (valueChanged)="onThrottleChanged($event)"></throttle>
         <throttle [style]="'h'" [value]="ctrlValue" (valueChanged)="onThrottleChanged($event)"></throttle>
-        <throttle [style]="'k'" [value]="ctrlValue" (valueChanged)="onThrottleChanged($event)"></throttle>
     </div>
 </div>
