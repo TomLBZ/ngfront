@@ -1,0 +1,29 @@
+<div class="flex grow border">
+    <mapview
+        [geoObjects]="markers"
+        [apiKey]="apiKey"
+        [zoom]="zoom"
+        [centerLat]="center[0]"
+        [centerLng]="center[1]"
+        [iconScale]="iconScale"
+        [mapStyles]="['topo-v2', 'satellite', 'bright-v2']"
+        [mapStyle]="'topo-v2'"
+        (layerModeChanged)="onLayerModeChanged($event)"
+        (objectClicked)="onObjectClicked($event)"
+        (mapClicked)="onMapClicked($event)"
+    ></mapview>    
+</div>
+<div class="flex vquart">
+    <div class="flex c hquart border padding">
+        <dropselect
+            [items]="modeList"
+            [defaultItem]="modeList[0]"
+            [title]="'Select Mode'"
+            [indexMode]="true"
+            [hoverMode]="true"
+            [multiSelect]="false"
+            [fixDropdown]="true"
+            (selectionChanged)="onModeChanged($event)"
+        ></dropselect>
+    </div>
+</div>
