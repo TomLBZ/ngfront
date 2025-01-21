@@ -13,6 +13,8 @@ export class ThrottleComponent {
     @Input() upKey: string = 'w';
     @Input() downKey: string = 's';
     @Input() showText: boolean = true;
+    @Input() showTitle: boolean = true;
+    @Input() title: string = 'Throttle';
     private _style: string = 'v';
     get style(): string {
         return this._style;

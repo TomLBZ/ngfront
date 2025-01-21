@@ -1,4 +1,7 @@
 <div class="throttle-wrapper">
+    @if (showTitle) {
+        <span class="heading">{{ title }}</span>
+    }
     @if (styleIsVertical || styleIsHorizontal) {
         <slider
             [isEmphasized]="shiftActive"
@@ -27,10 +30,10 @@
     }
     @if (showText) {
         <div class="text-container">
-            <p>Value: {{ value }}</p>
-            <p>Sensitivity: {{ sensitivity }}</p>
+            <p>Value: {{ value.toFixed(2) }}</p>
+            <p>Sensitivity: {{ sensitivity.toFixed(2) }}</p>
             <p>Press "{{ upKey }}" or "{{ downKey }}" to change.</p>
-            <p>Hold Shift to adjust sensitivity instead of the value!</p>
+            <p>Hold Shift to adjust sensitivity</p>
         </div>
     }
 </div>  
