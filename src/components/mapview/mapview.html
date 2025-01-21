@@ -4,6 +4,8 @@
     [center]="[centerLat, centerLng]"
     [fadeDuration]="fadeDuration"
     (mapLoad)="onMapLoad($event)"
+    (mapClick)="onMapClick($event)"
+    (mapMouseMove)="onMapMouseMove($event)"
 >
     @for (geoObj of geoObjects; track geoObj.id) {
         <mgl-image
@@ -60,6 +62,9 @@
         (layerClick)="onMarkerClick($event)"
         (layerMouseEnter)="onMarkerEnter($event)"
         (layerMouseLeave)="onMarkerLeave($event)"
+        (layerMouseDown)="onMarkerDown($event)"
+        (layerMouseMove)="onMarkerMove($event)"
+        (layerMouseUp)="onMarkerUp($event)"
     >
     </mgl-layer>
     @if (popupVisible) {
@@ -77,6 +82,7 @@
 <div class="floaty">
     <dropselect
         [items]="mapStyles"
+        [defaultItem]="mapStyle"
         [title]="'Select Layer Mode'"
         [indexMode]="false"
         [hoverMode]="true"

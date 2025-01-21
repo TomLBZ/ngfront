@@ -45,7 +45,8 @@ export class MapViewComponent {
     ];
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<Marker>();
-
+    @Output() objectMoved = new EventEmitter<any>();
+    @Output() mapClicked = new EventEmitter<MapLayerMouseEvent>();
     // mapstyle
     map!: Map;
     onMapLoad(map: Map) {
@@ -96,26 +97,28 @@ export class MapViewComponent {
     }
 
     // marker
-    onMarkerClick(event: MapLayerMouseEvent) {
+    private findObjFromEvent(event: MapLayerMouseEvent): Marker | undefined {
         const features = event.features;
         if (features && features.length > 0) {
             const idx = features[0].properties['id'];
             if (idx !== undefined) {
-                const obj = this.geoObjects.find(obj => obj.id === idx);
-                if (!obj) return;
-                this.objectClicked.emit(obj);
-                if (this.selectedMarkerId !== idx) this.selectedMarkerId = idx;
-                else this.selectedMarkerId = -1;
+                return this.geoObjects.find(obj => obj.id === idx);
             }
+        }
+        return undefined;
+    }
+    onMarkerClick(event: MapLayerMouseEvent) {
+        const obj = this.findObjFromEvent(event);
+        if (obj) {
+            this.objectClicked.emit(obj);
+            if (this.selectedMarkerId !== obj.id) this.selectedMarkerId = obj.id;
+            else this.selectedMarkerId = -1;
         }
     }
     onMarkerEnter(event: MapLayerMouseEvent) {
+        if (this.isDragging) return;
         event.target.getCanvas().style.cursor = 'pointer';
-        const features = event.features;
-        if (!features || features.length === 0) return;
-        const idx = features[0].properties['id'];
-        if (idx === undefined) return;
-        const obj = this.geoObjects.find(obj => obj.id === idx);
+        const obj = this.findObjFromEvent(event);
         if (!obj) return;
         const lat = obj.lat;
         const lon = obj.lon;
@@ -133,4 +136,32 @@ export class MapViewComponent {
     popupLonLat: [number, number] = [0, 0];
     popupVisible: boolean = false;
     popupText: string = 'Test';
+
+    // map events
+    onMapClick(event: MapLayerMouseEvent) {
+        this.mapClicked.emit(event);
+    }
+    onMapMouseMove(event: MapLayerMouseEvent) {
+        if (!this.isDragging) return; // handles marker dragging too
+        if (this.movingId === undefined) return;
+        const coords = event.lngLat;
+        this.objectMoved.emit({ id: this.movingId, lng: coords.lng, lat: coords.lat });
+    }
+    private isDragging: boolean = false;
+    private movingId: number | undefined = undefined;
+    onMarkerDown(event: MapLayerMouseEvent) {
+        event.preventDefault(); // prevent map drag
+        this.isDragging = true;
+    }
+    onMarkerMove(event: MapLayerMouseEvent) {
+        if (!this.isDragging) return;
+        if (this.movingId === undefined) this.movingId = this.findObjFromEvent(event)?.id;
+        this.onMapMouseMove(event);
+    }
+    onMarkerUp(event: MapLayerMouseEvent) {
+        if (!this.isDragging) return;
+        event.preventDefault(); // prevent map drag
+        this.isDragging = false;
+        this.movingId = undefined;
+    }
 }
