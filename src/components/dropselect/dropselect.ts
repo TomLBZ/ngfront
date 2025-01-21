@@ -7,7 +7,18 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
     styleUrls: ['./dropselect.less']
 })
 export class DropSelectComponent {
-    @Input() items: any[] = [];
+    private _items: any[] = [];
+    get items() {
+        return this._items;
+    }
+    @Input() set items(items: any[]) {
+        if (!items || items.length == 0) {
+            this._items = [];
+            this.selectedIndices = [];
+            return
+        }
+        this._items = items;
+    }
     private _defaultItem: any = null;
     get defaultItem() {
         return this._defaultItem;
