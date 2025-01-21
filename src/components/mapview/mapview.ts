@@ -47,6 +47,8 @@ export class MapViewComponent {
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<Marker>();
     @Output() objectMoved = new EventEmitter<any>();
+    @Output() objectMouseDown = new EventEmitter<any>();
+    @Output() objectMouseUp = new EventEmitter<any>();
     @Output() mapClicked = new EventEmitter<MapLayerMouseEvent>();
     // mapstyle
     map!: Map;
@@ -151,9 +153,11 @@ export class MapViewComponent {
     private isDragging: boolean = false;
     private movingId: number | undefined = undefined;
     onMarkerDown(event: MapLayerMouseEvent) {
-        if (!this.markerMovable) return;
-        event.preventDefault(); // prevent map drag
-        this.isDragging = true;
+        if (this.markerMovable) {
+            event.preventDefault(); // prevent map drag
+            this.isDragging = true;
+        }
+        this.objectMouseDown.emit(event);
     }
     onMarkerMove(event: MapLayerMouseEvent) {
         if (!this.isDragging) return;
@@ -161,9 +165,12 @@ export class MapViewComponent {
         this.onMapMouseMove(event);
     }
     onMarkerUp(event: MapLayerMouseEvent) {
-        if (!this.isDragging) return;
-        event.preventDefault(); // prevent map drag
-        this.isDragging = false;
-        this.movingId = undefined;
+        if (this.isDragging) {
+            event.preventDefault(); // prevent map drag
+            this.isDragging = false;
+            this.movingId = undefined;
+        }
+        this.popupVisible = false;
+        this.objectMouseUp.emit(event);
     }
 }
