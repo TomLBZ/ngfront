@@ -1,0 +1,7 @@
+<span class="heading">Control</span>
+<joystick
+    (valueChanged)="onJoystickChanged($event)"
+></joystick>
+<throttle [value]="value" (valueChanged)="onThrottleChanged($event)"></throttle>
+<throttle [style]="'h'" [value]="value" (valueChanged)="onThrottleChanged($event)"></throttle>
+<throttle [style]="'k'" [value]="value" (valueChanged)="onThrottleChanged($event)"></throttle>
