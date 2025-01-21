@@ -43,6 +43,7 @@ export class MapViewComponent {
         "bright-v2", "dataviz", "landscape", "ocean", "openstreetmap", 
         "outdoor-v2", "satellite", "streets-v2", "toner-v2", "topo-v2", "winter-v2"
     ];
+    @Input() markerMovable: boolean = false;
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<Marker>();
     @Output() objectMoved = new EventEmitter<any>();
@@ -150,6 +151,7 @@ export class MapViewComponent {
     private isDragging: boolean = false;
     private movingId: number | undefined = undefined;
     onMarkerDown(event: MapLayerMouseEvent) {
+        if (!this.markerMovable) return;
         event.preventDefault(); // prevent map drag
         this.isDragging = true;
     }
