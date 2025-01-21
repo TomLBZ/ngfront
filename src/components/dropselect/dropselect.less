@@ -58,13 +58,16 @@
     background: #fff;
     border: 1px solid #ccc;
     border-radius: 4px;
-    max-height: 200px;
+    max-height: 500%;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 1;
   
     li {
       padding: 6px 8px;
       cursor: pointer;
+      &.selected {
+        background: #eee;
+      }
       
       &:hover {
         background: #eee;

@@ -31,19 +31,20 @@
         <ul class="dropselect-dropdown">
             @for (item of filtered; track $index) {
                 @let i = getIndex(item);
+                @let isSelected = isItemSelected(i);
                 @if (multiSelect) {
-                    <li>
+                    <li [class.selected]="isSelected">
                         <label class="multi-select-item">
                             <input
                                 type="checkbox"
-                                [checked]="isItemSelected(i)"
+                                [checked]="isSelected"
                                 (change)="onSelectItem(i)"
                             />
                             {{ representation(item) }}
                         </label>
                     </li>
                 } @else {
-                    <li
+                    <li [class.selected]="isSelected"
                         (click)="onSelectItem(i)">
                         {{ representation(item) }}
                     </li>

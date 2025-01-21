@@ -8,6 +8,19 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
 })
 export class DropSelectComponent {
     @Input() items: any[] = [];
+    private _defaultItem: any = null;
+    get defaultItem() {
+        return this._defaultItem;
+    }
+    @Input() set defaultItem(item: any) {
+        this._defaultItem = item;
+        if (item) {
+            const index = this.items.indexOf(item);
+            if (index >= 0) {
+                this.selectedIndices = [index];
+            }
+        }
+    }
     @Input() representation: Function = (a: any) => a;
     @Input() indexMode: boolean = false;
     @Input() hoverMode: boolean = false;
