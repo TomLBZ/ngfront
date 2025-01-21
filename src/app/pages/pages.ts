@@ -13,7 +13,8 @@ export class PagesComponent {
     {label: 'Playground', path: 'playground'},
     {label: 'Object Editing', path: 'object-editing'},
     {label: 'Drop Select', path: 'drop-select'},
-    {label: 'Controls', path: 'controls'}
+    {label: 'Controls', path: 'controls'},
+    {label: 'Path Edit', path: 'path-edit'}
   ];
   private helpStrMultiline = `Help
   Multiline Help Item 1:
