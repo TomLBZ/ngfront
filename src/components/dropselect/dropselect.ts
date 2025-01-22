@@ -7,18 +7,7 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
     styleUrls: ['./dropselect.less']
 })
 export class DropSelectComponent {
-    private _items: any[] = [];
-    get items() {
-        return this._items;
-    }
-    @Input() set items(items: any[]) {
-        if (!items || items.length == 0) {
-            this._items = [];
-            this.selectedIndices = [];
-            return
-        }
-        this._items = items;
-    }
+    @Input() items: any[] = [];
     private _defaultItem: any = null;
     get defaultItem() {
         return this._defaultItem;
@@ -43,7 +32,14 @@ export class DropSelectComponent {
     searchTerm: string = "";
     showDropdown: boolean = this.fixDropdown;
     private mouseOver: boolean = false;
-    private selectedIndices: number[] = [];
+    private _selectedIndices: number[] = [];
+    private get selectedIndices() {
+        if (this.items.length == 0) return [];
+        return this._selectedIndices;
+    }
+    private set selectedIndices(indices: number[]) {
+        this._selectedIndices = indices;
+    }
 
     get selected() {
         if (this.multiSelect) {
