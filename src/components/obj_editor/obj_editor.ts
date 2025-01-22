@@ -48,14 +48,40 @@ export class ObjEditorComponent {
         this.textMode = !this.textMode;
     }
 
-    getObjStr(): string {
-        return JSON.stringify(this._objToEdit, null, 2);
+    private getObjKeys(obj: any): string[] {
+        const keys = Object.keys(obj);
+        const includedKeys = keys.filter(this.includeFilter);
+        return includedKeys;
+    }
+
+    getObjStr(obj?: any): string {
+        obj = obj === undefined ? this._objToEdit : obj;
+        const isArray = this.isArray(obj);
+        const isObject = this.isObject(obj, isArray);
+        if (!isArray && !isObject) {
+            return JSON.stringify(obj, null, 2);
+        }
+        if (isObject) {
+            const keys = this.getObjKeys(obj);
+            const partialObj: any = {};
+            for (const key of keys) {
+                partialObj[key] = obj[key];
+            }
+            return JSON.stringify(partialObj, null, 2);
+        }
+        const subStrs = [];
+        for (let i = 0; i < obj.length; i++) {
+            subStrs.push(this.getObjStr(obj[i]));
+        }
+        const jsonStr = subStrs.join(',\n');
+        return `[\n${jsonStr}\n]`;
     }
 
     onFieldChange(change: Change): void {
         let change_key = change.key;
         if (change_key.startsWith(this.objName)) {
-            change_key = change_key.slice(this.objName.length + 1);
+            change_key = change_key.slice(this.objName.length);
+            if (change_key.startsWith('.'))change_key = change_key.slice(1);
         }
         const segments = change_key.split('.');
         const tokens: Array<string | number> = [];
@@ -88,33 +114,45 @@ export class ObjEditorComponent {
     onTextChange(event: any): void {
         const value = event.target.value;
         if (typeof value === 'string') {
-            const obj = JSON.parse(value);
-            this.updateObj(this._objToEdit, obj);
+            let obj = {};
+            try {
+                obj = JSON.parse(value);
+            } catch (e) {
+                console.error("Invalid JSON string");
+                return;
+            }
+            this.updateObj(this._objToEdit, obj, this.objName);
         }
     }
-
+    private isArray(obj: any): boolean {
+        return Array.isArray(obj) || ArrayBuffer.isView(obj);
+    }
+    private isObject(obj: any, isArray: boolean = false): boolean {
+        return typeof obj === 'object' && !isArray;
+    }
     updateObj(originalobj: any, targetobj: any, key: string = "Object"): void {
         if (Object.keys(targetobj).length === 0) {
-            const oldValue = originalobj;
-            originalobj = targetobj;
-            if (key !== "") {
-                this.onFieldChange({ key, oldValue, newValue: targetobj });
-            }
+            this.onFieldChange({ key, oldValue: originalobj, newValue: targetobj });
         }
         else {
-            const isArray = Array.isArray(targetobj) || ArrayBuffer.isView(targetobj);
-            const isObject = typeof targetobj === 'object' && !isArray;
-            const local_keys = Object.keys(originalobj);
-            for (let i = 0; i < local_keys.length; i++) {
-                const local_key = local_keys[i];
-                if (targetobj[local_key] === undefined) {
-                    delete originalobj[local_key];
+            const isArray = this.isArray(targetobj);
+            const isObject = this.isObject(targetobj, isArray);
+            const targetKeys = Object.keys(targetobj);
+            for (let i = 0; i < targetKeys.length; i++) {
+                const targetKey = targetKeys[i];
+                const newKey = isArray ? `${key}[${targetKey}]` :
+                    isObject ? `${key}.${targetKey}` : key;
+                if (originalobj[targetKey] === undefined) {
+                    this.onFieldChange({ key: newKey, oldValue: undefined, newValue: targetobj[targetKey] });
                 }
-                else if (originalobj[local_key] !== targetobj[local_key]) {
-                    const newkey = isArray ? key + `[${local_key}]` : 
-                        isObject ? key + `.${local_key}` : key;
-                    this.updateObj(originalobj[local_key], targetobj[local_key], newkey);
+                else if (originalobj[targetKey] !== targetobj[targetKey]) {
+                    this.updateObj(originalobj[targetKey], targetobj[targetKey], newKey);
                 }
+            }
+            const originalKeys = this.getObjKeys(originalobj);
+            const removedKeys = originalKeys.filter((key) => !targetKeys.includes(key));
+            for (let i = 0; i < removedKeys.length; i++) {
+                delete originalobj[removedKeys[i]];
             }
         }
     }
