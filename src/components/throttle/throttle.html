@@ -1,4 +1,4 @@
-<div class="flex c dashed rounded center">
+<div class="flex c dashed rounded centeralign">
     @if (showTitle) {
         <span class="heading">{{ title }}</span>
     }
@@ -29,7 +29,7 @@
         ></knob>
     }
     @if (showText) {
-        <div class="flex c center">
+        <div class="flex c centeralign">
             <p class="tight">Value: {{ value.toFixed(2) }}</p>
             <p class="tight">Sensitivity: {{ sensitivity.toFixed(2) }}</p>
             <p class="tight">Press "{{ upKey }}" or "{{ downKey }}" to change.</p>
