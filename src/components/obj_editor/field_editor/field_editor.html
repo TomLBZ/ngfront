@@ -19,6 +19,8 @@
             [objToEdit]="objToEdit[$index]"
             [objName]="'[' + $index + ']'"
             [readOnly]="readOnly"
+            [expanded]="defaultExpanded"
+            [defaultExpanded]="defaultExpanded"
             (fieldChanged)="onArrayChanged($event)"
           ></field-editor>
         }
@@ -30,6 +32,8 @@
             [objName]="key"
             [readOnly]="readOnly"
             [includeFilter]="includeFilter"
+            [expanded]="defaultExpanded"
+            [defaultExpanded]="defaultExpanded"
             (fieldChanged)="onFieldChanged($event)"
           ></field-editor> 
         }

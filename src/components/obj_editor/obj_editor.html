@@ -6,6 +6,7 @@
             [expanded]="true"
             [includeFilter]="includeFilter"
             [readOnly]="readOnly"
+            [defaultExpanded]="defaultExpanded"
             (fieldChanged)="onFieldChange($event)"
         ></field-editor>
         @if (textMode && !readOnly) {

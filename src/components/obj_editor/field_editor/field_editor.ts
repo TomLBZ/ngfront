@@ -12,6 +12,7 @@ export class FieldEditorComponent {
   @Input() objToEdit: any = {};
   @Input() objName: string = '';
   @Input() expanded: boolean = false;
+  @Input() defaultExpanded: boolean = false;
   @Input() readOnly: boolean = false;
   @Input() includeFilter: (key: string) => boolean = () => true;
   @Output() fieldChanged = new EventEmitter<Change>();
