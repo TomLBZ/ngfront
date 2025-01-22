@@ -1,4 +1,4 @@
-<div class="throttle-wrapper">
+<div class="flex c dashed rounded center">
     @if (showTitle) {
         <span class="heading">{{ title }}</span>
     }
@@ -29,11 +29,11 @@
         ></knob>
     }
     @if (showText) {
-        <div class="text-container">
-            <p>Value: {{ value.toFixed(2) }}</p>
-            <p>Sensitivity: {{ sensitivity.toFixed(2) }}</p>
-            <p>Press "{{ upKey }}" or "{{ downKey }}" to change.</p>
-            <p>Hold Shift to adjust sensitivity</p>
+        <div class="flex c center">
+            <p class="tight">Value: {{ value.toFixed(2) }}</p>
+            <p class="tight">Sensitivity: {{ sensitivity.toFixed(2) }}</p>
+            <p class="tight">Press "{{ upKey }}" or "{{ downKey }}" to change.</p>
+            <p class="tight">Hold Shift to adjust sensitivity</p>
         </div>
     }
 </div>  

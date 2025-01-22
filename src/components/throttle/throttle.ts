@@ -3,11 +3,11 @@ import { SliderComponent } from '../slider/slider';
 import { KnobComponent } from '../knob/knob';
 
 @Component({
-  standalone: true,
-  selector: 'throttle',
-  imports: [SliderComponent, KnobComponent],
-  templateUrl: './throttle.html',
-  styleUrls: ['./throttle.less'],
+    standalone: true,
+    selector: 'throttle',
+    imports: [SliderComponent, KnobComponent],
+    templateUrl: './throttle.html',
+    styleUrls: ['./throttle.less']
 })
 export class ThrottleComponent {
     @Input() upKey: string = 'w';
