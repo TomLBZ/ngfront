@@ -15,12 +15,14 @@ export class SimpleMarker implements Marker {
     constructor(
         public lat: number, 
         public lon: number, 
-        id?: number
+        id?: number,
+        alt?: number,
     ) {
         if (SimpleMarker.instanceCount == 0) {
             SimpleMarker._iconData = SimpleMarker.getIconData(this.iconSize);
         }
         this.id = id === undefined ? SimpleMarker.instanceCount++ : id;
+        this.alt = alt === undefined ? 0 : alt;
         this.iconData = SimpleMarker._iconData;
     }
     get popupText() {
