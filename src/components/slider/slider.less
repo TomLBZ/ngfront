@@ -1,85 +1,46 @@
-.slider-container {
-    position: relative;
-    display: inline-block;
-    cursor: default;
-    user-select: none;
-    &.draggable {
-      cursor: pointer;
-    }
-}
-
-.emphasized {
-    border-color: #ff4081;
-    box-shadow: 0 0 8px rgba(255, 64, 129, 0.7);
-}
-
-.slider-track {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    border-radius: 4px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-  
-.slider-fill {
-    position: absolute;
-    left: 0;
-    top: 0;
-    transition: width 0.2s, height 0.2s;
-    &.dragging {
-        transition: none;
-    }
-}
-  
-.slider-value {
-    position: absolute;
-    text-align: center;
-    width: 100%;
-    top: 0;
-    left: 0;
-    line-height: 20px;
-    font-size: 0.8rem;
-    color: #333333;
-}
-  
-.slider-label {
-    position: absolute;
-    font-size: 0.75rem;
-    color: #333333;
-}
-  
-.slider-container.vertical {
-    .slider-label-min {
-        top: 0;
-        bottom: auto;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-    .slider-label-max {
-        top: auto;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-    .slider-value {
+.slider-text {
+    .min {
+        left: 0;
+        right: auto;
         top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-90deg);
-        transform-origin: center center;
-        line-height: normal;
+        bottom: auto;
+        transform: translateY(-50%);
     }
-}
-  
-.slider-label-min {
-    left: 0;
-    right: auto;
-    top: 50%;
-    transform: translate(50%, -50%);
-}
-.slider-label-max {
-    left: auto;
-    right: 0;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    .max {
+        left: auto;
+        right: 0;
+        top: 50%;
+        bottom: auto;
+        transform: translateY(-50%);
+    }
+    .value {
+        left: 50%;
+        right: auto;
+        top: 50%;
+        bottom: auto;
+        transform: translate(-50%, -50%);
+    }
+    &.vertical {
+        .min {
+            left: 50%;
+            right: auto;
+            top: auto;
+            bottom: 0;
+            transform: translateX(-50%);
+        }
+        .max {
+            left: 50%;
+            right: auto;
+            top: 0;
+            bottom: auto;
+            transform: translateX(-50%);
+        }
+        .value {
+            left: 50%;
+            right: auto;
+            top: 50%;
+            bottom: auto;
+            transform: translate(-50%, -50%) rotate(-90deg);
+        }
+    }
 }

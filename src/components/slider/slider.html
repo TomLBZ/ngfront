@@ -1,7 +1,7 @@
 <div
-    class="slider-container"
+    class="draghost relative"
     [class.draggable]="isDraggable"
-    [class.vertical]="isVertical"
+    [class.dragging]="isDragging"
     [style.width]="isVertical ? width : length"
     [style.height]="isVertical ? length : width"
     (pointerdown)="onPointerDown($event)"
@@ -9,33 +9,37 @@
     (pointerup)="onPointerUp($event)"
 >
     <div
-        class="slider-track"
-        [style.backgroundColor]="backColor"
+        class="overhidden relative full round emphhost emphasizable"
         [class.emphasized]="isEmphasized"
+        [style.backgroundColor]="backColor"
     >
-        <div
-            [classList]="isDragging ? 'slider-fill dragging' : 'slider-fill'"
+        <div class="absolute left top resizehost resizable"
+            [class.resizing]="isDragging"
             [style.backgroundColor]="fillColor"
-            [style.width]="!isVertical ? fillRatio * 100 + '%' : '100%'"
-            [style.height]="isVertical ? fillRatio * 100 + '%' : '100%'"
+            [style.width]="!isVertical ? ratio * 100 + '%' : '100%'"
+            [style.height]="isVertical ? ratio * 100 + '%' : '100%'"
             [style.bottom]="isVertical && !isReversed? '0' : 'auto'"
             [style.top]="isVertical && isReversed? '0' : 'auto'"
+            [style.left]="!isVertical && !isReversed? '0' : 'auto'"
+            [style.right]="!isVertical && isReversed? '0' : 'auto'"
         >
         </div>
     </div>
-
-    @if (showLabel) {
-        <div class="slider-label slider-label-min">
-            {{ minValue }}
-        </div>
-        <div class="slider-label slider-label-max">
-            {{ maxValue }}
-        </div>
-    }
-
-    @if (showText) {
-        <div class="slider-value">
-            {{ displayValue }}
-        </div>
-    }
+    <div class="absolute top left bottom right slider-text"
+        [class.vertical]="isVertical"
+    >
+        @if (showLabel) {
+            <div class="absolute small min">
+                {{ isReversed ? maxValue : minValue }}
+            </div>
+            <div class="absolute small max">
+                {{ isReversed ? minValue : maxValue }}
+            </div>
+        }
+        @if (showText) {
+            <div class="absolute small value">
+                {{ displayValue }}
+            </div>
+        }
+    </div>
 </div>

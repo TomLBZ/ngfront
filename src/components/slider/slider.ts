@@ -39,9 +39,6 @@ export class SliderComponent {
         if (isNaN(r)) return 0;
         return r < 0 ? 0 : r > 1 ? 1 : r;
     }
-    get fillRatio(): number {
-      return this.isReversed ? 1 - this.ratio : this.ratio;
-    }
     get displayValue(): string {
         return this.isPercentage ? 
             Math.round(this.ratio * 100) + '%' : 
