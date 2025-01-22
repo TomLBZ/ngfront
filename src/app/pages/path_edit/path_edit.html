@@ -8,22 +8,39 @@
         [iconScale]="iconScale"
         [mapStyles]="['topo-v2', 'satellite', 'bright-v2']"
         [mapStyle]="'topo-v2'"
+        [markerMovable]="!isAltPressed"
         (layerModeChanged)="onLayerModeChanged($event)"
-        (objectClicked)="onObjectClicked($event)"
+        (objectMouseUp)="onObjectMouseUp($event)"
         (mapClicked)="onMapClicked($event)"
+        (objectMoved)="onObjectMoved($event)"
     ></mapview>    
 </div>
-<div class="flex vquart">
-    <div class="flex c hquart border padding">
-        <dropselect
-            [items]="modeList"
-            [defaultItem]="modeList[0]"
-            [title]="'Select Mode'"
-            [indexMode]="true"
-            [hoverMode]="true"
-            [multiSelect]="false"
-            [fixDropdown]="true"
-            (selectionChanged)="onModeChanged($event)"
-        ></dropselect>
+<div class="flex c hquart">
+    <div class="flex c vhalf border padding">
+        <div class="heading">Edit Mission Path</div>
+        <div class="flex ends">
+            <span class="italic">Add Marker:</span>
+            <span>Alt + Left Click</span>
+        </div>
+        <div class="flex ends">
+            <span class="italic">Delete Marker:</span>
+            <span>Alt + Right Click</span>
+        </div>
+        <div class="flex ends">
+            <span class="italic">Change Coords:</span>
+            <span>Drag Marker / Edit Coords</span>
+        </div>
+        <div class="flex ends">
+            <span class="italic">Change Altitude:</span>
+            <span>Alt + Mouse Wheel</span>
+        </div>
+        <obj-editor
+            [objToEdit]="markers"
+            [objName]="'Waypoint Markers'"
+            [textMode]="false"
+            [includeFilter]="includeFilter"
+            [defaultExpanded]="true"
+            (updated)="onUpdate($event)"
+        ></obj-editor>
     </div>
 </div>

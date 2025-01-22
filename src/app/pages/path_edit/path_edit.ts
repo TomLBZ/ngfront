@@ -1,13 +1,13 @@
-import { Component, ViewChild } from "@angular/core";
+import { Component, HostListener, ViewChild } from "@angular/core";
 import { MapViewComponent, Marker } from "../../../components/mapview/mapview";
 import { env } from "../../app.config";
 import { SimpleMarker } from "./marker";
-import { DropSelectComponent } from "../../../components/dropselect/dropselect";
+import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 
 @Component({
     selector: "page-controls",
     standalone: true,
-    imports: [MapViewComponent, DropSelectComponent],
+    imports: [MapViewComponent, ObjEditorComponent],
     templateUrl: "./path_edit.html",
     styleUrls: ["./path_edit.less"]
 })
@@ -18,30 +18,61 @@ export class PathEditPage {
     zoom = 12;
     center = [103.822872, 1.364917];
     iconScale = 1.5;
-    modeList = ["none", "add", "edit", "delete"];
-    private mode = "none";
-    onModeChanged(i: number) {
-        this.mode = this.modeList[i];
+    includeFilter = (key: string) => {
+        if (key.startsWith("_")) return false;
+        if (key.startsWith("icon")) return false;
+        const excludedFields = ["id", "hdg"];
+        if (excludedFields.includes(key)) return false;
+        return true;
+    }
+    onUpdate(obj: any) {
+        console.log(obj);
     }
     @ViewChild(MapViewComponent) mapView!: MapViewComponent;
     onLayerModeChanged(obj: any) {
         console.log(obj);
     }
-    onObjectClicked(obj: Marker) {
-        if (this.mode === "edit") {
-            this.mapView.refresh(obj);
+    onObjectMouseUp(obj: any) {
+        const features = obj.features;
+        if (!features || features.length === 0) return;
+        const feature = features[0];
+        const id = feature.properties['id'];
+        const markerIndex = this.markers.findIndex((marker) => marker.id === id);
+        if (markerIndex < 0) return;
+        if (this.isAltPressed && obj.originalEvent.button === 2) {
+            this.markers = this.markers.splice(markerIndex, 1);
         }
-        else if (this.mode === "delete") {
-            const markerIndex = this.markers.findIndex((marker) => marker === obj);
-            this.markers.splice(markerIndex, 1);
+    }
+    onObjectMoved(obj: any) {
+        if (!this.isAltPressed) {
+            const m = new SimpleMarker(obj.lat, obj.lng, obj.id);
+            this.mapView.refresh(m);
         }
     }
     onMapClicked(obj: any) {
         const lnglat = obj.lngLat;
         if (!lnglat) return;
-        if (this.mode === "add") {
-            const newMarker = new SimpleMarker(lnglat.lat, lnglat.lng);
-            this.mapView.refresh(newMarker);
+        if (this.isAltPressed) {
+            const isLeftClick = obj.originalEvent.button === 0;
+            if (isLeftClick) { // add new marker
+                const newMarker = new SimpleMarker(lnglat.lat, lnglat.lng);
+                this.mapView.refresh(newMarker);
+                this.mapView.selectedMarkerId = newMarker.id;
+                this.markers = [...this.markers];
+            }
+        }
+    }
+    isAltPressed = false;
+    @HostListener("window:keydown", ["$event"])
+    onKeydown(event: KeyboardEvent) {
+        if (event.key === "Alt") {
+            this.isAltPressed = true;
+        }
+    }
+    @HostListener("window:keyup", ["$event"])
+    onKeyup(event: KeyboardEvent) {
+        if (event.key === "Alt") {
+            this.isAltPressed = false;
         }
     }
 }
