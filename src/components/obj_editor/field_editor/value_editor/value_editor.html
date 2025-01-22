@@ -1,10 +1,10 @@
-<div class="value-editor">
-    <div class="value-editor-label">
+<div class="flex row centeralign">
+    <div class="wmin50px italic">
         {{ itemName ? itemName : '\<Value\>' }}
     </div>
-    <div class="value-editor-input">
+    <div>
         @if (readOnly) {
-            <div class="value-editor-readonly">
+            <div>
                 {{ getStringRepresentation() }}
             </div>
         }
