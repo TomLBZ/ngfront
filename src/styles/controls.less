@@ -1,0 +1,46 @@
+button {
+    border: 1px solid #abc;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #567;
+    color: white;
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+button:hover:disabled {
+    cursor: not-allowed;
+}
+
+input {
+    outline: none;
+    border: 1px solid #abc;
+    border-radius: 5px;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+input[type="checkbox"] {
+    cursor: pointer;
+    transform: scale(1.2);
+}
+input[type="text"],
+input[type="number"],
+input[type="date"] {
+    min-width: 50px;
+}
+
+input:hover {
+    border-color: #567;
+}
+
+input:active,
+input:focus {
+    background-color: #def;
+}
+
+input:disabled {
+    background-color: #eee;
+    cursor: not-allowed;
+}

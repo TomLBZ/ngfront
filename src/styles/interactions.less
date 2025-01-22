@@ -1,0 +1,42 @@
+.draghost {
+    cursor: move;
+    user-select: none;
+    cursor: default;
+    &.draggable {
+        cursor: grab;
+        &.dragging {
+            cursor: grabbing;
+        }
+    }
+}
+
+.emphhost {
+    &.emphasizable {
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        &.emphasized {
+            border-color: #ff4081;
+            box-shadow: 0 0 8px rgba(255, 64, 129, 0.7);
+        }
+    }
+}
+
+.resizehost {
+    &.resizable {
+        transition: width 0.2s ease, height 0.2s ease;
+        &.resizing {
+            transition: none;
+        }
+    }
+}
+
+.noresize {
+    resize: none;
+}
+
+.noselect {
+    user-select: none;
+}
+
+.pointer {
+    cursor: pointer;
+}
