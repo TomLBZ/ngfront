@@ -1,8 +1,8 @@
 @let isArray = isArrayType(objToEdit);
 @let isObject = isObjectType(objToEdit);
 @if (isArray || isObject) {
-  <div class="flex centeralign">
-    <div class="wmin50px bold marginright">
+  <div class="flex centeralign justends">
+    <div class="bold marginright nowrap overhidden">
       {{ objName }}
     </div>
     <button (click)="toggleSelfExpand()">
