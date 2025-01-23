@@ -1,24 +1,28 @@
 @if (objToEdit) {
-    <div class="object-editor">
-        <field-editor 
-            [objToEdit]="objToEdit"
-            [objName]="objName"
-            [expanded]="true"
-            [includeFilter]="includeFilter"
-            [readOnly]="readOnly"
-            [defaultExpanded]="defaultExpanded"
-            (fieldChanged)="onFieldChange($event)"
-        ></field-editor>
+    <div class="flex grow zeromin">
+        <div class="flex grow overscrolly single">
+            <field-editor class="zeromin"
+                [objToEdit]="objToEdit"
+                [objName]="objName"
+                [expanded]="true"
+                [includeFilter]="includeFilter"
+                [readOnly]="readOnly"
+                [defaultExpanded]="defaultExpanded"
+                (fieldChanged)="onFieldChange($event)"
+            ></field-editor>
+        </div>
         @if (textMode && !readOnly) {
-            <textarea class="textbox"
-                [value]="getObjStr()"
-                (input)="onTextChange($event)"
-            ></textarea>
+            <div class="flex grow hhalf">
+                <textarea class="flex grow padding noresize"
+                    [value]="getObjStr()"
+                    (input)="onTextChange($event)"
+                ></textarea>
+            </div>
         }
     </div>
     @if (!readOnly) {
-        <div class="controls">
-            <Label>
+        <div class="flex centeralign justaround padding">
+            <Label class="noselect pointer">
                 <input 
                     type="checkbox"
                     [checked]="textMode"
@@ -26,11 +30,11 @@
                 >
                 Toggle Text
             </Label>
-            <button (click)="reset()">Reset</button>
-            <button (click)="apply()">Apply</button>
+            <button class="wmin50px padding" (click)="reset()">Reset</button>
+            <button class="wmin50px padding" (click)="apply()">Apply</button>
         </div>    
     }
 }
 @else {
-    <div class="placeholder">No Object Selected</div>
+    <div class="flex grow justcenter centeralign huge lighttext">No Object</div>
 }
