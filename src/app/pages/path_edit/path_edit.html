@@ -27,14 +27,18 @@
             <span>Alt + Right Click</span>
         </div>
         <div class="flex ends">
-            <span class="italic">Change Coords:</span>
-            <span>Drag Marker / Edit Coords</span>
+            <span class="italic">Move Marker:</span>
+            <span>Left Drag</span>
         </div>
         <div class="flex ends">
-            <span class="italic">Change Altitude:</span>
+            <span class="italic">Change Alt:</span>
             <span>Alt + Mouse Wheel</span>
         </div>
-        <obj-editor
+        <div class="flex ends">
+            <span class="italic">Precise Edit:</span>
+            <span>Edit below</span>
+        </div>
+        <obj-editor class="flex c grow"
             [objToEdit]="markers"
             [objName]="'Waypoint Markers'"
             [textMode]="false"
