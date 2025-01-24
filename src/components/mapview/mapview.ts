@@ -44,6 +44,9 @@ export class MapViewComponent {
         "outdoor-v2", "satellite", "streets-v2", "toner-v2", "topo-v2", "winter-v2"
     ];
     @Input() markerMovable: boolean = false;
+    @Input() showLines: boolean = false;
+    @Input() showSymbols: boolean = false;
+    @Input() labelFunc: Function = (obj: Marker) => "";
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<Marker>();
     @Output() objectMoved = new EventEmitter<any>();
@@ -71,6 +74,29 @@ export class MapViewComponent {
         }
         return this._initialMapStyle;
     }
+    get linePairs() {
+        const coords = this.geoObjects.map(obj => [obj.lon, obj.lat]);
+        const pairs = [];
+        for (let i = 0; i < coords.length - 1; i++) {
+            pairs.push([coords[i], coords[i + 1]]);
+        }
+        return pairs;
+    }
+    pairTracker(pair: Array<Array<number>>) {
+        const tracker1 = pair[0][0].toString() + pair[0][1].toString();
+        const tracker2 = pair[1][0].toString() + pair[1][1].toString();
+        return tracker1 + tracker2;
+    }
+    get labelPoints() {
+        return this.geoObjects.map(obj => ({
+            lon: obj.lon,
+            lat: obj.lat,
+            text: this.labelFunc(obj)
+        }));
+    }
+    labelTracker(labelPoint: any) {
+        return labelPoint.lon.toString() + labelPoint.lat.toString() + labelPoint.text;
+    }
     getMapStyle() {
         const keys = Object.keys(this._cachedStyles);
         if (keys.length == 0 || !keys.includes(this.mapStyle)) {
@@ -83,7 +109,6 @@ export class MapViewComponent {
         if (idx >= 0) this.geoObjects[idx] = m;
         else this.geoObjects.push(m);
     }
-
     // dropselect
     selectedMarkerId: number = -1;
     onSelectT(obj: any) {

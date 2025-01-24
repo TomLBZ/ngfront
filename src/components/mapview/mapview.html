@@ -7,6 +7,28 @@
     (mapClick)="onMapClick($event)"
     (mapMouseMove)="onMapMouseMove($event)"
 >
+    @if (showLines) {
+        <mgl-geojson-source id="segments">
+            @for (pair of linePairs; track pairTracker(pair)) {
+                <mgl-feature
+                    [geometry]="{
+                        type: 'LineString',
+                        coordinates: pair
+                    }"
+                ></mgl-feature>
+            }
+        </mgl-geojson-source>
+        <mgl-layer
+            id="lines"
+            type="line"
+            source="segments"
+            [layout]="{}"
+            [paint]="{
+                'line-color': 'rgba(255, 0, 0, 1)',
+                'line-width': 2,
+            }"
+        ></mgl-layer>
+    }
     @for (geoObj of geoObjects; track geoObj.id) {
         <mgl-image
             [id]="geoObj.id.toString()"
@@ -29,7 +51,8 @@
                     icon: geoObj.id.toString(),
                     iconSize: geoObj.iconSize,
                     iconRadius: geoObj.iconSize * 0.5,
-                    heading: geoObj.hdg
+                    heading: geoObj.hdg,
+                    label: labelFunc(geoObj),
                 }"
             ></mgl-feature>
         }
@@ -57,15 +80,8 @@
             'icon-image': ['get', 'icon'],
             'icon-size': iconScale,
             'icon-rotate': ['get', 'heading'],
-            'symbol-sort-key': ['get', 'id'],
-            'text-field': ['get', 'id'],
-            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-            'text-size': 12,
-        }"
-        [paint]="{
-            'text-color': 'rgba(255, 255, 127, 1)',
-            'text-halo-color': 'rgba(0, 0, 255, 0.5)',
-            'text-halo-width': 1,
+            'icon-allow-overlap': true,
+            'icon-ignore-placement': true,
         }"
         (layerClick)="onMarkerClick($event)"
         (layerMouseEnter)="onMarkerEnter($event)"
@@ -75,15 +91,45 @@
         (layerMouseUp)="onMarkerUp($event)"
     >
     </mgl-layer>
+    @if (showSymbols) {
+        <mgl-geojson-source id="labels">
+            @for (label of labelPoints; track labelTracker(label)) {
+                <mgl-feature
+                    [geometry]="{
+                        type: 'Point',
+                        coordinates: [label.lon, label.lat]
+                    }"
+                    [properties]="{
+                        label: label.text
+                    }"
+                ></mgl-feature>
+            }
+        </mgl-geojson-source>
+        <mgl-layer
+            id="symbols"
+            type="symbol"
+            source="labels"
+            [layout]="{
+                'text-field': ['get', 'label'],
+                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                'text-size': 12,
+                'text-allow-overlap': true,
+            }"
+            [paint]="{
+                'text-color': 'rgba(255, 255, 127, 1)',
+                'text-halo-color': 'rgba(0, 0, 255, 0.8)',
+                'text-halo-width': 1,
+            }"
+        >
+        </mgl-layer>
+    }
     @if (popupVisible) {
         <mgl-popup
             [lngLat]="popupLonLat"
             [closeOnClick]="false"
             [closeButton]="false"
         >
-            <div class="popup">
-                {{popupText}}
-            </div>
+            <div class="popup">{{popupText}}</div>
         </mgl-popup>
     }
 </mgl-map>
