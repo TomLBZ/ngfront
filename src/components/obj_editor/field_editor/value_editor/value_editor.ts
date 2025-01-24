@@ -45,14 +45,12 @@ export class ValueEditorComponent {
 
     isDateType(value: any): boolean {
         if (value instanceof Date) return true;
-        if (typeof value === "string") return !isNaN(Date.parse(value));
+        if (typeof value === "string") return this.parseDate(value) !== null;
         return false;
     }
 
     parseDate(value: string): Date | null {
         if (!value) return null;
-        const timestamp = Date.parse(value);
-        if (!isNaN(timestamp)) return new Date(timestamp);
         const dateStringRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
         if (dateStringRegex.test(value)) return new Date(value);
         return null;
