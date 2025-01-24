@@ -4,8 +4,7 @@ import { Component, ViewChild } from "@angular/core";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
 import { MapViewComponent, Marker } from "../../../components/mapview/mapview";
-import { JoystickComponent } from "../../../components/joystick/joystick";
-import { ThrottleComponent } from "../../../components/throttle/throttle";
+import { OutboxComponent } from "../../../components/outbox/outbox";
 // other custom imports
 import { env } from "../../app.config";
 import { CircleMarker } from "./marker";
@@ -17,8 +16,7 @@ import { CircleMarker } from "./marker";
         ObjEditorComponent, 
         DropSelectComponent,
         MapViewComponent,
-        JoystickComponent,
-        ThrottleComponent
+        OutboxComponent
     ],
     templateUrl: "./playground.html",
     styleUrls: ["./playground.less"]
@@ -35,7 +33,6 @@ export class PlaygroundComponent {
     zoom = 12;
     center = [103.822872, 1.364917];
     iconScale = 1.5;
-    ctrlValue: number = 0.0;
     includeFilter = (key: string) => {
         const excludedFields = ["icon", "iconData"];
         return !excludedFields.includes(key);
@@ -92,13 +89,5 @@ export class PlaygroundComponent {
         if (Array.isArray(obj)) {
             this.selIndicesL = obj;
         }
-    }
-
-    onJoystickChanged(obj: any) {
-        console.log(obj);
-    }
-    onThrottleChanged(obj: any) {
-        this.ctrlValue = obj as number;
-        console.log(obj);
     }
 }

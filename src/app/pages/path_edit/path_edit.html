@@ -18,29 +18,29 @@
 <div class="flex c hquart">
     <div class="flex c vhalf double padding">
         <div class="heading">Edit Mission Path</div>
-        <div class="flex ends">
-            <span class="italic">Add Marker:</span>
+        <div class="flex justends">
+            <span class="italic">Add:</span>
             <span>Alt + Left Click</span>
         </div>
-        <div class="flex ends">
-            <span class="italic">Delete Marker:</span>
+        <div class="flex justends">
+            <span class="italic">Delete:</span>
             <span>Alt + Right Click</span>
         </div>
-        <div class="flex ends">
-            <span class="italic">Move Marker:</span>
+        <div class="flex justends">
+            <span class="italic">Move:</span>
             <span>Left Drag</span>
         </div>
-        <div class="flex ends">
+        <div class="flex justends">
             <span class="italic">Change Alt:</span>
             <span>Alt + Mouse Wheel</span>
         </div>
-        <div class="flex ends">
+        <div class="flex justends">
             <span class="italic">Precise Edit:</span>
             <span>Edit below</span>
         </div>
         <obj-editor class="flex c grow"
             [objToEdit]="markers"
-            [objName]="'Waypoint Markers'"
+            [objName]="'Waypoints'"
             [textMode]="false"
             [includeFilter]="includeFilter"
             [defaultExpanded]="true"

@@ -43,10 +43,8 @@
         ></obj-editor>
     </div>
     <div class="flex c hthird border padding">
-        <span class="heading">Control</span>
-        <joystick
-            (valueChanged)="onJoystickChanged($event)"
-        ></joystick>
-        <throttle [style]="'h'" [value]="ctrlValue" (valueChanged)="onThrottleChanged($event)"></throttle>
+        <outbox
+            [text]="'123'"
+        ></outbox>
     </div>
 </div>
