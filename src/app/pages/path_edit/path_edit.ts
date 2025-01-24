@@ -25,10 +25,12 @@ export class PathEditPage {
         if (excludedFields.includes(key)) return false;
         return true;
     }
+    labelFunc = (obj: Marker) => this.markers.indexOf(obj).toString();
+
     @ViewChild(MapViewComponent) mapView!: MapViewComponent;
     @ViewChild(ObjEditorComponent) objEditor!: ObjEditorComponent;
     onUpdate(obj: any) {
-        console.log(obj);
+        this.markers = obj as Array<Marker>;
     }
     onLayerModeChanged(obj: any) {
         console.log(obj);
@@ -42,14 +44,14 @@ export class PathEditPage {
         if (markerIndex < 0) return;
         if (this.isAltPressed && obj.originalEvent.button === 2) {
             this.markers.splice(markerIndex, 1);
-            this.objEditor.objToEdit = this.markers;
+            this.objEditor.objToEdit = this.markers; // refresh editor
         }
     }
     onObjectMoved(obj: any) {
         if (!this.isAltPressed) {
             const m = new SimpleMarker(obj.lat, obj.lng, obj.id);
             this.mapView.refresh(m);
-            this.objEditor.objToEdit = this.markers;
+            this.objEditor.objToEdit = this.markers; // refresh editor
         }
     }
     onMapClicked(obj: any) {
