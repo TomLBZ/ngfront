@@ -5,7 +5,7 @@
     <div class="flex grow">
         @if (readOnly) {
             <div>
-                {{ getStringRepresentation() }}
+                {{ itemStr }}
             </div>
         }
         @else {
@@ -16,7 +16,8 @@
             @else {
                 <input class="full wmin50px"
                     type="{{type}}"
-                    [value]="itemToEdit"
+                    step="any"
+                    [value]="itemStr"
                     (input)="onItemChange($event)"
                 />
             }

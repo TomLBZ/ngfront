@@ -26,7 +26,7 @@ export class ValueEditorComponent {
         return "unsupported";
     }
 
-    getStringRepresentation(): string {
+    get itemStr(): string {
         if (this.isDateType(this.itemToEdit)) return this.formatDateForInput(this.itemToEdit);
         return this.itemToEdit.toString();
     }
