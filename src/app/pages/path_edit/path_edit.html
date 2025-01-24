@@ -16,6 +16,7 @@
         (objectMouseUp)="onObjectMouseUp($event)"
         (mapClicked)="onMapClicked($event)"
         (objectMoved)="onObjectMoved($event)"
+        (objectClicked)="onObjectClicked($event)"
     ></mapview>    
 </div>
 <div class="flex c hquart">
@@ -39,9 +40,9 @@
         </div>
         <div class="flex justends">
             <span class="italic">Precise Edit:</span>
-            <span>Edit below</span>
+            <span>Edit below & Apply</span>
         </div>
-        <obj-editor class="flex c grow"
+        <obj-editor class="flex c grow paddingtop"
             [objToEdit]="markers"
             [objName]="'Waypoints'"
             [textMode]="false"
@@ -49,5 +50,50 @@
             [defaultExpanded]="true"
             (updated)="onUpdate($event)"
         ></obj-editor>
+    </div>
+    <div class="flex c vhalf double padding">
+        <div class="heading">Mission Metadata</div>
+        <div class="round dashed padding">
+            <field-editor
+                [objToEdit]="missionParams.id"
+                [objName]="'ID'"
+                (fieldChanged)="onMissionUpdate($event)"
+            ></field-editor>
+            <field-editor
+                [objToEdit]="missionParams.name"
+                [objName]="'Name'"
+                (fieldChanged)="onMissionUpdate($event)"
+            ></field-editor>
+            <field-editor
+                [objToEdit]="missionParams.description"
+                [objName]="'Description'"
+                (fieldChanged)="onMissionUpdate($event)"
+            ></field-editor>
+            <field-editor
+                [objToEdit]="missionParams.saved_at"
+                [objName]="'Saved At'"
+                (fieldChanged)="onMissionUpdate($event)"
+            ></field-editor>
+        </div>
+        <div class="round dashed padding">
+            <dropselect class="paddingbottom"
+                [items]="configs"
+                [title]="'Leader Plane'"
+                [indexMode]="true"
+                [hoverMode]="true"
+                [fixDropdown]="false"
+                [representation]="cfgRepr"
+                (selectionChanged)="onLeaderSelect($event)"
+            ></dropselect>
+            <dropselect class="paddingbottom"
+                [items]="followerPlanes"
+                [title]="'Follower Planes'"
+                [indexMode]="true"
+                [hoverMode]="true"
+                [multiSelect]="true"
+                [representation]="cfgRepr"
+                (selectionChanged)="onFollowerSelect($event)"
+            ></dropselect>
+        </div>
     </div>
 </div>
