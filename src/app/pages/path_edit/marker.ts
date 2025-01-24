@@ -26,7 +26,7 @@ export class SimpleMarker implements Marker {
         this.iconData = SimpleMarker._iconData;
     }
     get popupText() {
-        return `${this.name}:\nLng: ${this.lon.toFixed(4)}, Lat: ${this.lat.toFixed(4)}\nAlt: ${this.alt.toFixed(2)}m, Hdg: ${this.hdg.toFixed(2)}deg`;
+        return `${this.name}:\nLng: ${this.lon.toFixed(4)}, Lat: ${this.lat.toFixed(4)}\nAlt: ${this.alt.toFixed(2)}m`;
     }
     get trackTarget() {
         const primes = [2, 3, 5, 7];
