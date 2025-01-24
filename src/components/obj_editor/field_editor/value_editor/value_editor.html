@@ -1,26 +1,22 @@
 <div class="flex centeralign justends">
-    <div class="flex italic paddingright">
+    <span class="italic paddingright">
         {{ itemName ? itemName : '\<Value\>' }}
-    </div>
-    <div class="flex grow">
-        @if (readOnly) {
-            <div>
-                {{ itemStr }}
-            </div>
+    </span>
+    @if (readOnly) {
+        <span>{{itemStr}}</span>
+    }
+    @else {
+        @let type = getInputType();
+        @if (type === "unsupported") {
+            <span>Unsupported item type</span>
         }
         @else {
-            @let type = getInputType();
-            @if (type === "unsupported") {
-                Unsupported item type
-            }
-            @else {
-                <input class="full wmin50px"
-                    type="{{type}}"
-                    step="any"
-                    [value]="itemStr"
-                    (input)="onItemChange($event)"
-                />
-            }
+            <input class="wmin50px"
+                type="{{type}}"
+                step="any"
+                [value]="itemStr"
+                (input)="onItemChange($event)"
+            />
         }
-    </div>
+    }
 </div>
