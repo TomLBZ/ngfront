@@ -1,9 +1,22 @@
-<div class="full overscroll relative">
-    @if(data.length > 0) {
+@if(data.length > 0) {
+    <div class="flex justaround">
+        <dropselect class="flex r grow"
+        [items]="columns"
+        title="Filter Fields"
+        [indexMode]="true"
+        [hoverMode]="true"
+        [multiSelect]="true"
+        [fixDropdown]="false"
+        [representation]="getTitleCase"
+        (selectionChanged)="onSelectionChanged($event)">
+      </dropselect>
+      <button (click)="exportToCSV()">Export</button>
+    </div>
+    <div class="flex grow overscroll relative">
         <table class="absolute top left right bottom">
             <thead>
                 <tr>
-                @for(col of columns; track $index) {
+                @for(col of selectedColumns; track $index) {
                     <th>{{ getTitleCase(col) }}</th>
                 }
                 </tr>
@@ -11,15 +24,15 @@
             <tbody>
                 @for(row of data; track $index) {
                 <tr>
-                    @for(col of columns; track $index) {
+                    @for(col of selectedColumns; track $index) {
                     <td>{{ row[col] }}</td>
                     }
                 </tr>
                 }
             </tbody>
         </table>
-    }
-    @else {
-        <p>No data available.</p>
-    }    
-</div>
+    </div>    
+}
+@else {
+    <p>No data available.</p>
+}        
