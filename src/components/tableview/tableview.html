@@ -1,0 +1,25 @@
+<div class="full overscroll">
+    @if(data.length > 0) {
+        <table class="full">
+            <thead>
+                <tr>
+                @for(col of columns; track $index) {
+                    <th>{{ getTitleCase(col) }}</th>
+                }
+                </tr>
+            </thead>
+            <tbody>
+                @for(row of data; track $index) {
+                <tr>
+                    @for(col of columns; track $index) {
+                    <td>{{ row[col] }}</td>
+                    }
+                </tr>
+                }
+            </tbody>
+        </table>
+    }
+    @else {
+        <p>No data available.</p>
+    }    
+</div>
