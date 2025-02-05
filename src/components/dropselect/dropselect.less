@@ -21,13 +21,8 @@
       width: 100%;
       box-sizing: border-box;
       padding: 6px 28px 6px 8px;
-      border: 1px solid #ccc;
       border-radius: 4px;
-      
-      &:focus {
-        outline: none;
-        border-color: #888;
-      }
+      text-overflow: ellipsis;
     }
   
     .clear-btn {
@@ -62,12 +57,13 @@
     li {
       padding: 6px 8px;
       cursor: pointer;
+      transition: background 0.2s ease;
       &.selected {
-        background: #eee;
+        background: #def;
       }
       
       &:hover {
-        background: #eee;
+        background: #def;
       }
   
       .multi-select-item {
