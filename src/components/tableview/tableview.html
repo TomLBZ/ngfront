@@ -1,18 +1,18 @@
 @if(data.length > 0) {
-    <div class="flex justaround">
-        <dropselect class="flex r grow"
-        [items]="columns"
-        title="Filter Fields"
-        [indexMode]="true"
-        [hoverMode]="true"
-        [multiSelect]="true"
-        [fixDropdown]="false"
-        [representation]="getTitleCase"
-        (selectionChanged)="onSelectionChanged($event)">
+    <div class="flex justaround single">
+        <dropselect class="flex r justends h3quarts"
+            [items]="columns"
+            title="Filter Fields To Export"
+            [indexMode]="true"
+            [hoverMode]="true"
+            [multiSelect]="true"
+            [fixDropdown]="false"
+            [representation]="getTitleCase"
+            (selectionChanged)="onSelectionChanged($event)">
       </dropselect>
-      <button (click)="exportToCSV()">Export</button>
+      <button class="wmin80px" (click)="exportToCSV()">Export</button>
     </div>
-    <div class="flex grow overscroll relative">
+    <div class="flex grow overscroll relative dashed">
         <table class="absolute top left right bottom">
             <thead>
                 <tr>
