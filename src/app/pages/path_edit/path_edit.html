@@ -76,7 +76,7 @@
             ></field-editor>
         </div>
         <div class="round dashed padding">
-            <dropselect class="paddingbottom"
+            <dropselect class="paddingbottom flex c justcenter"
                 [items]="configs"
                 [title]="'Leader Plane'"
                 [indexMode]="true"
@@ -85,7 +85,7 @@
                 [representation]="cfgRepr"
                 (selectionChanged)="onLeaderSelect($event)"
             ></dropselect>
-            <dropselect class="paddingbottom"
+            <dropselect class="paddingbottom flex c justcenter"
                 [items]="followerPlanes"
                 [title]="'Follower Planes'"
                 [indexMode]="true"
