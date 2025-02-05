@@ -44,3 +44,32 @@ input:disabled {
     background-color: #eee;
     cursor: not-allowed;
 }
+
+table {
+    border-collapse: collapse;
+    tr {
+        transition: background-color 0.2s ease;
+    }
+  
+    th,
+    td {
+      border: 1px solid #567;
+      padding: 8px;
+      text-align: left;
+    }
+  
+    th {
+      background-color: #abc;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+  
+    tr:nth-child(even) {
+      background-color: #def;
+    }
+  
+    tr:hover {
+      background-color: #eee;
+    }
+}
