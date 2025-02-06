@@ -53,6 +53,15 @@ export class ValueEditorComponent {
         if (!value) return null;
         const dateStringRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
         if (dateStringRegex.test(value)) return new Date(value);
+        // test for date string in the format yyyy-mm-dd
+        const yyyymmddRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (yyyymmddRegex.test(value)) {
+            const dateParts = value.split("-");
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1;
+            const day = parseInt(dateParts[2]);
+            return new Date(year, month, day);
+        }
         return null;
     }
 
@@ -68,6 +77,7 @@ export class ValueEditorComponent {
         } else {
             newValue = targetValue;
         }
+        console.log(targetValue);
         if (this.itemToEdit !== newValue) {
             const oldValue = this.itemToEdit;
             this.itemToEdit = newValue;
