@@ -17,7 +17,10 @@ export class TableViewComponent implements OnChanges {
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['data'] && this.data && this.data.length > 0) {
             this.columns = Object.keys(this.data[0]);
-            this.selectedColumns = [...this.columns];
+            this.selectedColumns = [...this.columns].filter(col => this.selectedColumns.includes(col));
+            if (this.selectedColumns.length === 0) {
+                this.selectedColumns = [...this.columns];
+            }
         } else {
             this.columns = [];
             this.selectedColumns = [];

@@ -2,7 +2,7 @@
     <div class="flex justaround single">
         <dropselect class="flex r justends h3quarts"
             [items]="columns"
-            title="Filter Fields To Export"
+            title="Fields Filter"
             [indexMode]="true"
             [hoverMode]="true"
             [multiSelect]="true"
@@ -10,7 +10,7 @@
             [representation]="getTitleCase"
             (selectionChanged)="onSelectionChanged($event)">
       </dropselect>
-      <button class="wmin80px" (click)="exportToCSV()">Export</button>
+      <button class="wmin80px" (click)="exportToCSV()">Export As CSV</button>
     </div>
     <div class="flex grow overscroll relative">
         <table class="absolute top left right bottom">
@@ -34,5 +34,5 @@
     </div>    
 }
 @else {
-    <p>No data available.</p>
+    <p class="flex grow justcenter centeralign huge lighttext">No data available.</p>
 }        
