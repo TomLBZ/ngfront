@@ -15,7 +15,6 @@ import { DropSelectComponent } from "../../../components/dropselect/dropselect";
     styleUrls: ["./path_edit.less"]
 })
 export class PathEditPage {
-    value: number = 0.0;
     markers: Array<Marker> = [];
     apiKey = env.mapKey;
     zoom = 12;
