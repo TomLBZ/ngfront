@@ -31,6 +31,10 @@ export class ValueEditorComponent {
         return this.itemToEdit.toString();
     }
 
+    get checked(): boolean {
+        return this.isBooleanType(this.itemToEdit) ? this.itemToEdit : false;
+    }
+
     isStringType(value: any): boolean {
         return typeof value === "string";
     }
@@ -77,7 +81,6 @@ export class ValueEditorComponent {
         } else {
             newValue = targetValue;
         }
-        console.log(targetValue);
         if (this.itemToEdit !== newValue) {
             const oldValue = this.itemToEdit;
             this.itemToEdit = newValue;
