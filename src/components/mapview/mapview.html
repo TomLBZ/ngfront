@@ -6,6 +6,8 @@
     (mapLoad)="onMapLoad($event)"
     (mapClick)="onMapClick($event)"
     (mapMouseMove)="onMapMouseMove($event)"
+    (mapMouseDown)="onMapMouseDown($event)"
+    (mapMouseUp)="onMapMouseUp($event)"
 >
     @if (showLines) {
         <mgl-geojson-source id="segments">

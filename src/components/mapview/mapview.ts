@@ -54,6 +54,9 @@ export class MapViewComponent {
     @Output() objectMouseDown = new EventEmitter<any>();
     @Output() objectMouseUp = new EventEmitter<any>();
     @Output() mapClicked = new EventEmitter<MapLayerMouseEvent>();
+    @Output() mapMouseDown = new EventEmitter<MapLayerMouseEvent>();
+    @Output() mapMouseUp = new EventEmitter<MapLayerMouseEvent>();
+    @Output() mapMouseMove = new EventEmitter<MapLayerMouseEvent>();
     // mapstyle
     map!: Map;
     onMapLoad(map: Map) {
@@ -170,7 +173,14 @@ export class MapViewComponent {
     onMapClick(event: MapLayerMouseEvent) {
         this.mapClicked.emit(event);
     }
+    onMapMouseDown(event: MapLayerMouseEvent) {
+        this.mapMouseDown.emit(event);
+    }
+    onMapMouseUp(event: MapLayerMouseEvent) {
+        this.mapMouseUp.emit(event);
+    }
     onMapMouseMove(event: MapLayerMouseEvent) {
+        this.mapMouseMove.emit(event);
         if (!this.isDragging) return; // handles marker dragging too
         if (this.movingId === undefined) return;
         const coords = event.lngLat;
@@ -180,8 +190,10 @@ export class MapViewComponent {
     private movingId: number | undefined = undefined;
     onMarkerDown(event: MapLayerMouseEvent) {
         if (this.markerMovable) {
-            event.preventDefault(); // prevent map drag
-            this.isDragging = true;
+            event.preventDefault(); // prevent map drag and map pan
+            if (event.originalEvent.button === 0) { // left down
+                this.isDragging = true;
+            }
         }
         this.objectMouseDown.emit(event);
     }
