@@ -1,5 +1,5 @@
 import { Component, HostListener, ViewChild } from "@angular/core";
-import { MapViewComponent, Marker } from "../../../components/mapview/mapview";
+import { MapViewComponent, MapViewEvent, Marker, MarkerEvent } from "../../../components/mapview/mapview";
 import { env } from "../../app.config";
 import { SimpleMarker } from "./marker";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
@@ -55,42 +55,61 @@ export class PathEditPage {
     onMissionUpdate(obj: any) {
         console.log(obj);
     }
-    onLayerModeChanged(obj: any) {
-        console.log(obj);
-    }
-    onObjectMouseUp(obj: any) {
-        const features = obj.features;
-        if (!features || features.length === 0) return;
-        const feature = features[0];
-        const id = feature.properties['id'];
-        const markerIndex = this.markers.findIndex((marker) => marker.id === id);
-        if (markerIndex < 0) return;
-        if (this.isAltPressed && obj.originalEvent.button === 2) {
-            this.markers.splice(markerIndex, 1);
-            this.objEditor.objToEdit = this.markers; // refresh editor
+    raising = { idx: -1, startLng: -1, startLat: -1, startAlt: -1 };
+    onObjectMouseDown(me: MarkerEvent) {
+        if (me.secondaryButton) { // right button down
+            if (!this.isAltPressed) { // without alt: init change altitude field
+                this.raising.idx = me.idx;
+                this.raising.startLng = this.markers[me.idx].lon;
+                this.raising.startLat = this.markers[me.idx].lat;
+                this.raising.startAlt = (this.markers[me.idx] as SimpleMarker).alt;
+            } else if (this.raising.idx < 0) { // with alt and not changing altitude: delete marker
+                this.markers.splice(me.idx, 1);
+                this.objEditor.objToEdit = this.markers; // refresh editor
+            }
         }
     }
-    onObjectMoved(obj: any) {
-        if (!this.isAltPressed) {
-            const m = new SimpleMarker(obj.lat, obj.lng, obj.id);
+    onObjectMoved(me: MarkerEvent) {
+        if (!this.isAltPressed && this.raising.idx < 0 && me.primaryButton) { // left button down
+            const m = new SimpleMarker(me.lat, me.lng, this.markers[me.idx].id, (this.markers[me.idx] as SimpleMarker).alt);
             this.mapView.refresh(m);
             this.objEditor.objToEdit = this.markers; // refresh editor
         }
     }
-    onObjectClicked(obj: any) {
+    onObjectMouseUp(obj: any) {
         this.missionParams.leader = obj.id;
     }
-    onMapClicked(obj: any) {
-        const lnglat = obj.lngLat;
-        if (!lnglat) return;
-        if (this.isAltPressed) {
-            const isLeftClick = obj.originalEvent.button === 0;
-            if (isLeftClick) { // add new marker
-                const newMarker = new SimpleMarker(lnglat.lat, lnglat.lng);
-                this.mapView.refresh(newMarker);
-                this.mapView.selectedMarkerId = newMarker.id;
-                this.objEditor.objToEdit = this.markers;
-            }
+    onMapMouseDown(mve: MapViewEvent) {
+        if (this.isAltPressed && mve.primaryButton) { // press alt + left click, add marker
+            const newMarker = new SimpleMarker(mve.lat, mve.lng);
+            this.mapView.refresh(newMarker);
+            this.mapView.selectedMarkerId = newMarker.id;
+            this.objEditor.objToEdit = this.markers;
+        }
+    }
+    onMapMouseUp(mve: MapViewEvent) {
+        if (!this.isAltPressed && mve.secondaryButton && this.raising.idx >= 0) { // right button up
+            this.raising.idx = -1;
+            this.raising.startLng = -1;
+            this.raising.startLat = -1;
+            this.raising.startAlt = -1;
+        }
+    }
+    onMapMouseMove(mve: MapViewEvent) {
+        if (this.raising.idx >= 0 && mve.secondaryButton) { // right button down
+            const mkr = this.markers[this.raising.idx] as SimpleMarker;
+            const diffLng = mve.lng - this.raising.startLng;
+            const diffLat = mve.lat - this.raising.startLat;
+            const scale = 100; // 1 unit = 100 m
+            const unitLen = Math.pow(10, diffLng * scale); // always positive
+            const diffAlt = diffLat * scale * unitLen;
+            const minStep = 0.01;
+            const change = diffAlt > 0 ? Math.max(diffAlt, minStep) : 
+            diffAlt < 0 ? Math.min(diffAlt, -minStep) : 0;
+            const newAlt = this.raising.startAlt + change;
+            const m = new SimpleMarker(this.raising.startLat, this.raising.startLng, mkr.id, newAlt);
+            this.mapView.refresh(m);
+            this.objEditor.objToEdit = this.markers; // refresh editor
         }
     }
     isAltPressed = false;

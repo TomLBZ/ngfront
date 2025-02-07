@@ -12,35 +12,43 @@
         [showLines]="true"
         [showSymbols]="true"
         [labelFunc]="labelFunc"
-        (layerModeChanged)="onLayerModeChanged($event)"
+        (objectMouseDown)="onObjectMouseDown($event)"
         (objectMouseUp)="onObjectMouseUp($event)"
-        (mapClicked)="onMapClicked($event)"
         (objectMoved)="onObjectMoved($event)"
-        (objectClicked)="onObjectClicked($event)"
+        (mapMouseDown)="onMapMouseDown($event)"
+        (mapMouseUp)="onMapMouseUp($event)"
+        (mapMouseMove)="onMapMouseMove($event)"
     ></mapview>    
 </div>
 <div class="flex c hquart">
     <div class="flex c vhalf double padding">
-        <div class="heading">Edit Mission Path</div>
-        <div class="flex justends">
-            <span class="italic">Add:</span>
-            <span>Alt + Left Click</span>
+        <div class="heading">Mission Path Editor</div>
+        <div class="small padding">
+            <div class="normal italic bold">Edit on Map:</div>
+            <div class="flex justends">
+                <span class="italic">Add WP:</span>
+                <span>Alt + Left Click</span>
+            </div>
+            <div class="flex justends">
+                <span class="italic">Remove WP:</span>
+                <span>Alt + Right Click</span>
+            </div>
+            <div class="flex justends">
+                <span class="italic">Change LngLat:</span>
+                <span>Left Drag ✥</span>
+            </div>
+            <div class="flex justends">
+                <span class="italic">Change Alt:</span>
+                <span>Right Drag ↕</span>
+            </div>
+            <div class="flex justends">
+                <span class="italic">Change δAlt:</span>
+                <span>Right Drag ↔</span>
+            </div>            
         </div>
-        <div class="flex justends">
-            <span class="italic">Delete:</span>
-            <span>Alt + Right Click</span>
-        </div>
-        <div class="flex justends">
-            <span class="italic">Move:</span>
-            <span>Left Drag</span>
-        </div>
-        <div class="flex justends">
-            <span class="italic">Change Alt:</span>
-            <span>Alt + Mouse Wheel</span>
-        </div>
-        <div class="flex justends">
-            <span class="italic">Precise Edit:</span>
-            <span>Edit below & Apply</span>
+        <div class="small padding">
+            <div class="normal italic bold">Edit Manually Below:</div>
+            <span>Edit value manually and click Apply to see changes.</span>
         </div>
         <obj-editor class="flex c grow paddingtop"
             [objToEdit]="markers"
