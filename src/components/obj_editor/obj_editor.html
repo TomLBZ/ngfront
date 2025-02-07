@@ -12,7 +12,7 @@
             ></field-editor>
         </div>
         @if (textMode && !readOnly) {
-            <div class="flex grow hhalf">
+            <div class="flex grow hhalf errorhost" [class.error]="errorState">
                 <textarea class="flex grow padding noresize"
                     [value]="getObjStr()"
                     (input)="onTextChange($event)"

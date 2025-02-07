@@ -43,6 +43,7 @@ export class ObjEditorComponent {
         this._objRef = obj;
         this._objToEdit = cloneable.deepCopy(obj);
     }
+    errorState: boolean = false;
 
     toggleText(): void {
         this.textMode = !this.textMode;
@@ -118,9 +119,10 @@ export class ObjEditorComponent {
             try {
                 obj = JSON.parse(value);
             } catch (e) {
-                console.error("Invalid JSON string");
+                this.errorState = true;
                 return;
             }
+            this.errorState = false;
             this.updateObj(this._objToEdit, obj, this.objName);
         }
     }
