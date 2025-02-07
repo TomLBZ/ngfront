@@ -7,6 +7,10 @@ export class IconGen {
     static yellow = new Color(255, 255, 0, 255);
     static cyan = new Color(0, 255, 255, 255);
     static magenta = new Color(255, 0, 255, 255);
+    static white = new Color(255, 255, 255, 255);
+    static black = new Color(0, 0, 0, 255);
+    static gray = new Color (127, 127, 127, 255);
+    static transparent = new Color(0, 0, 0, 0);
     static epsilon = 0.01;
     static bloat = 0.9;
     static get r() { return (1 - IconGen.epsilon) * IconGen.bloat; }
