@@ -17,6 +17,7 @@ export class PagesComponent {
     {label: 'Path Edit', path: 'path-edit'},
     {label: 'Logs', path: 'logs'}
   ];
+  selectedTabPath = 'playground';
   private helpStrMultiline = `Help
   Multiline Help Item 1:
     Left: Do something.
@@ -30,5 +31,9 @@ export class PagesComponent {
     alert('Logging out...');
     localStorage.removeItem('salt');
     window.location.href = '/';
+  }
+  onLinkClicked(event: any) {
+    const path = event.target.pathname;
+    this.selectedTabPath = path.split('/').pop();
   }
 }

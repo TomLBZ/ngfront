@@ -1,37 +1,26 @@
-<header>
-  <div class="header-title">
+<header class="flex justends centeralign">
+  <div class="flex centeralign justcenter">
     <img src="assets/boxcross.svg" alt="logo">
-    <span class="bigtext">Template</span>
+    <span class="large bold paddingleft marginleft">Template</span>
   </div>
-  <div class="header-content">
-    <!--dropdown-->
-    <!-- <div class="dropdown">
-        <button class="dropbtn">Placeholder Dropdown</button>
-        <div class="dropdown-content">
-        <a href="#">Placeholder Link 1</a>
-        <a href="#">Placeholder Link 2</a>
-        <a href="#">Placeholder Link 3</a>
-        </div>
-    </div> -->
-    <!-- <span>Placehodler Text</span> -->
-  </div>
-  <div class="header-toolbox">
-    <button (click)="showHelp()">Help</button>
-    <button (click)="logOut()">Logout</button>
+  <div class="flex centeralign justcenter">
+    <button class="wmin50px padding" (click)="showHelp()">Help</button>
+    <div class="wmin10px"></div>
+    <button class="wmin50px padding" (click)="logOut()">Logout</button>
   </div>
 </header>
   
-<div class="main-container">
+<div class="flex grow">
   <nav class="left-pane">
     <ul>
       @for (tab of tabs; track $index) {
-          <li>
-              <a [routerLink]="[tab.path]">{{ tab.label }}</a>
+          <li class="centertext" [class.selected]="tab.path === selectedTabPath">
+              <a [routerLink]="[tab.path]" (click)="onLinkClicked($event)">{{ tab.label }}</a>
           </li>
       }
     </ul>
   </nav>
-  <div class="right-pane">
+  <div class="flex grow padding overauto">
     <router-outlet></router-outlet>
   </div>
 </div>
