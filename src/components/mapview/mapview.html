@@ -57,20 +57,22 @@
             ></mgl-feature>
         }
     </mgl-geojson-source>
-    <mgl-layer
-        id="marker-border"
-        type="circle"
-        source="markers"
-        [filter]="['all', 
-            ['all', ['has', 'id'], ['has', 'iconRadius']],
-            ['==', ['get', 'id'], selectedMarkerId]]"
-        [paint]="{
-            'circle-radius': ['*', ['get', 'iconRadius'], this.iconScale],
-            'circle-color': 'rgba(0, 0, 0, 0.2)',
-            'circle-stroke-width': 2 * iconScale,
-            'circle-stroke-color': 'rgba(255, 127, 0, 1)',
-        }"
-    ></mgl-layer>
+    @if (showSelected) {
+        <mgl-layer
+            id="marker-border"
+            type="circle"
+            source="markers"
+            [filter]="['all', 
+                ['all', ['has', 'id'], ['has', 'iconRadius']],
+                ['==', ['get', 'id'], selectedMarkerId]]"
+            [paint]="{
+                'circle-radius': ['*', ['get', 'iconRadius'], this.iconScale],
+                'circle-color': 'rgba(0, 0, 0, 0.2)',
+                'circle-stroke-width': 2 * iconScale,
+                'circle-stroke-color': 'rgba(255, 127, 0, 1)',
+            }"
+        ></mgl-layer>
+    }
     <mgl-layer
         id="points"
         type="symbol"

@@ -46,6 +46,7 @@ export class MapViewComponent {
     @Input() markerMovable: boolean = false;
     @Input() showLines: boolean = false;
     @Input() showSymbols: boolean = false;
+    @Input() showSelected: boolean = false;
     @Input() labelFunc: Function = (obj: Marker) => "";
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectClicked = new EventEmitter<Marker>();
