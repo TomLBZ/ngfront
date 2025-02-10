@@ -30,9 +30,9 @@
             }"
         ></mgl-layer>
     }
-    @for (geoObj of geoObjects; track geoObj.id) {
+    @for (geoObj of geoObjects; track geoObj.constructor.name + geoObj.id.toString()) {
         <mgl-image
-            [id]="geoObj.id.toString()"
+            [id]="geoObj.constructor.name + geoObj.id.toString()"
             [data]="{
                 width: geoObj.iconSize,
                 height: geoObj.iconSize,
@@ -49,11 +49,12 @@
                 }"
                 [properties]="{
                     id: geoObj.id,
-                    icon: geoObj.id.toString(),
+                    icon: geoObj.constructor.name + geoObj.id.toString(),
                     iconSize: geoObj.iconSize,
                     iconRadius: geoObj.iconSize * 0.5,
                     heading: geoObj.hdg,
                     label: labelFunc(geoObj),
+                    cName: geoObj.constructor.name
                 }"
             ></mgl-feature>
         }
@@ -65,7 +66,8 @@
             source="markers"
             [filter]="['all', 
                 ['all', ['has', 'id'], ['has', 'iconRadius']],
-                ['==', ['get', 'id'], selectedMarkerId]]"
+                ['==', ['get', 'id'], selectedMarkerId],
+                ['==', ['get', 'cName'], selectedMarkerCName]]"
             [paint]="{
                 'circle-radius': ['*', ['get', 'iconRadius'], this.iconScale],
                 'circle-color': 'rgba(0, 0, 0, 0.2)',
@@ -90,7 +92,6 @@
         (layerMouseEnter)="onMarkerEnter($event)"
         (layerMouseLeave)="onMarkerLeave($event)"
         (layerMouseDown)="onMarkerDown($event)"
-        (layerMouseMove)="onMarkerMove($event)"
         (layerMouseUp)="onMarkerUp($event)"
     >
     </mgl-layer>
