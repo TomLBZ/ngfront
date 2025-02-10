@@ -28,6 +28,8 @@ export class PathEditPage {
         return true;
     }
     labelFunc = (obj: Marker) => this.markers.indexOf(obj).toString();
+    connectableFilter = (obj: Marker) => obj instanceof SimpleMarker;
+    moveableFilter = (obj: Marker) => obj instanceof SimpleMarker;
     missionParams = new Mission(0, "Mission 1");
     configs = [
         {id: 1, type: "quadrotor", name: "Q1"}, 
