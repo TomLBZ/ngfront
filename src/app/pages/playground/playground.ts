@@ -42,7 +42,7 @@ export class PlaygroundComponent {
         console.log(obj);
     }
     @ViewChild(ObjEditorComponent) objEditor: ObjEditorComponent | undefined;
-    onObjectClicked(obj: Marker) {
+    onObjectClicked(obj: any) {
         console.log(obj);
         const idx = this.markers.findIndex((marker) => marker === obj);
         if (idx >= 0) {
