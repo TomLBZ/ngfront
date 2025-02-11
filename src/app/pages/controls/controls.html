@@ -1,7 +1,36 @@
-<span class="heading">Control</span>
-<joystick
-    (valueChanged)="onJoystickChanged($event)"
-></joystick>
-<throttle [value]="value" (valueChanged)="onThrottleChanged($event)"></throttle>
-<throttle [style]="'h'" [value]="value" (valueChanged)="onThrottleChanged($event)"></throttle>
-<throttle [style]="'k'" [value]="value" (valueChanged)="onThrottleChanged($event)"></throttle>
+<span class="txt_hdg">Control</span>
+<div class="p_quarth bd_dbl bd_r10 pad10 bdc_tint">
+    <joystick
+        [showValues]="true"
+        [knobText]="'Drag Me'"
+        (valueChanged)="onJoystickChanged($event)"
+    ></joystick>
+</div>
+<div class="p_quarth bd_dbl bd_r10 pad10 bdc_tint">
+    <throttle 
+        [style]="'h'" 
+        [value]="value" 
+        [sensitivity]="sensitivity"
+        (valueChanged)="onThrottleChanged($event)"
+        (sensitivityChanged)="onSensitivityChanged($event)"
+    ></throttle>
+</div>
+<div class="flex p_halfh">
+    <div class="p_halfw bd_dbl bd_r10 pad10 bdc_tint">
+        <throttle 
+            [value]="value" 
+            [sensitivity]="sensitivity"
+            (valueChanged)="onThrottleChanged($event)"
+            (sensitivityChanged)="onSensitivityChanged($event)"
+        ></throttle>
+    </div>
+    <div class="p_halfw bd_dbl bd_r10 pad10 bdc_tint">
+        <throttle 
+            [style]="'k'" 
+            [value]="value" 
+            [sensitivity]="sensitivity"
+            (valueChanged)="onThrottleChanged($event)"
+            (sensitivityChanged)="onSensitivityChanged($event)"
+        ></throttle>
+    </div>
+</div>
