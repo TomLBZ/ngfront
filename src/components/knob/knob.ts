@@ -9,9 +9,6 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
 export class KnobComponent {
     @Input() maxValue: number = 1;
     @Input() minValue: number = 0;
-    @Input() backColor: string = "#cccccc";
-    @Input() fillColor: string = "#2196F3";
-    @Input() holeColor: string = "#ffffff";
     @Input() holeWidthPerc: number = 20;
     @Input() isDraggable: boolean = false;
     @Input() showText: boolean = false;
@@ -47,10 +44,6 @@ export class KnobComponent {
     get fillAngle() {
         return 360 * this.ratio;
     }
-    get conicGradient() {
-        const a = this.fillAngle.toFixed(2);
-        return `conic-gradient(${this.fillColor} 0deg ${a}deg, ${this.backColor} ${a}deg 360deg)`;
-    }
     get needleRotation() {
         return `rotate(${this.fillAngle}deg)`;
     }
@@ -71,7 +64,7 @@ export class KnobComponent {
         const padMax = strMax.includes(".") ? strMax + pad : pad + strMax;
         const min = maxLen === strMin.length ? strMin : padMin;
         const max = maxLen === strMax.length ? strMax : padMax;
-        return `${max} | ${min}`;
+        return `${max}|${min}`;
     }
 
     onPointerDown(event: PointerEvent): void {

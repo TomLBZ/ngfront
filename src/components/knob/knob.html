@@ -1,46 +1,47 @@
 <div
-    class="knob-container"
+    class="pos_rel noselect"
     [style.width]="size"
     [style.height]="size"
-    [class.draggable]="isDraggable"
+    [class.draghost]="isDraggable"
     (pointerdown)="onPointerDown($event)"
     (pointermove)="onPointerMove($event)"
     (pointerup)="onPointerUp($event)"
 >
-    <div class="knob-ring" 
+    <div class="p_full pos_rel bd_r50p ringhost emphhost" 
         [class.dragging]="isDragging"
-        [class.emphasized]="isEmphasized"
-        [style.--fillColor]="fillColor"
-        [style.--backColor]="backColor"
+        [class.tr_none]="isDragging"
+        [class.tr_short]="!isDragging"
         [style.--degrees]="fillAngle + 'deg'"
+        [class.bg_emph]="isEmphasized"   
     >
-        <div class="knob-hole"
-            [style.background]="holeColor"
+        <div class="pos_abs noptr bd_r50p top0 btm0 lft0 rht0 emphhost tr_short bdc_tint bd_sng"
+            [class.bd_emph]="isEmphasized"
+            [class.sh_emph]="isEmphasized"    
+        ></div>
+        <div class="pos_abs noptr bd_r50p bgc_white emphhost tr_short bdc_tint bd_sng"
+            [class.inset]="isEmphasized"
+            [class.bd_emph]="isEmphasized"
+            [class.sh_emph]="isEmphasized" 
             [style.top]="holeWidthPerc + '%'"
             [style.left]="holeWidthPerc + '%'"
             [style.right]="holeWidthPerc + '%'"
             [style.bottom]="holeWidthPerc + '%'"
         ></div>
         @if (showNeedle) {
-            <div class="knob-needle"
-                [class.dragging]="isDragging"
+            <div class="pos_abs top5p lft50p p_2pentah bgc_black tfo_btmoff px_w2"
+                [style.height]="'30%'"
+                [class.tr_none]="isDragging"
+                [class.tr_short]="!isDragging"
                 [style.transform]="needleRotation"
             ></div>
         }
-        <div class="knob-hole"
-            [style.background]="holeColor"
-            [style.top]="holeWidthPerc + 10 + '%'"
-            [style.left]="holeWidthPerc + 10 + '%'"
-            [style.right]="holeWidthPerc + 10 + '%'"
-            [style.bottom]="holeWidthPerc + 10 + '%'"
-        ></div>
         @if (showText) {
-            <div class="knob-text">{{ displayValue }}</div>
+            <div class="pos_abs top50p lft50p ft_smal centtext noptr tf_cent">{{ displayValue }}</div>
         }
     </div>
     @if (showLabel) {
-        <div class="knob-labels">
-            <span class="knob-label-divider">{{ labelValue }}</span>
+        <div class="pos_abs lft50p tf_xcent top0 centtext ft_smal bold ff_mono">
+            {{ labelValue }}
         </div>
     }
 </div>
