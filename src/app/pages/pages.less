@@ -7,52 +7,12 @@
   padding: 0px;
 }
 
-header {
-  background-color: #d5dadf;
-  box-shadow: 0 0 5px #567;
-  padding: 10px;
-  height: 20px;
-  img {
-    width: 25px;
-    height: 25px;
-  }
-}
 .bottom {
-  height: 96vh;
-}
-.left-pane {
-  width: 15vw;
-  background-color: #eaeaea;
-  padding-top: 10px;
-  box-shadow: 0 3px 5px #567;
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    li {
-      padding: 10px;
-      transition: background-color 0.2s ease;
-      border-radius: 10px;
-      &:hover {
-        background-color: #ccc;
-      }
-      &.selected {
-        background-color: #567;
-        a {
-          color: white;
-        }
-      }
-      a {
-        text-decoration: none;
-        color: #333;
-        display: block;
-        transition: color 0.2s ease;
-      }
-    }
-  }
+  height: calc(100vh - 40px);
+  width: 100vw;
 }
 .page-content {
-  width: calc(85vw - 10px);
-  height: calc(100vh - 50px);
   padding: 5px;
+  width: calc(100vw - 160px);
+  height: calc(100vh - 50px);
 }

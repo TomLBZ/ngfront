@@ -1,27 +1,26 @@
-<header class="flex justends centeralign">
-  <div class="flex centeralign justcenter">
-    <img src="assets/boxcross.svg" alt="logo">
-    <span class="large bold paddingleft marginleft">Template</span>
+<header class="flex justends centcont bgc_tint sh5_tint pad10 px_h20">
+  <div class="flex centcont justcent">
+    <img src="assets/boxcross.svg" alt="logo" class="px_h30 px_w30">
+    <span class="ft_larg bold pad10lft">Template</span>
   </div>
-  <div class="flex centeralign justcenter">
-    <button class="wmin50px padding" (click)="showHelp()">Help</button>
-    <div class="wmin10px"></div>
-    <button class="wmin50px padding" (click)="logOut()">Logout</button>
+  <div class="flex centcont justcent">
+    <button class="px_minw50 pad5" (click)="showHelp()">Help</button>
+    <div class="px_minw10"></div>
+    <button class="px_minw50 pad5" (click)="logOut()">Logout</button>
   </div>
 </header>
   
-<div class="flex grow">
-  <nav class="left-pane">
-    <ul>
+<div class="flex bottom">
+  <nav class="bgc_lgrey pad10top sh10_ytint px_w150">
+    <ul class="pad0 mar0 menu">
       @for (tab of tabs; track $index) {
-          <li class="centertext" [class.selected]="tab.path === selectedTabPath">
+          <li class="centtext pad10 bd_r5 selecthost" [class.selected]="tab.path === selectedTabPath">
               <a [routerLink]="[tab.path]" (click)="onLinkClicked($event)">{{ tab.label }}</a>
           </li>
       }
     </ul>
   </nav>
-  <div class="flex grow padding overauto">
+  <div class="page-content">
     <router-outlet></router-outlet>
   </div>
 </div>
-  
