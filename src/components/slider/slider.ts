@@ -10,8 +10,6 @@ export class SliderComponent {
     @Input() maxValue = 1;
     @Input() minValue = 0;
     @Input() isVertical = false;
-    @Input() backColor = '#cccccc';
-    @Input() fillColor = '#2196F3';
     @Input() isDraggable = false;
     @Input() showText = false;
     @Input() showLabel = false;

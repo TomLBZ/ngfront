@@ -1,6 +1,6 @@
 <div
-    class="draghost relative"
-    [class.draggable]="isDraggable"
+    class="noselect pos_rel"
+    [class.draghost]="isDraggable"
     [class.dragging]="isDragging"
     [style.width]="isVertical ? width : length"
     [style.height]="isVertical ? length : width"
@@ -9,13 +9,14 @@
     (pointerup)="onPointerUp($event)"
 >
     <div
-        class="overhidden relative full round emphhost emphasizable"
-        [class.emphasized]="isEmphasized"
-        [style.backgroundColor]="backColor"
+        class="ov_hid pos_rel p_full bd_r5 emphhost bgc_lgrey tr_short bdc_tint bd_sng"
+        [class.bd_emph]="isEmphasized"
+        [class.sh_emph]="isEmphasized"
     >
-        <div class="absolute left top resizehost resizable"
-            [class.resizing]="isDragging"
-            [style.backgroundColor]="fillColor"
+        <div class="pos_abs lft0 top0 emphhost bgc_submit"
+            [class.tr_none]="isDragging"
+            [class.tr_short]="!isDragging"
+            [class.bg_emph]="isEmphasized"
             [style.width]="!isVertical ? ratio * 100 + '%' : '100%'"
             [style.height]="isVertical ? ratio * 100 + '%' : '100%'"
             [style.bottom]="isVertical && !isReversed? '0' : 'auto'"
@@ -25,19 +26,19 @@
         >
         </div>
     </div>
-    <div class="absolute top left bottom right slider-text"
+    <div class="pos_abs top0 lft0 btm0 rht0 slider-text"
         [class.vertical]="isVertical"
     >
         @if (showLabel) {
-            <div class="absolute small min">
+            <div class="pos_abs ft_smal min">
                 {{ isReversed ? maxValue : minValue }}
             </div>
-            <div class="absolute small max">
+            <div class="pos_abs ft_smal max">
                 {{ isReversed ? minValue : maxValue }}
             </div>
         }
         @if (showText) {
-            <div class="absolute small value">
+            <div class="pos_abs ft_smal value">
                 {{ displayValue }}
             </div>
         }
