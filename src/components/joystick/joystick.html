@@ -1,24 +1,24 @@
-<div #joystickBase class="joystick-base"
-    [style.width.px]="baseSize"
-    [style.height.px]="baseSize"
-    [style.background-color]="baseColor">
-    <div
-        #joystickKnob
-        [classList]="knobClasses"
-        [style.width.px]="knobSize"
-        [style.height.px]="knobSize"
-        [style.left.px]="knobX"
-        [style.top.px]="knobY"
-        [style.background-color]="knobColor"
-        (pointerdown)="onPointerDown($event)"
-        (pointermove)="onPointerMove($event)"
-        (pointerup)="onPointerUp($event)"
-    >
-        {{knobText}}
+<div class="flexc bd_dsh bd_r5 centcont">
+    <div #joystickBase class="pos_rel bd_r50p noselect bgc_lgrey bd_sng bdc_tint sh5_intint"
+        [style.width.px]="baseSize"
+        [style.height.px]="baseSize">
+        <div #joystickKnob class="centtext centcont pos_abs tf_cent bd_r50p bgc_grey sh5_grey draghost"
+            [class.tr_none]="isDragging"
+            [class.tr_short]="!isDragging"
+            [style.width.px]="knobSize"
+            [style.height.px]="knobSize"
+            [style.left.px]="knobX"
+            [style.top.px]="knobY"
+            (pointerdown)="onPointerDown($event)"
+            (pointermove)="onPointerMove($event)"
+            (pointerup)="onPointerUp($event)"
+        >
+            {{knobText}}
+        </div>
     </div>
-</div>
 
-<div class="joystick-values" [style.display]="showValues ? 'flex' : 'none'">
-    <p>x: {{ horizontalValue }}</p>
-    <p>y: {{ verticalValue }}</p>
+    <div class="flexc justcent" [style.display]="showValues ? 'flex' : 'none'">
+        <p class="mar0">x: {{ horizontalValue }}</p>
+        <p class="mar0">y: {{ verticalValue }}</p>
+    </div>
 </div>

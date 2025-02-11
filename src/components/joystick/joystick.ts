@@ -12,8 +12,6 @@ export class JoystickComponent {
     @ViewChild('joystickKnob', { static: true }) joystickKnobRef!: ElementRef;
     @Input() baseSize: number = 200;
     @Input() knobSize: number = 60;
-    @Input() baseColor: string = '#ddd';
-    @Input() knobColor: string = '#888';
     @Input() knobText: string = '';
     @Input() showValues: boolean = false;
     @Output() valueChanged = new EventEmitter<Vec2>();
@@ -26,12 +24,10 @@ export class JoystickComponent {
     isDragging = false;
     horizontalValue = 0;
     verticalValue = 0;
-    knobClasses = 'joystick-knob';
 
     onPointerDown(event: PointerEvent): void {
         event.preventDefault();
         this.isDragging = true;
-        this.knobClasses += ' dragging';
         (event.target as HTMLElement).setPointerCapture(event.pointerId);
     }
 
@@ -67,7 +63,6 @@ export class JoystickComponent {
             this.knobY = this.centerY;
             this.horizontalValue = 0;
             this.verticalValue = 0;
-            this.knobClasses = 'joystick-knob';
             (event.target as HTMLElement).releasePointerCapture(event.pointerId);
         }
     }
