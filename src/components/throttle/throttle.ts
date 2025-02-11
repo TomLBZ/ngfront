@@ -48,7 +48,17 @@ export class ThrottleComponent {
         this.valueChanged.emit(v);
     }
     @Output() valueChanged = new EventEmitter<number>();
-    sensitivity: number = 0.1;
+    @Output() sensitivityChanged = new EventEmitter<number>();
+    private _sensitivity: number = 0.1;
+    get sensitivity(): number {
+        return this._sensitivity;
+    }
+    @Input() set sensitivity(s: number) {
+        const newSensitivity = this.clampValue(s);
+        if (this._sensitivity === newSensitivity) return;
+        this._sensitivity = newSensitivity;
+        this.sensitivityChanged.emit(s);
+    }
     shiftActive: boolean = false;
 
     private clampValue(value: number): number {
@@ -85,6 +95,10 @@ export class ThrottleComponent {
     }
 
     onValueChanged(value: number): void {
-        this.value = value;
+        if (this.shiftActive) {
+            this.sensitivity = value;
+        } else {
+            this.value = value;
+        }
     }
 }

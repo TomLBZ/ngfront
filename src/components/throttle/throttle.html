@@ -1,6 +1,6 @@
-<div class="flex c dashed rounded centeralign">
+<div class="flexc bd_dsh bd_r5 centcont">
     @if (showTitle) {
-        <span class="heading">{{ title }}</span>
+        <span class="txt_hdg">{{ title }}</span>
     }
     @if (styleIsVertical || styleIsHorizontal) {
         <slider
@@ -11,7 +11,7 @@
             [isPercentage]="false"
             [showLabel]="true"
             [showText]="true"
-            [value]="value"
+            [value]="shiftActive ? sensitivity : value"
             (valueChanged)="onValueChanged($event)"
         ></slider>
     }
@@ -24,16 +24,16 @@
             [isDraggable]="true"
             [isPercentage]="false"
             [size]="'100px'"
-            [value]="value"
+            [value]="shiftActive ? sensitivity : value"
             (valueChanged)="onValueChanged($event)"
         ></knob>
     }
     @if (showText) {
-        <div class="flex c centeralign">
-            <p class="tight">Value: {{ value.toFixed(2) }}</p>
-            <p class="tight">Sensitivity: {{ sensitivity.toFixed(2) }}</p>
-            <p class="tight">Press "{{ upKey }}" or "{{ downKey }}" to change.</p>
-            <p class="tight">Hold Shift to adjust sensitivity</p>
+        <div class="flexc centcont">
+            <p class="mar0 pad0">Value: {{ value.toFixed(2) }}</p>
+            <p class="mar0 pad0">Sensitivity: {{ sensitivity.toFixed(2) }}</p>
+            <p class="mar0 pad0">Press "{{ upKey }}" or "{{ downKey }}" to change.</p>
+            <p class="mar0 pad0">Hold Shift to adjust sensitivity</p>
         </div>
     }
 </div>  
