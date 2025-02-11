@@ -57,3 +57,21 @@
     }
 }
 
+.selecthost {
+    transition: background-color 0.2s ease;
+    &:hover {
+        background-color: @c_grey;
+    }
+    &.selected {
+        background-color: @c_dtint;
+        a {
+            color: @c_white;
+        }
+    }
+    a {
+        text-decoration: none;
+        color: @c_dgrey;
+        display: block;
+        transition: color 0.2s ease;
+    }
+}
