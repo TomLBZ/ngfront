@@ -1,14 +1,10 @@
 :host {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   margin: 0px;
   padding: 0px;
-  img {
-    width: 30px;
-    height: 30px;
-  }
 }
 
 header {
@@ -16,10 +12,16 @@ header {
   box-shadow: 0 0 5px #567;
   padding: 10px;
   height: 20px;
+  img {
+    width: 25px;
+    height: 25px;
+  }
+}
+.bottom {
+  height: 96vh;
 }
 .left-pane {
-  width: max-content;
-  min-width: 120px;
+  width: 15vw;
   background-color: #eaeaea;
   padding-top: 10px;
   box-shadow: 0 3px 5px #567;
@@ -48,4 +50,9 @@ header {
       }
     }
   }
+}
+.page-content {
+  width: calc(85vw - 10px);
+  height: calc(100vh - 50px);
+  padding: 5px;
 }

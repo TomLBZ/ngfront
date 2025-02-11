@@ -1,12 +1,12 @@
 button {
-    border: 1px solid #abc;
+    border: 1px solid @c_tint;
     border-radius: 5px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #567;
-    color: white;
+    background-color: @c_dtint;
+    color: @c_white;
     transition: background-color 0.5s ease, color 0.5s ease;
 }
 
@@ -16,7 +16,7 @@ button:hover:disabled {
 
 input {
     outline: none;
-    border: 1px solid #abc;
+    border: 1px solid @c_tint;
     border-radius: 5px;
     transition: border-color 0.2s ease, background-color 0.2s ease;
 }
@@ -32,16 +32,16 @@ input[type="date"] {
 }
 
 input:hover {
-    border-color: #567;
+    border-color: @c_dtint;
 }
 
 input:active,
 input:focus {
-    background-color: #def;
+    background-color: @c_ltint;
 }
 
 input:disabled {
-    background-color: #eee;
+    background-color: @c_lgrey;
     cursor: not-allowed;
 }
 
@@ -53,23 +53,23 @@ table {
   
     th,
     td {
-      border: 1px solid #567;
+      border: 1px solid @c_dtint;
       padding: 8px;
       text-align: left;
     }
   
     th {
-      background-color: #abc;
+      background-color: @c_tint;
       position: sticky;
       top: 0;
       z-index: 1;
     }
   
     tr:nth-child(even) {
-      background-color: #def;
+      background-color: @c_ltint
     }
   
     tr:hover {
-      background-color: #eee;
+      background-color: @c_lgrey;
     }
 }

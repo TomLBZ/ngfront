@@ -1,3 +1,23 @@
+.noresize {
+    resize: none;
+}
+.noselect {
+    user-select: none;
+}
+
+.c_ptr {
+    cursor: pointer;
+}
+.c_grb {
+    cursor: grab;
+}
+.c_grbng {
+    cursor: grabbing;
+}
+.c_def {
+    cursor: default;
+}
+
 .draghost {
     cursor: move;
     user-select: none;
@@ -14,8 +34,8 @@
     &.emphasizable {
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
         &.emphasized {
-            border-color: #ff4081;
-            box-shadow: 0 0 8px rgba(255, 64, 129, 0.7);
+            border-color: @c_emph;
+            box-shadow: 0 0 8px @c_demph;
         }
     }
 }
@@ -23,8 +43,8 @@
 .errorhost {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     &.error {
-        border-color: red;
-        box-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
+        border-color: @c_err;
+        box-shadow: 0 0 8px @c_derr;
     }
 }
 
@@ -37,34 +57,3 @@
     }
 }
 
-.noresize {
-    resize: none;
-}
-
-.noselect {
-    user-select: none;
-}
-
-.pointer {
-    cursor: pointer;
-}
-
-.overscroll {
-    overflow: scroll;
-}
-
-.overscrolly {
-    overflow-y: scroll;
-}
-
-.overscrollx {
-    overflow-x: scroll;
-}
-
-.overhidden {
-    overflow: hidden;
-}
-
-.overauto {
-    overflow: auto;
-}
