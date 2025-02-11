@@ -19,24 +19,21 @@
 }
 
 .draghost {
-    cursor: move;
-    user-select: none;
-    cursor: default;
-    &.draggable {
-        cursor: grab;
-        &.dragging {
-            cursor: grabbing;
-        }
+    cursor: grab;
+    &.dragging {
+        cursor: grabbing;
     }
 }
 
 .emphhost {
-    &.emphasizable {
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        &.emphasized {
-            border-color: @c_emph;
-            box-shadow: 0 0 8px @c_demph;
-        }
+    &.bd_emph {
+        border-color: @c_emph;
+    }
+    &.bg_emph {
+        background-color: @c_emph;
+    }
+    &.sh_emph {
+        box-shadow: 0 0 8px @c_emph;
     }
 }
 
@@ -45,15 +42,6 @@
     &.error {
         border-color: @c_err;
         box-shadow: 0 0 8px @c_derr;
-    }
-}
-
-.resizehost {
-    &.resizable {
-        transition: width 0.2s ease, height 0.2s ease;
-        &.resizing {
-            transition: none;
-        }
     }
 }
 
@@ -74,4 +62,16 @@
         display: block;
         transition: color 0.2s ease;
     }
+}
+
+.tr_none {
+    transition: none;
+}
+
+.tr_short {
+    transition: all 0.2s ease;
+}
+
+.tr_long {
+    transition: all 0.5s ease;
 }
