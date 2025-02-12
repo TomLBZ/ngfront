@@ -7,8 +7,7 @@ import { Vec2 } from "../../../utils/vec/vec2";
     selector: "page-controls",
     standalone: true,
     imports: [JoystickComponent, ThrottleComponent],
-    templateUrl: "./controls.html",
-    styleUrls: ["./controls.less"]
+    templateUrl: "./controls.html"
 })
 export class ControlsPage {
     value: number = 0.0;

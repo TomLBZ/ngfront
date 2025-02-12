@@ -1,40 +1,53 @@
-<span class="txt_hdg">Control</span>
-<div class="p_quarth bd_dbl bd_r10 pad10 bdc_tint">
-    <joystick
-        [showValues]="true"
-        [knobText]="'Drag Me'"
-        [baseSizeStr]="'150px'"
-        [knobSizeStr]="'50px'"
-        (valueChanged)="onJoystickChanged($event)"
-    ></joystick>
-</div>
-<div class="p_quarth bd_dbl bd_r10 pad10 bdc_tint">
-    <throttle 
-        [style]="'h'" 
-        [value]="value" 
-        [sizeStr]="'200px'"
-        [sensitivity]="sensitivity"
-        (valueChanged)="onThrottleChanged($event)"
-        (sensitivityChanged)="onSensitivityChanged($event)"
-    ></throttle>
-</div>
-<div class="flex p_halfh">
-    <div class="p_halfw bd_dbl bd_r10 pad10 bdc_tint">
+<div class="p_full">
+    <div class="p_quarth bd_dbl bd_r10 pad10 bdc_tint">
+        <joystick
+            [showValues]="true"
+            [showTitle]="true"
+            [showBorder]="true"
+            [knobText]="'Drag Me'"
+            [baseSizeStr]="'150px'"
+            [knobSizeStr]="'50px'"
+            (valueChanged)="onJoystickChanged($event)"
+        ></joystick>
+    </div>
+    <div class="p_quarth bd_dbl bd_r10 pad10 bdc_tint">
         <throttle 
-            [value]="value"
-            [sizeStr]="'200px'" 
+            [style]="'h'" 
+            [showTitle]="true"
+            [showText]="true"
+            [showBorder]="true"
+            [value]="value" 
+            [sizeStr]="'200px'"
             [sensitivity]="sensitivity"
             (valueChanged)="onThrottleChanged($event)"
             (sensitivityChanged)="onSensitivityChanged($event)"
         ></throttle>
     </div>
-    <div class="p_halfw bd_dbl bd_r10 pad10 bdc_tint">
-        <throttle class="px_w50 px_h50"
-            [style]="'k'" 
-            [value]="value" 
-            [sensitivity]="sensitivity"
-            (valueChanged)="onThrottleChanged($event)"
-            (sensitivityChanged)="onSensitivityChanged($event)"
-        ></throttle>
+    <div class="flex p_halfh">
+        <div class="p_halfw bd_dbl bd_r10 pad10 bdc_tint">
+            <throttle 
+                [value]="value"
+                [showTitle]="true"
+                [showText]="true"
+                [showBorder]="true"
+                [sizeStr]="'200px'" 
+                [sensitivity]="sensitivity"
+                (valueChanged)="onThrottleChanged($event)"
+                (sensitivityChanged)="onSensitivityChanged($event)"
+            ></throttle>
+        </div>
+        <div class="p_halfw bd_dbl bd_r10 pad10 bdc_tint">
+            <throttle
+                [style]="'k'" 
+                [value]="value" 
+                [showTitle]="true"
+                [showText]="true"
+                [showBorder]="true"
+                [sizeStr]="'100px'"
+                [sensitivity]="sensitivity"
+                (valueChanged)="onThrottleChanged($event)"
+                (sensitivityChanged)="onSensitivityChanged($event)"
+            ></throttle>
+        </div>
     </div>
 </div>
