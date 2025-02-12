@@ -13,6 +13,8 @@ export class FieldEditorComponent {
   @Input() expanded: boolean = false;
   @Input() defaultExpanded: boolean = false;
   @Input() readOnly: boolean = false;
+  @Input() showBorder: boolean = false;
+  @Input() scrollChildren: boolean = false;
   @Input() includeFilter: (key: string) => boolean = () => true;
   @Output() fieldChanged = new EventEmitter<Change>();
 

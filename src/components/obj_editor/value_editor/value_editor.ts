@@ -15,6 +15,7 @@ export class ValueEditorComponent {
     @Input() itemName: string = "";
     @Input() readOnly: boolean = false;
     @Input() itemToEdit: any = {};
+    @Input() showBorder: boolean = false;
     @Output() itemChanged = new EventEmitter<Change>();
 
     getInputType(): string {

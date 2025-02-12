@@ -31,6 +31,7 @@ export class ObjEditorComponent {
     @Input() objName: string = 'Object';
     @Input() readOnly: boolean = false;
     @Input() defaultExpanded: boolean = false;
+    @Input() showBorder: boolean = false;
     @Input() includeFilter: (key: string) => boolean = () => true;
     @Output() updated = new EventEmitter<any>();
     private _objToEdit: any = {};

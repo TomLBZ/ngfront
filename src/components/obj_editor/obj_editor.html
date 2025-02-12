@@ -1,28 +1,40 @@
-<div class="flexc zeromin p_full">
+<div class="flexc centcont justends bd_r5 p_fullh"
+    [class.bd_dsh]="showBorder"
+>
     @if (objToEdit) {
-        <div class="flex grow zeromin">
-            <field-editor class="flexc grow zeromin ovy_scr"
-                [objToEdit]="objToEdit"
-                [objName]="objName"
-                [expanded]="true"
-                [includeFilter]="includeFilter"
-                [readOnly]="readOnly"
-                [defaultExpanded]="defaultExpanded"
-                (fieldChanged)="onFieldChange($event)"
-            ></field-editor>
-            @if (textMode && !readOnly) {
-                <div class="flex grow p_halfw errorhost" [class.error]="errorState">
-                    <textarea class="flex grow pad5 noresize"
-                        [value]="getObjStr()"
-                        (input)="onTextChange($event)"
-                    ></textarea>
-                </div>
+        <div class="flex p_fullw"
+            [style.height]="readOnly ? '100%' : 'calc(100% - 30px)'"
+        >
+            @let textBoxShown = textMode && !readOnly;
+            <div class="p_fullh"
+                [class.p_halfw]="textBoxShown"
+                [class.p_fullw]="!textBoxShown"
+            >
+                <field-editor
+                    [objToEdit]="objToEdit"
+                    [objName]="objName"
+                    [expanded]="true"
+                    [scrollChildren]="true"
+                    [includeFilter]="includeFilter"
+                    [readOnly]="readOnly"
+                    [defaultExpanded]="defaultExpanded"
+                    (fieldChanged)="onFieldChange($event)"
+                ></field-editor>
+            </div>
+            @if (textBoxShown) {
+                <textarea class="p_halfw pad5 noresize errorhost"
+                    [class.error]="errorState"
+                    [value]="getObjStr()"
+                    (input)="onTextChange($event)"
+                ></textarea>
+                <!-- <div class="p_halfw errorhost" [class.error]="errorState">
+                </div> -->
             }
         </div>
         @if (!readOnly) {
-            <div class="flex centcont justarnd pad5">
-                <Label class="noselect cs_ptr">
-                    <input 
+            <div class="flex centcont justarnd pad5 p_fullw px_h30 bgc_lgrey">
+                <Label class="noselect cs_ptr ft_smal flex centcont">
+                    <input
                         type="checkbox"
                         [checked]="textMode"
                         (change)="toggleText()"
@@ -35,6 +47,6 @@
         }
     }
     @else {
-        <div class="flex grow zeromin justcent centcont ft_huge c_grey">No Object</div>
+        <div class="flex p_full zeromin justcent centcont ft_huge c_grey">No Object</div>
     }
 </div>
