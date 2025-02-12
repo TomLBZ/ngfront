@@ -5,8 +5,7 @@ import { RouterModule, RouterOutlet } from '@angular/router';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, RouterModule],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.less'
+  templateUrl: './app.component.html'
 })
 export class AppComponent {
   title = 'ngfront';
