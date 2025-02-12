@@ -1,5 +1,5 @@
-<div class="p_halfh p_halfw bd_r5 bd_dbl bdc_tint pad10">
-    <dropselect class="flexc justcent"
+<div class="p_full bd_r5 bd_dbl bdc_tint pad10 flexc">
+    <dropselect class="pad10btm"
         [items]="objList"
         [title]="'Select Single Object to Edit'"
         [indexMode]="true"
@@ -9,7 +9,7 @@
         [representation]="dropRepr"
         (selectionChanged)="onSelect($event)"
     ></dropselect>
-    <obj-editor 
+    <obj-editor class="flex grow"
         [objToEdit]="selObj"
         [textMode]="textMode" 
         [objName]="selName"

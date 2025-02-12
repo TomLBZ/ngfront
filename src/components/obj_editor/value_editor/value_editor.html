@@ -1,25 +1,27 @@
-<div class="flex centcont justends ovx_hid bd_r5"
-    [class.bd_dsh]="showBorder"
->
-    <span class="ital pad5rht">
-        {{ itemName ? itemName : '\<Value\>' }}
-    </span>
-    @if (readOnly) {
-        <span>{{itemStr}}</span>
-    }
-    @else {
-        @let type = getInputType();
-        @if (type === "unsupported") {
-            <span>Unsupported item type</span>
+<div class="p_full">
+    <div class="flex centcont justends ovx_hid bd_r5"
+        [class.bd_dsh]="showBorder"
+    >
+        <span class="ital pad5rht">
+            {{ itemName ? itemName : '\<Value\>' }}
+        </span>
+        @if (readOnly) {
+            <span>{{itemStr}}</span>
         }
         @else {
-            <input 
-                type="{{type}}"
-                step="any"
-                [value]="itemStr"
-                [checked]="checked"
-                (input)="onItemChange($event)"
-            />
+            @let type = getInputType();
+            @if (type === "unsupported") {
+                <span>Unsupported item type</span>
+            }
+            @else {
+                <input 
+                    type="{{type}}"
+                    step="any"
+                    [value]="itemStr"
+                    [checked]="checked"
+                    (input)="onItemChange($event)"
+                />
+            }
         }
-    }
+    </div>
 </div>
