@@ -1,26 +1,33 @@
-<header class="flex justends centcont bgc_tint sh5_tint pad10 px_h20">
-  <div class="flex centcont justcent">
-    <img src="assets/boxcross.svg" alt="logo" class="px_h30 px_w30">
-    <span class="ft_larg bold pad10lft">Template</span>
-  </div>
-  <div class="flex centcont justcent">
-    <button class="px_minw50 pad5" (click)="showHelp()">Help</button>
-    <div class="px_minw10"></div>
-    <button class="px_minw50 pad5" (click)="logOut()">Logout</button>
-  </div>
-</header>
-  
-<div class="flex bottom">
-  <nav class="bgc_lgrey pad10top sh10_ytint px_w150">
-    <ul class="pad0 mar0 menu">
-      @for (tab of tabs; track $index) {
-          <li class="centtext pad10 bd_r5 selecthost" [class.selected]="tab.path === selectedTabPath">
-              <a [routerLink]="[tab.path]" (click)="onLinkClicked($event)">{{ tab.label }}</a>
-          </li>
-      }
-    </ul>
-  </nav>
-  <div class="page-content">
-    <router-outlet></router-outlet>
-  </div>
+<div class="flexc v_full mar0 pad0">
+    <header class="flex justends centcont bgc_tint sh5_tint pad10 px_h20">
+        <div class="flex centcont justcent">
+            <img src="assets/boxcross.svg" alt="logo" class="px_h30 px_w30">
+            <span class="ft_larg bold pad10lft">Template</span>
+        </div>
+        <div class="flex centcont justcent">
+            <button class="px_minw50 pad5" (click)="showHelp()">Help</button>
+            <div class="px_minw10"></div>
+            <button class="px_minw50 pad5" (click)="logOut()">Logout</button>
+        </div>
+    </header>
+      
+    <div class="flex v_fullw"
+      [style.height]="'calc(100vh - 40px)'"
+    >
+        <nav class="bgc_lgrey pad10top sh10_ytint px_w150">
+            <ul class="pad0 mar0 menu">
+                @for (tab of tabs; track $index) {
+                    <li class="centtext pad10 bd_r5 tabshost tr_short cs_ptr" [class.selected]="tab.path === selectedTabPath">
+                        <a [routerLink]="[tab.path]" (click)="onLinkClicked($event)">{{ tab.label }}</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+        <div class="pad5"
+            [style.width]="'calc(100vw - 160px)'"
+            [style.height]="'calc(100vh - 50px)'"
+        >
+            <router-outlet></router-outlet>
+        </div>
+    </div>  
 </div>
