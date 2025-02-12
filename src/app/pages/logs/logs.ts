@@ -5,8 +5,7 @@ import { TableViewComponent } from "../../../components/tableview/tableview";
     selector: "page-logs",
     standalone: true,
     imports: [TableViewComponent],
-    templateUrl: "./logs.html",
-    styleUrls: ["./logs.less"]
+    templateUrl: "./logs.html"
 })
 export class LogsPage {
     objList: Array<any> = [
