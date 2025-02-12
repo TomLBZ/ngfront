@@ -11,8 +11,9 @@ import { KnobComponent } from '../knob/knob';
 export class ThrottleComponent {
     @Input() upKey: string = 'w';
     @Input() downKey: string = 's';
-    @Input() showText: boolean = true;
-    @Input() showTitle: boolean = true;
+    @Input() showText: boolean = false;
+    @Input() showTitle: boolean = false;
+    @Input() showBorder: boolean = false;
     @Input() title: string = 'Throttle';
     @Input() sizeStr: string = '100px';
     private _style: string = 'v';

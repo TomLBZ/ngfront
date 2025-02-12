@@ -1,4 +1,6 @@
-<div class="flexc bd_dsh bd_r5 centcont">
+<div class="flexc bd_r5 centcont"
+    [class.bd_dsh]="showBorder"
+>
     @if (showTitle) {
         <span class="txt_hdg">{{ title }}</span>
     }
