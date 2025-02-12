@@ -7,17 +7,20 @@
 .noptr {
     pointer-events: none;
 }
+.nobg {
+    background: none;
+}
 
-.c_ptr {
+.cs_ptr {
     cursor: pointer;
 }
-.c_grb {
+.cs_grb {
     cursor: grab;
 }
-.c_grbng {
+.cs_grbng {
     cursor: grabbing;
 }
-.c_def {
+.cs_def {
     cursor: default;
 }
 
@@ -69,8 +72,7 @@
     }
 }
 
-.selecthost {
-    transition: background-color 0.2s ease;
+.tabshost {
     &:hover {
         background-color: @c_grey;
     }
@@ -84,7 +86,15 @@
         text-decoration: none;
         color: @c_dgrey;
         display: block;
-        transition: color 0.2s ease;
+    }
+}
+
+.listhost {
+    &:hover {
+        background-color: @c_ltint;
+    }
+    &.selected {
+        background-color: @c_ltint;
     }
 }
 
