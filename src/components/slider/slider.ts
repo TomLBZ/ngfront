@@ -3,8 +3,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 @Component({
     selector: 'slider',
     standalone: true,
-    templateUrl: './slider.html',
-    styleUrls: ['./slider.less']
+    templateUrl: './slider.html'
 })
 export class SliderComponent {
     @Input() maxValue = 1;

@@ -26,19 +26,32 @@
         >
         </div>
     </div>
-    <div class="pos_abs top0 lft0 btm0 rht0 slider-text"
-        [class.vertical]="isVertical"
-    >
+    <div class="pos_abs top0 lft0 btm0 rht0">
         @if (showLabel) {
-            <div class="pos_abs ft_smal min">
+            <div class="pos_abs ft_smal"
+                [class.tf_xcent]="isVertical"
+                [class.tf_ycent]="!isVertical"
+                [class.top50p]="!isVertical"
+                [class.btm0]="isVertical"
+                [style.left]="isVertical ? '50%' : '0'"
+            >
                 {{ isReversed ? maxValue : minValue }}
             </div>
-            <div class="pos_abs ft_smal max">
+            <div class="pos_abs ft_smal"
+                [class.tf_xcent]="isVertical"
+                [class.tf_ycent]="!isVertical"
+                [class.lft50p]="isVertical"
+                [class.rht0]="!isVertical"
+                [style.top]="isVertical ? '0' : '50%'"
+            >
                 {{ isReversed ? minValue : maxValue }}
             </div>
         }
         @if (showText) {
-            <div class="pos_abs ft_smal value">
+            <div class="pos_abs ft_smal lft50p top50p"
+                [class.tf_rotcent]="isVertical"
+                [class.tf_cent]="!isVertical"
+            >
                 {{ displayValue }}
             </div>
         }
