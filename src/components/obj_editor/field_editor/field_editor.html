@@ -1,55 +1,57 @@
-@let isArray = isArrayType(objToEdit);
-@let isObject = isObjectType(objToEdit);
-@if (isArray || isObject) {
-  <div class="flex centeralign justends">
-    <div class="bold marginright nowrap overhidden">
-      {{ objName }}
-    </div>
-    <button (click)="toggleSelfExpand()">
-      {{ expanded ? '▼' : '▷' }}
-    </button>
-  </div>
-  <div class="paddingleft marginbottom dashed round">
-    @if (expanded) {
-      @if (isArray) {
-        @for (item of objToEdit; track $index) {
-          <field-editor
-            [objToEdit]="objToEdit[$index]"
-            [objName]="'[' + $index + ']'"
-            [readOnly]="readOnly"
-            [expanded]="defaultExpanded"
-            [includeFilter]="includeFilter"
-            [defaultExpanded]="defaultExpanded"
-            (fieldChanged)="onArrayChanged($event)"
-          ></field-editor>
-        }
-      }
-      @else if (isObject) {
-        @for (key of getObjKeys(); track key) {
-          <field-editor
-            [objToEdit]="objToEdit[key]"
-            [objName]="key"
-            [readOnly]="readOnly"
-            [includeFilter]="includeFilter"
-            [expanded]="defaultExpanded"
-            [defaultExpanded]="defaultExpanded"
-            (fieldChanged)="onFieldChanged($event)"
-          ></field-editor> 
-        }
-      }
+<div class="p_full zeromin">
+    @let isArray = isArrayType(objToEdit);
+    @let isObject = isObjectType(objToEdit);
+    @if (isArray || isObject) {
+        <div class="flex centcont justends">
+            <div class="bold mar5rht txt_nowrap ov_hid">
+                {{ objName }}
+            </div>
+            <button (click)="toggleSelfExpand()">
+                {{ expanded ? '▼' : '▷' }}
+            </button>
+        </div>
+        <div class="pad5lft mar5btm bd_dsh bd_r5 bdc_tint">
+            @if (expanded) {
+                @if (isArray) {
+                    @for (item of objToEdit; track $index) {
+                        <field-editor
+                            [objToEdit]="objToEdit[$index]"
+                            [objName]="'[' + $index + ']'"
+                            [readOnly]="readOnly"
+                            [expanded]="defaultExpanded"
+                            [includeFilter]="includeFilter"
+                            [defaultExpanded]="defaultExpanded"
+                            (fieldChanged)="onArrayChanged($event)"
+                        ></field-editor>
+                    }
+                }
+                @else if (isObject) {
+                    @for (key of getObjKeys(); track key) {
+                        <field-editor
+                            [objToEdit]="objToEdit[key]"
+                            [objName]="key"
+                            [readOnly]="readOnly"
+                            [includeFilter]="includeFilter"
+                            [expanded]="defaultExpanded"
+                            [defaultExpanded]="defaultExpanded"
+                            (fieldChanged)="onFieldChanged($event)"
+                        ></field-editor> 
+                    }
+                }
+            }
+            @else {
+                <span>
+                    {{ isObjectType(objToEdit) ? '\<Object\>' : '\[Array\]' }}
+                </span>
+            }
+        </div>
     }
     @else {
-      <span>
-        {{ isObjectType(objToEdit) ? '\<Object\>' : '\[Array\]' }}
-      </span>
+        <value-editor class="p_fullw"
+            [itemToEdit]="objToEdit"
+            [itemName]="objName"
+            [readOnly]="readOnly"
+            (itemChanged)="onItemChanged($event)"
+        ></value-editor>
     }
-  </div>
-}
-@else {
-  <value-editor class="fullw"
-    [itemToEdit]="objToEdit"
-    [itemName]="objName"
-    [readOnly]="readOnly"
-    (itemChanged)="onItemChanged($event)"
-  ></value-editor>
-}
+</div>

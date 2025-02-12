@@ -1,12 +1,11 @@
 import { Component, Input, EventEmitter, Output} from '@angular/core';
-import { ValueEditorComponent, Change } from './value_editor/value_editor';
+import { ValueEditorComponent, Change } from '../value_editor/value_editor';
 
 @Component({
   standalone: true,
   selector: 'field-editor',
-  templateUrl: './field_editor.html',
-  styleUrls: ['./field_editor.less'],
-  imports: [ValueEditorComponent]
+  imports: [ValueEditorComponent],
+  templateUrl: './field_editor.html'
 })
 export class FieldEditorComponent {
   @Input() objToEdit: any = {};
