@@ -14,8 +14,8 @@ export class SliderComponent {
     @Input() showLabel = false;
     @Input() isPercentage = false;
     @Input() isReversed = false;
-    @Input() length = '100%';
-    @Input() width = '20px';
+    @Input() lengthStr = '200px';
+    @Input() widthStr = '20px';
     @Input() isEmphasized = false;
     private _value = 0;
     get value(): number {

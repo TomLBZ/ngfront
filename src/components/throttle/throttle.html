@@ -6,7 +6,7 @@
         <slider
             [isEmphasized]="shiftActive"
             [isVertical]="styleIsVertical"
-            [length]="'200px'"
+            [lengthStr]="sizeStr"
             [isDraggable]="true"
             [isPercentage]="false"
             [showLabel]="true"
@@ -17,13 +17,13 @@
     }
     @else if (styleIsKnob) {
         <knob
+            [size]="sizeStr"
             [isEmphasized]="shiftActive"
             [showLabel]="true"
             [showNeedle]="true"
             [showText]="true"
             [isDraggable]="true"
             [isPercentage]="false"
-            [size]="'100px'"
             [value]="shiftActive ? sensitivity : value"
             (valueChanged)="onValueChanged($event)"
         ></knob>

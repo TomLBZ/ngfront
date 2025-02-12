@@ -14,6 +14,7 @@ export class ThrottleComponent {
     @Input() showText: boolean = true;
     @Input() showTitle: boolean = true;
     @Input() title: string = 'Throttle';
+    @Input() sizeStr: string = '100px';
     private _style: string = 'v';
     get style(): string {
         return this._style;
