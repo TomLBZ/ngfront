@@ -13,6 +13,9 @@ export class JoystickComponent {
     @Input() knobSizeStr: string = '60px';
     @Input() knobText: string = '';
     @Input() showValues: boolean = false;
+    @Input() showTitle: boolean = false;
+    @Input() showBorder: boolean = false;
+    @Input() title: string = 'Joystick';
     @Output() valueChanged = new EventEmitter<Vec2>();
 
     private get baseSizePx(): number {

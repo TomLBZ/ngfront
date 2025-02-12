@@ -1,4 +1,9 @@
-<div class="flexc bd_dsh bd_r5 centcont">
+<div class="flexc bd_r5 centcont"
+    [class.bd_dsh]="showBorder"
+>
+    @if (showTitle) {
+        <span class="txt_hdg">{{ title }}</span>
+    }
     <div #joystickBase class="pos_rel bd_r50p noselect bgc_lgrey bd_sng bdc_tint sh5_intint"
         [style.width]="baseSizeStr"
         [style.height]="baseSizeStr">
