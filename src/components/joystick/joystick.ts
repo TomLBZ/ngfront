@@ -4,8 +4,7 @@ import { Vec2 } from '../../utils/vec/vec2';
 @Component({
     standalone: true,
     selector: 'joystick',
-    templateUrl: './joystick.html',
-    styleUrls: ['./joystick.less'],
+    templateUrl: './joystick.html'
 })
 export class JoystickComponent {
     @ViewChild('joystickBase', { static: true }) joystickBaseRef!: ElementRef;

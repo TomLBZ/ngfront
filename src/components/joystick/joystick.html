@@ -3,6 +3,7 @@
         [style.width.px]="baseSize"
         [style.height.px]="baseSize">
         <div #joystickKnob class="centtext centcont pos_abs tf_cent bd_r50p bgc_grey sh5_grey draghost"
+            [class.dragging]="isDragging"
             [class.tr_none]="isDragging"
             [class.tr_short]="!isDragging"
             [style.width.px]="knobSize"
