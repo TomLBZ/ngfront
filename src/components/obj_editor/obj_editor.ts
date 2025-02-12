@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FieldEditorComponent } from './field_editor/field_editor';
-import { Change } from './field_editor/value_editor/value_editor';
+import { Change } from './value_editor/value_editor';
 
 export class cloneable {
     public static deepCopy<T>(source: T): T {
@@ -23,9 +23,8 @@ export class cloneable {
 @Component({
   selector: 'obj-editor',
   standalone: true,
-  templateUrl: './obj_editor.html',
-  styleUrls: ['./obj_editor.less'],
-  imports: [FieldEditorComponent]
+  imports: [FieldEditorComponent],
+  templateUrl: './obj_editor.html'
 })
 export class ObjEditorComponent {
     @Input() textMode: boolean = true;

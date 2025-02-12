@@ -1,7 +1,7 @@
-@if (objToEdit) {
-    <div class="flex grow zeromin">
-        <div class="flex c grow overscrolly">
-            <field-editor class="zeromin"
+<div class="flexc zeromin p_full">
+    @if (objToEdit) {
+        <div class="flex grow zeromin">
+            <field-editor class="flexc grow zeromin ovy_scr"
                 [objToEdit]="objToEdit"
                 [objName]="objName"
                 [expanded]="true"
@@ -10,31 +10,31 @@
                 [defaultExpanded]="defaultExpanded"
                 (fieldChanged)="onFieldChange($event)"
             ></field-editor>
+            @if (textMode && !readOnly) {
+                <div class="flex grow p_halfw errorhost" [class.error]="errorState">
+                    <textarea class="flex grow pad5 noresize"
+                        [value]="getObjStr()"
+                        (input)="onTextChange($event)"
+                    ></textarea>
+                </div>
+            }
         </div>
-        @if (textMode && !readOnly) {
-            <div class="flex grow hhalf errorhost" [class.error]="errorState">
-                <textarea class="flex grow padding noresize"
-                    [value]="getObjStr()"
-                    (input)="onTextChange($event)"
-                ></textarea>
-            </div>
+        @if (!readOnly) {
+            <div class="flex centcont justarnd pad5">
+                <Label class="noselect cs_ptr">
+                    <input 
+                        type="checkbox"
+                        [checked]="textMode"
+                        (change)="toggleText()"
+                    >
+                    Toggle Text
+                </Label>
+                <button class="px_minw50 pad5" (click)="reset()">Reset</button>
+                <button class="px_minw50 pad5" (click)="apply()">Apply</button>
+            </div>    
         }
-    </div>
-    @if (!readOnly) {
-        <div class="flex centeralign justaround padding">
-            <Label class="noselect pointer">
-                <input 
-                    type="checkbox"
-                    [checked]="textMode"
-                    (change)="toggleText()"
-                >
-                Toggle Text
-            </Label>
-            <button class="wmin50px padding" (click)="reset()">Reset</button>
-            <button class="wmin50px padding" (click)="apply()">Apply</button>
-        </div>    
     }
-}
-@else {
-    <div class="flex grow justcenter centeralign huge lighttext">No Object</div>
-}
+    @else {
+        <div class="flex grow zeromin justcent centcont ft_huge c_grey">No Object</div>
+    }
+</div>
