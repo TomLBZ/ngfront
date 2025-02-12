@@ -3,6 +3,8 @@
     <joystick
         [showValues]="true"
         [knobText]="'Drag Me'"
+        [baseSizeStr]="'150px'"
+        [knobSizeStr]="'50px'"
         (valueChanged)="onJoystickChanged($event)"
     ></joystick>
 </div>
@@ -10,6 +12,7 @@
     <throttle 
         [style]="'h'" 
         [value]="value" 
+        [sizeStr]="'200px'"
         [sensitivity]="sensitivity"
         (valueChanged)="onThrottleChanged($event)"
         (sensitivityChanged)="onSensitivityChanged($event)"
@@ -18,14 +21,15 @@
 <div class="flex p_halfh">
     <div class="p_halfw bd_dbl bd_r10 pad10 bdc_tint">
         <throttle 
-            [value]="value" 
+            [value]="value"
+            [sizeStr]="'200px'" 
             [sensitivity]="sensitivity"
             (valueChanged)="onThrottleChanged($event)"
             (sensitivityChanged)="onSensitivityChanged($event)"
         ></throttle>
     </div>
     <div class="p_halfw bd_dbl bd_r10 pad10 bdc_tint">
-        <throttle 
+        <throttle class="px_w50 px_h50"
             [style]="'k'" 
             [value]="value" 
             [sensitivity]="sensitivity"
