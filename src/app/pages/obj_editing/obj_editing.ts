@@ -1,10 +1,12 @@
 import { Component } from "@angular/core";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
+import { FieldEditorComponent } from "../../../components/obj_editor/field_editor/field_editor";
+import { ValueEditorComponent } from "../../../components/obj_editor/value_editor/value_editor";
 
 @Component({
     selector: "page-obj-editing",
     standalone: true,
-    imports: [ObjEditorComponent],
+    imports: [ObjEditorComponent, FieldEditorComponent, ValueEditorComponent],
     templateUrl: "./obj_editing.html"
 })
 export class ObjEditingPage {
@@ -44,6 +46,6 @@ export class ObjEditingPage {
     teststr = "test";
 
     onUpdate(obj: any) {
-        console.log(obj);
+        this.myObj = obj;
     }
 }

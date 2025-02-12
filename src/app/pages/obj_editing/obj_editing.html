@@ -1,7 +1,33 @@
-<div class="p_halfh p_halfw bd_r5 bd_dbl bdc_tint pad10">
-    <obj-editor
-        [objToEdit]="myObj" 
-        [textMode]="textMode" 
-        (updated)="onUpdate($event)"
-    ></obj-editor>
+<div class="p_full">
+    <div class="p_halfh bd_dbl bdc_tint bd_r5 pad10">
+        <obj-editor
+            [objToEdit]="myObj" 
+            [textMode]="textMode" 
+            [showBorder]="true"
+            [defaultExpanded]="true"
+            [readOnly]="false"
+            (updated)="onUpdate($event)"
+        ></obj-editor>
+    </div>
+    <div class="flex p_halfh">
+        <div class="p_halfw bd_dbl bdc_tint bd_r5 pad10">
+            <field-editor
+                [objToEdit]="myObj"
+                [objName]="'myObj'"
+                [expanded]="true"
+                [defaultExpanded]="true"
+                [readOnly]="true"
+                [showBorder]="true"
+                [scrollChildren]="true"
+            ></field-editor>
+        </div>
+        <div class="p_halfw bd_dbl bdc_tint bd_r5 pad10">
+            <value-editor
+                [itemToEdit]="myObj.name"
+                [itemName]="'myObj.name'"
+                [readOnly]="true"
+                [showBorder]="true"
+            ></value-editor>
+        </div>
+    </div>
 </div>
