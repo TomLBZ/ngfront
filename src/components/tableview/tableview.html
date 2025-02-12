@@ -1,38 +1,43 @@
-@if(data.length > 0) {
-    <div class="flex justaround single">
-        <dropselect class="flex r justends h3quarts"
-            [items]="columns"
-            title="Fields Filter"
-            [indexMode]="true"
-            [hoverMode]="true"
-            [multiSelect]="true"
-            [fixDropdown]="false"
-            [representation]="getTitleCase"
-            (selectionChanged)="onSelectionChanged($event)">
-      </dropselect>
-      <button class="wmin80px" (click)="exportToCSV()">Export As CSV</button>
-    </div>
-    <div class="flex grow overscroll relative">
-        <table class="absolute top left right bottom">
-            <thead>
-                <tr>
-                @for(col of selectedColumns; track $index) {
-                    <th>{{ getTitleCase(col) }}</th>
-                }
-                </tr>
-            </thead>
-            <tbody>
-                @for(row of data; track $index) {
-                <tr>
+<div class="p_full bd_r5 flexc"
+    [class.bd_dsh]="showBorder"
+>
+    @if(data.length > 0) {
+        <div class="flex justarnd bd_sng bdc_tint">
+            <dropselect class="flex justends p_3quarth"
+                [items]="columns"
+                title="Fields Filter"
+                [titleAbove]="false"
+                [indexMode]="true"
+                [hoverMode]="true"
+                [multiSelect]="true"
+                [fixDropdown]="false"
+                [representation]="getTitleCase"
+                (selectionChanged)="onSelectionChanged($event)">
+        </dropselect>
+        <button class="px_minw80" (click)="exportToCSV()">Export As CSV</button>
+        </div>
+        <div class="flex grow ov_scr pos_rel">
+            <table class="pos_abs top0 lft0 rht0 btm0">
+                <thead>
+                    <tr>
                     @for(col of selectedColumns; track $index) {
-                    <td>{{ row[col] }}</td>
+                        <th>{{ getTitleCase(col) }}</th>
                     }
-                </tr>
-                }
-            </tbody>
-        </table>
-    </div>    
-}
-@else {
-    <p class="flex grow justcenter centeralign huge lighttext">No data available.</p>
-}        
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(row of data; track $index) {
+                    <tr>
+                        @for(col of selectedColumns; track $index) {
+                        <td>{{ row[col] }}</td>
+                        }
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>    
+    }
+    @else {
+        <p class="flex grow justcent centcont ft_huge c_grey">No data available.</p>
+    }            
+</div>

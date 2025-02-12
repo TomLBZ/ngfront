@@ -5,11 +5,11 @@ import { DropSelectComponent } from '../dropselect/dropselect';
     selector: 'tableview',
     standalone: true,
     imports: [DropSelectComponent],
-    templateUrl: './tableview.html',
-    styleUrls: ['./tableview.less']
+    templateUrl: './tableview.html'
 })
 export class TableViewComponent implements OnChanges {
     @Input() data: any[] = [];
+    @Input() showBorder = false;
     columns: string[] = [];
     selectedColumns: string[] = [];
     repr = (item: string): string => this.getTitleCase(item);
