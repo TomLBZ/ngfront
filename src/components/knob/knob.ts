@@ -15,7 +15,7 @@ export class KnobComponent {
     @Input() showLabel: boolean = false;
     @Input() isPercentage: boolean = false;
     @Input() isEmphasized: boolean = false;
-    @Input() size: string = "100%";
+    @Input() sizeStr: string = "100px";
     private _value: number = 0;
     get value(): number {
         return this._value;
@@ -28,10 +28,6 @@ export class KnobComponent {
     }
     @Output() valueChanged = new EventEmitter<number>();
     isDragging = false;
-    readonly centerX = 50;
-    readonly centerY = 50;
-    readonly radius = 40;
-    readonly circumference = 2 * Math.PI * this.radius;
     private clampValue(v: number): number {
         return Math.min(this.maxValue, Math.max(this.minValue, v));
     }
