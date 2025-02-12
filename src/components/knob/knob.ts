@@ -3,8 +3,7 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
 @Component({
     selector: "knob",
     standalone: true,
-    templateUrl: "./knob.html",
-    styleUrls: ["./knob.less"]
+    templateUrl: "./knob.html"
 })
 export class KnobComponent {
     @Input() maxValue: number = 1;

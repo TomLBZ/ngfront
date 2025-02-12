@@ -3,12 +3,12 @@
     [style.width]="size"
     [style.height]="size"
     [class.draghost]="isDraggable"
+    [class.dragging]="isDragging"
     (pointerdown)="onPointerDown($event)"
     (pointermove)="onPointerMove($event)"
     (pointerup)="onPointerUp($event)"
 >
     <div class="p_full pos_rel bd_r50p ringhost emphhost" 
-        [class.dragging]="isDragging"
         [class.tr_none]="isDragging"
         [class.tr_short]="!isDragging"
         [style.--degrees]="fillAngle + 'deg'"
