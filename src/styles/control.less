@@ -2,16 +2,16 @@ button {
     border: 1px solid @c_tint;
     border-radius: 5px;
     cursor: pointer;
-}
-
-button:hover {
-    background-color: @c_dtint;
-    color: @c_white;
     transition: background-color 0.5s ease, color 0.5s ease;
-}
-
-button:hover:disabled {
-    cursor: not-allowed;
+    &:hover {
+        background-color: @c_dtint;
+        color: @c_white;
+        &:disabled {
+            background-color: @c_lgrey;
+            color: @c_dgrey;
+            cursor: not-allowed;
+        }
+    }
 }
 
 input {
@@ -19,6 +19,17 @@ input {
     border: 1px solid @c_tint;
     border-radius: 5px;
     transition: border-color 0.2s ease, background-color 0.2s ease;
+    &:hover {
+        border-color: @c_dtint;
+    }
+    &:active,
+    &:focus {
+        border-color: @c_submit;
+    }
+    &:disabled {
+        background-color: @c_lgrey;
+        cursor: not-allowed;
+    }
 }
 
 input[type="checkbox"] {
@@ -29,20 +40,6 @@ input[type="text"],
 input[type="number"],
 input[type="date"] {
     min-width: 50px;
-}
-
-input:hover {
-    border-color: @c_dtint;
-}
-
-input:active,
-input:focus {
-    background-color: @c_ltint;
-}
-
-input:disabled {
-    background-color: @c_lgrey;
-    cursor: not-allowed;
 }
 
 table {
@@ -71,5 +68,24 @@ table {
   
     tr:hover {
       background-color: @c_lgrey;
+    }
+}
+
+textarea {
+    outline: none;
+    border: 1px solid @c_tint;
+    border-radius: 5px;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    &:hover {
+        border-color: @c_dtint;
+    }
+    &:active,
+    &:focus {
+        border-color: @c_submit;
+    }
+    &:disabled {
+        background-color: @c_lgrey;
+        cursor: not-allowed;
+        pointer-events: none;
     }
 }
