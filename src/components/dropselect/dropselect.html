@@ -1,63 +1,73 @@
-@if (title) {
-    <label class="bold oblq txt_nowrap centtext pad5">
-        {{ title }}
-    </label>
-}
-<div class="pos_rel"
-    (mouseenter)="onMouseEnter()"
-    (mouseleave)="onMouseLeave()">
-
-    <div class="flex centcont centtext">
-        <input class="p_fullw txtov_el pad5 bd_r5"
-            type="text"
-            [value]="searchTerm"
-            [placeholder]="placeholder"
-            (input)="onSearchChanged($event)"
-            (focus)="onSearchFocus()"
-            (blur)="onSearchBlur()"
-        />
-        @if (searchTerm) {
-            <button class="pos_abs rht0 top50p tf_cent centcont pad0 ff_mono bd_non nobg"
-                (click)="clearSearch()">
-                ✕
-            </button>
+<div class="p_full">
+    <div class="flex justcent"
+        [class.centcont]="!titleAbove"
+        [style.flex-direction]="titleAbove ? 'column' : 'row'"
+    >
+        @if (title) {
+            <label class="bold oblq txt_nowrap centtext"
+                [class.pad5btm]="titleAbove"
+                [class.pad5rht]="!titleAbove"
+            >
+                {{ title }}
+            </label>
         }
-    </div>
+        <div class="pos_rel"
+            (mouseenter)="onMouseEnter()"
+            (mouseleave)="onMouseLeave()">
 
-    @let filtered = filteredItems;
-    @let shown = fixDropdown || showDropdown;
-    @if (shown && filtered.length > 0) {
-        <ul class="pos_abs mar0 pad0 top100p lft0 rht0 bd_r5 bdc_grey bd_sng bgc_white ovy_aut p_max5h z2">
-            @for (item of filtered; track $index) {
-                @let i = getIndex(item);
-                @let isSelected = isItemSelected(i);
-                @if (multiSelect) {
-                    <li class="pad5 listhost tr_short cs_ptr"
-                        [class.selected]="isSelected">
-                        <label class="flex centcont cs_ptr">
-                            <input
-                                type="checkbox"
-                                [checked]="isSelected"
-                                (change)="onSelectItem(i)"
-                            />
-                            {{ representation(item) }}
-                        </label>
-                    </li>
-                } @else {
-                    <li class="pad5 listhost tr_short cs_ptr"
-                        [class.selected]="isSelected"
-                        (click)="onSelectItem(i)">
-                        {{ representation(item) }}
-                    </li>
+            <div class="flex centcont centtext">
+                <input class="p_fullw txtov_el pad5 bd_r5"
+                    type="text"
+                    [value]="searchTerm"
+                    [placeholder]="placeholder"
+                    (input)="onSearchChanged($event)"
+                    (focus)="onSearchFocus()"
+                    (blur)="onSearchBlur()"
+                />
+                @if (searchTerm) {
+                    <button class="pos_abs rht0 top50p tf_cent centcont pad0 ff_mono bd_non nobg"
+                        (click)="clearSearch()">
+                        ✕
+                    </button>
                 }
-            }
-        </ul>
-    }
+            </div>
 
-    @if (shown && filteredItems.length === 0) {
-        <!-- No items match the searchTerm -->
-        <div class="pos_abs top100p lft0 rht0 bd_r5 bdc_grey bd_sng bd_r5 pad5 bgc_white ital c_dtint z2">
-            No matching items
+            @let filtered = filteredItems;
+            @let shown = fixDropdown || showDropdown;
+            @if (shown && filtered.length > 0) {
+                <ul class="pos_abs mar0 pad0 top100p lft0 rht0 bd_r5 bdc_grey bd_sng bgc_white ovy_aut p_max5h z2">
+                    @for (item of filtered; track $index) {
+                        @let i = getIndex(item);
+                        @let isSelected = isItemSelected(i);
+                        @if (multiSelect) {
+                            <li class="pad5 listhost tr_short cs_ptr"
+                                [class.selected]="isSelected">
+                                <label class="flex centcont cs_ptr">
+                                    <input
+                                        type="checkbox"
+                                        [checked]="isSelected"
+                                        (change)="onSelectItem(i)"
+                                    />
+                                    {{ representation(item) }}
+                                </label>
+                            </li>
+                        } @else {
+                            <li class="pad5 listhost tr_short cs_ptr"
+                                [class.selected]="isSelected"
+                                (click)="onSelectItem(i)">
+                                {{ representation(item) }}
+                            </li>
+                        }
+                    }
+                </ul>
+            }
+
+            @if (shown && filteredItems.length === 0) {
+                <!-- No items match the searchTerm -->
+                <div class="pos_abs top100p lft0 rht0 bd_r5 bdc_grey bd_sng bd_r5 pad5 bgc_white ital c_dtint z2">
+                    No matching items
+                </div>
+            }
         </div>
-    }
+    </div>    
 </div>

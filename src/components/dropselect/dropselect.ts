@@ -26,6 +26,7 @@ export class DropSelectComponent {
     @Input() multiSelect: boolean = false;
     @Input() fixDropdown: boolean = false;
     @Input() title: string = "";
+    @Input() titleAbove: boolean = true;
     @Output() selectionChanged = new EventEmitter<any>();
 
     searchTerm: string = "";
