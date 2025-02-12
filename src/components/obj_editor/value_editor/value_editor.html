@@ -1,5 +1,5 @@
-<div class="flex centeralign justends">
-    <span class="italic paddingright">
+<div class="flex centcont justends">
+    <span class="ital pad5rht">
         {{ itemName ? itemName : '\<Value\>' }}
     </span>
     @if (readOnly) {
@@ -11,7 +11,7 @@
             <span>Unsupported item type</span>
         }
         @else {
-            <input class="wmin50px"
+            <input 
                 type="{{type}}"
                 step="any"
                 [value]="itemStr"

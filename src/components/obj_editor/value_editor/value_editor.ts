@@ -9,8 +9,7 @@ export interface Change {
 @Component({
     standalone: true,
     selector: "value-editor",
-    templateUrl: "./value_editor.html",
-    styleUrls: ["./value_editor.less"]
+    templateUrl: "./value_editor.html"
 })
 export class ValueEditorComponent {
     @Input() itemName: string = "";
