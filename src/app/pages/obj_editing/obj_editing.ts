@@ -5,8 +5,7 @@ import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
     selector: "page-obj-editing",
     standalone: true,
     imports: [ObjEditorComponent],
-    templateUrl: "./obj_editing.html",
-    styleUrls: ["./obj_editing.less"]
+    templateUrl: "./obj_editing.html"
 })
 export class ObjEditingPage {
 
