@@ -6,8 +6,7 @@ import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
     selector: "page-drop-select",
     standalone: true,
     imports: [DropSelectComponent, ObjEditorComponent],
-    templateUrl: "./drop_select.html",
-    styleUrls: ["./drop_select.less"]
+    templateUrl: "./drop_select.html"
 })
 export class DropSelectPage {
     objList: Array<any> = [
