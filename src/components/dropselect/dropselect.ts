@@ -3,8 +3,7 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
 @Component({
     selector: 'dropselect',
     standalone: true,
-    templateUrl: './dropselect.html',
-    styleUrls: ['./dropselect.less']
+    templateUrl: './dropselect.html'
 })
 export class DropSelectComponent {
     @Input() items: any[] = [];

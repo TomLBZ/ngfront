@@ -1,14 +1,14 @@
 @if (title) {
-    <label class="dropselect-label paddingleft paddingright">
+    <label class="bold oblq txt_nowrap centtext pad5">
         {{ title }}
     </label>
 }
-<div class="dropselect-container"
+<div class="pos_rel"
     (mouseenter)="onMouseEnter()"
     (mouseleave)="onMouseLeave()">
 
-    <div class="dropselect-search">
-        <input
+    <div class="flex centcont centtext">
+        <input class="p_fullw txtov_el pad5 bd_r5"
             type="text"
             [value]="searchTerm"
             [placeholder]="placeholder"
@@ -17,8 +17,7 @@
             (blur)="onSearchBlur()"
         />
         @if (searchTerm) {
-            <button
-                class="clear-btn"
+            <button class="pos_abs rht0 top50p tf_cent centcont pad0 ff_mono bd_non nobg"
                 (click)="clearSearch()">
                 ✕
             </button>
@@ -28,13 +27,14 @@
     @let filtered = filteredItems;
     @let shown = fixDropdown || showDropdown;
     @if (shown && filtered.length > 0) {
-        <ul class="dropselect-dropdown">
+        <ul class="pos_abs mar0 pad0 top100p lft0 rht0 bd_r5 bdc_grey bd_sng bgc_white ovy_aut p_max5h z2">
             @for (item of filtered; track $index) {
                 @let i = getIndex(item);
                 @let isSelected = isItemSelected(i);
                 @if (multiSelect) {
-                    <li [class.selected]="isSelected">
-                        <label class="multi-select-item">
+                    <li class="pad5 listhost tr_short cs_ptr"
+                        [class.selected]="isSelected">
+                        <label class="flex centcont cs_ptr">
                             <input
                                 type="checkbox"
                                 [checked]="isSelected"
@@ -44,7 +44,8 @@
                         </label>
                     </li>
                 } @else {
-                    <li [class.selected]="isSelected"
+                    <li class="pad5 listhost tr_short cs_ptr"
+                        [class.selected]="isSelected"
                         (click)="onSelectItem(i)">
                         {{ representation(item) }}
                     </li>
@@ -55,7 +56,7 @@
 
     @if (shown && filteredItems.length === 0) {
         <!-- No items match the searchTerm -->
-        <div class="no-items">
+        <div class="pos_abs top100p lft0 rht0 bd_r5 bdc_grey bd_sng bd_r5 pad5 bgc_white ital c_dtint z2">
             No matching items
         </div>
     }
