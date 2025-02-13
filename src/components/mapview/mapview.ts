@@ -69,8 +69,7 @@ export class MarkerEvent extends MapViewEvent {
         PopupComponent,
         DropSelectComponent
     ],
-    templateUrl: './mapview.html',
-    styleUrls: ['./mapview.less']
+    templateUrl: './mapview.html'
 })
 export class MapViewComponent {
     @Input() geoObjects: Array<Marker> = [];

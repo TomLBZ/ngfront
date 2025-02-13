@@ -1,151 +1,151 @@
-<mgl-map
-    [style]="initialMapStyle"
-    [zoom]="[zoom]"
-    [center]="[centerLat, centerLng]"
-    [fadeDuration]="fadeDuration"
-    (mapLoad)="onMapLoad($event)"
-    (mapMouseMove)="onMapMouseMove($event)"
-    (mapMouseDown)="onMapMouseDown($event)"
-    (mapMouseUp)="onMapMouseUp($event)"
->
-    @if (showLines) {
-        <mgl-geojson-source id="segments">
-            @for (pair of linePairs; track pairTracker(pair)) {
-                <mgl-feature
-                    [geometry]="{
-                        type: 'LineString',
-                        coordinates: pair
-                    }"
-                ></mgl-feature>
-            }
-        </mgl-geojson-source>
-        <mgl-layer
-            id="lines"
-            type="line"
-            source="segments"
-            [layout]="{}"
-            [paint]="{
-                'line-color': 'rgba(255, 0, 0, 1)',
-                'line-width': 2,
-            }"
-        ></mgl-layer>
-    }
-    @for (geoObj of geoObjects; track geoObj.constructor.name + geoObj.id.toString()) {
-        <mgl-image
-            [id]="geoObj.constructor.name + geoObj.id.toString()"
-            [data]="{
-                width: geoObj.iconSize,
-                height: geoObj.iconSize,
-                data: geoObj.iconData
-            }"
-        ></mgl-image>
-    }
-    <mgl-geojson-source id="markers">
-        @for (geoObj of geoObjects; track geoObj.trackTarget) {
-            <mgl-feature
-                [geometry]="{
-                    type: 'Point',
-                    coordinates: [geoObj.lon, geoObj.lat]
-                }"
-                [properties]="{
-                    id: geoObj.id,
-                    icon: geoObj.constructor.name + geoObj.id.toString(),
-                    iconSize: geoObj.iconSize,
-                    iconRadius: geoObj.iconSize * 0.5,
-                    heading: geoObj.hdg,
-                    label: labelFunc(geoObj),
-                    cName: geoObj.constructor.name
-                }"
-            ></mgl-feature>
-        }
-    </mgl-geojson-source>
-    @if (showSelected) {
-        <mgl-layer
-            id="marker-border"
-            type="circle"
-            source="markers"
-            [filter]="['all', 
-                ['all', ['has', 'id'], ['has', 'iconRadius']],
-                ['==', ['get', 'id'], selectedMarkerId],
-                ['==', ['get', 'cName'], selectedMarkerCName]]"
-            [paint]="{
-                'circle-radius': ['*', ['get', 'iconRadius'], this.iconScale],
-                'circle-color': 'rgba(0, 0, 0, 0.2)',
-                'circle-stroke-width': 2 * iconScale,
-                'circle-stroke-color': 'rgba(255, 127, 0, 1)',
-            }"
-        ></mgl-layer>
-    }
-    <mgl-layer
-        id="points"
-        type="symbol"
-        source="markers"
-        [filter]="['all', ['has', 'id'], ['has', 'icon'], ['has', 'heading']]"
-        [layout]="{
-            'icon-image': ['get', 'icon'],
-            'icon-size': iconScale,
-            'icon-rotate': ['get', 'heading'],
-            'icon-allow-overlap': true,
-            'icon-ignore-placement': true,
-        }"
-        (layerClick)="onMarkerClick($event)"
-        (layerMouseEnter)="onMarkerEnter($event)"
-        (layerMouseLeave)="onMarkerLeave($event)"
-        (layerMouseDown)="onMarkerDown($event)"
-        (layerMouseUp)="onMarkerUp($event)"
+<div class="pos_rel p_full flexc">
+    <mgl-map class="p_full"
+        [style]="initialMapStyle"
+        [zoom]="[zoom]"
+        [center]="[centerLat, centerLng]"
+        [fadeDuration]="fadeDuration"
+        (mapLoad)="onMapLoad($event)"
+        (mapMouseMove)="onMapMouseMove($event)"
+        (mapMouseDown)="onMapMouseDown($event)"
+        (mapMouseUp)="onMapMouseUp($event)"
     >
-    </mgl-layer>
-    @if (showSymbols) {
-        <mgl-geojson-source id="labels">
-            @for (label of labelPoints; track labelTracker(label)) {
+        @if (showLines) {
+            <mgl-geojson-source id="segments">
+                @for (pair of linePairs; track pairTracker(pair)) {
+                    <mgl-feature
+                        [geometry]="{
+                            type: 'LineString',
+                            coordinates: pair
+                        }"
+                    ></mgl-feature>
+                }
+            </mgl-geojson-source>
+            <mgl-layer
+                id="lines"
+                type="line"
+                source="segments"
+                [layout]="{}"
+                [paint]="{
+                    'line-color': 'rgba(255, 0, 0, 1)',
+                    'line-width': 2,
+                }"
+            ></mgl-layer>
+        }
+        @for (geoObj of geoObjects; track geoObj.constructor.name + geoObj.id.toString()) {
+            <mgl-image
+                [id]="geoObj.constructor.name + geoObj.id.toString()"
+                [data]="{
+                    width: geoObj.iconSize,
+                    height: geoObj.iconSize,
+                    data: geoObj.iconData
+                }"
+            ></mgl-image>
+        }
+        <mgl-geojson-source id="markers">
+            @for (geoObj of geoObjects; track geoObj.trackTarget) {
                 <mgl-feature
                     [geometry]="{
                         type: 'Point',
-                        coordinates: [label.lon, label.lat]
+                        coordinates: [geoObj.lon, geoObj.lat]
                     }"
                     [properties]="{
-                        label: label.text
+                        id: geoObj.id,
+                        icon: geoObj.constructor.name + geoObj.id.toString(),
+                        iconSize: geoObj.iconSize,
+                        iconRadius: geoObj.iconSize * 0.5,
+                        heading: geoObj.hdg,
+                        label: labelFunc(geoObj),
+                        cName: geoObj.constructor.name
                     }"
                 ></mgl-feature>
             }
         </mgl-geojson-source>
+        @if (showSelected) {
+            <mgl-layer
+                id="marker-border"
+                type="circle"
+                source="markers"
+                [filter]="['all', 
+                    ['all', ['has', 'id'], ['has', 'iconRadius']],
+                    ['==', ['get', 'id'], selectedMarkerId],
+                    ['==', ['get', 'cName'], selectedMarkerCName]]"
+                [paint]="{
+                    'circle-radius': ['*', ['get', 'iconRadius'], this.iconScale],
+                    'circle-color': 'rgba(0, 0, 0, 0.2)',
+                    'circle-stroke-width': 2 * iconScale,
+                    'circle-stroke-color': 'rgba(255, 127, 0, 1)',
+                }"
+            ></mgl-layer>
+        }
         <mgl-layer
-            id="symbols"
+            id="points"
             type="symbol"
-            source="labels"
+            source="markers"
+            [filter]="['all', ['has', 'id'], ['has', 'icon'], ['has', 'heading']]"
             [layout]="{
-                'text-field': ['get', 'label'],
-                'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                'text-size': 12,
-                'text-allow-overlap': true,
+                'icon-image': ['get', 'icon'],
+                'icon-size': iconScale,
+                'icon-rotate': ['get', 'heading'],
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
             }"
-            [paint]="{
-                'text-color': 'rgba(255, 255, 127, 1)',
-                'text-halo-color': 'rgba(0, 0, 255, 0.8)',
-                'text-halo-width': 1,
-            }"
+            (layerClick)="onMarkerClick($event)"
+            (layerMouseEnter)="onMarkerEnter($event)"
+            (layerMouseLeave)="onMarkerLeave($event)"
+            (layerMouseDown)="onMarkerDown($event)"
+            (layerMouseUp)="onMarkerUp($event)"
         >
         </mgl-layer>
-    }
-    @if (popupVisible) {
-        <mgl-popup
-            [lngLat]="popupLonLat"
-            [closeOnClick]="false"
-            [closeButton]="false"
-        >
-            <div class="popup">{{popupText}}</div>
-        </mgl-popup>
-    }
-</mgl-map>
-<div class="floaty">
-    <dropselect class="flex c justcenter"
+        @if (showSymbols) {
+            <mgl-geojson-source id="labels">
+                @for (label of labelPoints; track labelTracker(label)) {
+                    <mgl-feature
+                        [geometry]="{
+                            type: 'Point',
+                            coordinates: [label.lon, label.lat]
+                        }"
+                        [properties]="{
+                            label: label.text
+                        }"
+                    ></mgl-feature>
+                }
+            </mgl-geojson-source>
+            <mgl-layer
+                id="symbols"
+                type="symbol"
+                source="labels"
+                [layout]="{
+                    'text-field': ['get', 'label'],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 12,
+                    'text-allow-overlap': true,
+                }"
+                [paint]="{
+                    'text-color': 'rgba(255, 255, 127, 1)',
+                    'text-halo-color': 'rgba(0, 0, 255, 0.8)',
+                    'text-halo-width': 1,
+                }"
+            >
+            </mgl-layer>
+        }
+        @if (popupVisible) {
+            <mgl-popup
+                [lngLat]="popupLonLat"
+                [closeOnClick]="false"
+                [closeButton]="false"
+            >
+                <div class="txt_prewrap">{{popupText}}</div>
+            </mgl-popup>
+        }
+    </mgl-map>
+    <dropselect class="bgc_ltint bd_r5 pos_abs top0 rht0 z1 sh5_tint pad5top"
         [items]="mapStyles"
         [defaultItem]="mapStyle"
-        [title]="'Select Layer Mode'"
+        [title]="'Map Style'"
         [indexMode]="false"
         [hoverMode]="true"
         [multiSelect]="false"
         [fixDropdown]="false"
         (selectionChanged)="onSelectT($event)"
-    ></dropselect>
+    ></dropselect>    
 </div>
