@@ -1,22 +1,33 @@
-<div class="login-container">
-    <h2>Login</h2>
-    <form (ngSubmit)="login()">
-        <div>
-            <label>Username:</label>
-            <input type="text" [(ngModel)]="username" name="username" required />
-        </div>
-        <div>
-            <label>Password:</label>
-            <input type="password" [(ngModel)]="password" name="password" required />
-        </div>
-        <div>
-            <button type="submit">Login</button>
-        </div>
-        @if (loginError)
-        {
-            <div>
-                <p>Invalid username or password</p>
+<div class="flexc p_fullw p_3quarth centcont justcent">
+    <div class="px_w400 px_h400 sh5_grey bd_r10 bdc_white bd_sng bgc_white pad10 errhost"
+        [class.err]="loginError"
+    >
+        <div class="flexc pad10 ft_big mar10h justarnd">
+            <h2 class="centtext ft_huge px_h50 noselect">Login</h2>
+            <div class="flexc pad10 ft_big mar10h">
+                <label class="mar5btm noselect">Username:</label>
+                <input class="px_h30" type="text" 
+                    [value]="username" 
+                    (input)="onUsernameChange($event)"
+                    name="username" placeholder="username" required 
+                />
             </div>
-        }
-    </form>
+            <div class="flexc pad10 ft_big mar10h">
+                <label class="mar5btm noselect">Password:</label>
+                <input class="px_h30" type="password" 
+                    [value]="password" 
+                    (input)="onPasswordChange($event)"
+                    name="password" placeholder="password" required 
+                />
+            </div>
+            <div class="px_h10"></div>
+            <div class="flexc pad10 ft_big mar10h">
+                <button class="flexc centcont pad10 bgc_ltint c_dtint" type="submit" (click)="login()">Login</button>
+            </div>
+            @if (loginError)
+            {
+                <p class="flexc centtext c_err noselect">Invalid username or password</p>
+            }
+        </div>
+    </div>    
 </div>

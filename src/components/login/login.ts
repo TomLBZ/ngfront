@@ -1,14 +1,27 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { LoginService } from './login.service';
-import { FormsModule } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AppService } from '../../app/app.service';
+import { Observable, map } from 'rxjs';
+
+export const loginGuard: CanActivateFn = (): Observable<boolean> => {
+    const service = inject(AppService);
+    const router = inject(Router);
+    const salt: string = localStorage.getItem('salt') || '';
+    return service.uniPost('testlogin', { salt: salt }).pipe(
+        map(res => {
+            if (!res.success) {
+                console.log('Not logged in, redirecting to login page');
+                router.navigate(['/login']);
+            }
+            return res.success;
+        })
+    );
+}
 
 @Component({
     selector: 'login',
     templateUrl: './login.html',
-    styleUrls: ['./login.less'],
-    standalone: true,
-    imports: [FormsModule]
+    standalone: true
 })
 
 export class LoginComponent {
@@ -16,14 +29,22 @@ export class LoginComponent {
     password: string = '';
     loginError: boolean = false;
 
-    constructor(private authService: LoginService, private router: Router) {}
+    constructor(private service: AppService, private router: Router) {}
+
+    onUsernameChange(event: any): void {
+        this.username = event.target.value;
+    }
+
+    onPasswordChange(event: any): void {
+        this.password = event.target.value;
+    }
 
     login(): void {
-        this.authService.login(this.username, this.password).subscribe({
+        this.service.uniPost('login', { name: this.username, password: this.password}).subscribe({
             next: (res) => {
                 if (res.success) {
                     console.log('Logged in as ' + res.user);
-                    this.authService.setLoggedIn(res.salt);
+                    localStorage.setItem('salt', res.salt);
                     this.router.navigate(['/pages']);
                 } else {
                     this.loginError = true;
