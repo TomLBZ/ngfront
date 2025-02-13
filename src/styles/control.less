@@ -83,9 +83,15 @@ textarea {
     &:focus {
         border-color: @c_submit;
     }
-    &:disabled {
-        background-color: @c_lgrey;
-        cursor: not-allowed;
-        pointer-events: none;
+    &.console {
+        background-color: @c_black;
+        color: @c_console;
+    }
+    &:not(.console) {
+        &:disabled {
+            background-color: @c_lgrey;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
     }
 }
