@@ -18,8 +18,7 @@ import { CircleMarker } from "./marker";
         MapViewComponent,
         OutboxComponent
     ],
-    templateUrl: "./playground.html",
-    styleUrls: ["./playground.less"]
+    templateUrl: "./playground.html"
 })
 export class PlaygroundComponent {
     // top pane
@@ -56,10 +55,8 @@ export class PlaygroundComponent {
     // bottom pane
     dropRepr: Function = (obj: any) => obj.name;
     // left pane
-    titleL = "Multiselect Markers";
     selIndicesL: Array<number> = [];
     // right pane
-    titleR = "Select a Single Marker to Edit";
     textModeR: boolean = false;
     private selIndexR: number = -1;
     get selObjR() {

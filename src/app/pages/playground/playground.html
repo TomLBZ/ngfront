@@ -1,20 +1,20 @@
-<div class="flex vhalf double">
-    <mapview
-        [geoObjects]="markers"
-        [apiKey]="apiKey"
-        [zoom]="zoom"
-        [centerLat]="center[0]"
-        [centerLng]="center[1]"
-        [iconScale]="iconScale"
-        (layerModeChanged)="onLayerModeChanged($event)"
-        (objectClicked)="onObjectClicked($event)"
-    ></mapview>
-</div>
-<div class="flex r vhalf">
-    <div class="flex c hthird double padding"> 
-        <dropselect class="flex c justcenter"
+<div class="p_full">
+    <div class="p_halfh bd_dbl bdc_tint bd_r5">
+        <mapview
+            [geoObjects]="markers"
+            [apiKey]="apiKey"
+            [zoom]="zoom"
+            [centerLat]="center[0]"
+            [centerLng]="center[1]"
+            [iconScale]="iconScale"
+            (layerModeChanged)="onLayerModeChanged($event)"
+            (objectClicked)="onObjectClicked($event)"
+        ></mapview>
+    </div>
+    <div class="flex p_halfh">
+        <dropselect class="p_thirdw bd_dbl bdc_tint bd_r5 pad5"
             [items]="markers"
-            [title]="titleL"
+            [title]="'Multiselect Markers'"
             [indexMode]="true"
             [hoverMode]="true"
             [multiSelect]="true"
@@ -22,29 +22,27 @@
             [representation]="dropRepr"
             (selectionChanged)="onSelectL($event)"
         ></dropselect>
-    </div>
-    <div class="flex c hthird double padding">
-        <dropselect class="flex c justcenter"
-            [items]="markers"
-            [title]="titleR"
-            [indexMode]="true"
-            [hoverMode]="true"
-            [multiSelect]="false"
-            [fixDropdown]="false"
-            [representation]="dropRepr"
-            (selectionChanged)="onSelectR($event)"
-        ></dropselect>
-        <obj-editor 
-            [objToEdit]="selObjR"
-            [objName]="objNameR"
-            [textMode]="textModeR" 
-            [includeFilter]="includeFilter"
-            (updated)="onUpdate($event)"
-        ></obj-editor>
-    </div>
-    <div class="flex c hthird double padding">
-        <outbox
+        <div class="flexc p_thirdw bd_dbl bdc_tint bd_r5 pad5">
+            <dropselect class="pad10btm"
+                [items]="markers"
+                [title]="'Select Marker to Edit'"
+                [indexMode]="true"
+                [hoverMode]="true"
+                [multiSelect]="false"
+                [fixDropdown]="false"
+                [representation]="dropRepr"
+                (selectionChanged)="onSelectR($event)"
+            ></dropselect>
+            <obj-editor class="flex grow"
+                [objToEdit]="selObjR"
+                [objName]="objNameR"
+                [textMode]="textModeR" 
+                [includeFilter]="includeFilter"
+                (updated)="onUpdate($event)"
+            ></obj-editor>
+        </div>
+        <outbox class="p_thirdw bd_dbl bdc_tint bd_r5 pad5"
             [text]="'123'"
         ></outbox>
-    </div>
+    </div>    
 </div>
