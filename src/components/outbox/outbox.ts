@@ -3,8 +3,7 @@ import { Input, Component } from '@angular/core';
 @Component({
     selector: 'outbox',
     standalone: true,
-    templateUrl: './outbox.html',
-    styleUrls: ['./outbox.less']
+    templateUrl: './outbox.html'
 })
 export class OutboxComponent {
     @Input() text: string = '';

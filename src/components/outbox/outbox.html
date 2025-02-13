@@ -1,8 +1,10 @@
-<Output class="c flex grow">
-    <span class="heading">{{title}}</span>
-    <textarea 
-        class="flex grow round single padding overauto noresize console" 
-        disabled="true"
-    >{{text}}</textarea>
-    <button class="padding" (click)="clear()">Clear Output</button>
-</Output>
+<div class="p_full">
+    <Output class="flexc p_full">
+        <span class="txt_hdg">{{title}}</span>
+        <textarea 
+            class="flex grow bd_r5 bd_sng noresize px_minh100 ff_mono console"
+            [disabled]="true" 
+        >{{text}}</textarea>
+        <button class="pad5" (click)="clear()">Clear Output</button>
+    </Output>    
+</div>
