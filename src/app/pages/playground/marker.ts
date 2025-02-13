@@ -26,7 +26,7 @@ export class CircleMarker implements Marker {
     }
 
     get popupText() {
-        return `CircleMarker ${this.icon} at (Lng: ${this.lon}, Lat: ${this.lat})\nHeading: ${this.hdg} degrees.`;
+        return `CircleMarker ${this.icon}\nAt (Lng: ${this.lon}, Lat: ${this.lat})\nHeading: ${this.hdg} degrees.`;
     }
 
     get trackTarget() {

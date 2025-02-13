@@ -1,16 +1,14 @@
 <div class="p_full">
-    <div class="p_halfh bd_dbl bdc_tint bd_r5">
-        <mapview
-            [geoObjects]="markers"
-            [apiKey]="apiKey"
-            [zoom]="zoom"
-            [centerLat]="center[0]"
-            [centerLng]="center[1]"
-            [iconScale]="iconScale"
-            (layerModeChanged)="onLayerModeChanged($event)"
-            (objectClicked)="onObjectClicked($event)"
-        ></mapview>
-    </div>
+    <mapview class="flexc p_halfh bd_dbl bdc_tint bd_r5"
+        [geoObjects]="markers"
+        [apiKey]="apiKey"
+        [zoom]="zoom"
+        [centerLat]="center[0]"
+        [centerLng]="center[1]"
+        [iconScale]="iconScale"
+        (layerModeChanged)="onLayerModeChanged($event)"
+        (objectClicked)="onObjectClicked($event)"
+    ></mapview>
     <div class="flex p_halfh">
         <dropselect class="p_thirdw bd_dbl bdc_tint bd_r5 pad5"
             [items]="markers"
