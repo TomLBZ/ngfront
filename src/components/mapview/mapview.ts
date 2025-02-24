@@ -24,25 +24,21 @@ import { Color } from '../../utils/color/color';
     templateUrl: './mapview.html'
 })
 export class MapViewComponent {
-    @Input() geoObjects: Array<Marker> = [];
+    @Input() markerGroups: Array<MarkerGroup> = [];
+    @Input() paths: Array<Path> = [];
     @Input() apiKey: string = '';
     @Input() zoom: number = 12;
     @Input() centerLat: number = 103.822872;
     @Input() centerLng: number = 1.364917;
-    @Input() iconScale: number = 1.0;
     @Input() fadeDuration: number = 0;
     @Input() mapStyle: string = 'bright-v2';
     @Input() mapStyles: Array<string> = ['aquarelle', 'backdrop', "basic-v2", 
         "bright-v2", "dataviz", "landscape", "ocean", "openstreetmap", 
         "outdoor-v2", "satellite", "streets-v2", "toner-v2", "topo-v2", "winter-v2"
     ];
-    @Input() showLines: boolean = false;
-    @Input() showSymbols: boolean = false;
-    @Input() showSelected: boolean = false;
-    @Input() labelFunc: Function = (obj: Marker) => "";
-    @Input() connectableFilter: Function = (obj: Marker) => false;
-    @Input() moveableFilter: Function = (obj: Marker) => false;
     @Output() layerModeChanged = new EventEmitter<string>();
+    @Output() objectSelectionChanged = new EventEmitter<MarkerEvent>();
+    @Output() objectClicked = new EventEmitter<MarkerEvent>();
     @Output() objectMouseDown = new EventEmitter<MarkerEvent>();
     @Output() objectMouseUp = new EventEmitter<MarkerEvent>();
     @Output() objectMoved = new EventEmitter<MarkerEvent>();
@@ -51,60 +47,28 @@ export class MapViewComponent {
     @Output() mapMouseMove = new EventEmitter<MapViewEvent>();
     // mapstyle
     map!: Map;
-    onMapLoad(map: Map) {
-        this.map = map;
-    }
-    private _cachedStyles: any = {};
-    private _getStyle() {
-        const url = `https://api.maptiler.com/maps/${this.mapStyle}/style.json?key=${this.apiKey}`;
+    onMapLoad(map: Map) { this.map = map; }
+    private _cachedStyles: Cache<any> = new Cache<any>();
+    private _getStyle(style: string) {
+        const url = `https://api.maptiler.com/maps/${style}/style.json?key=${this.apiKey}`;
         const xhr = new XMLHttpRequest();
         xhr.open('GET', url, false);
         xhr.send();
         return JSON.parse(xhr.responseText);
     }
-    private _initialMapStyle: any = undefined;
-    get initialMapStyle() {
-        if (!this._initialMapStyle) {
-            this._cachedStyles[this.mapStyle] = this._getStyle();
-            this._initialMapStyle = this._cachedStyles[this.mapStyle];
+    private get style() {
+        const idx = this.mapStyles.indexOf(this.mapStyle);
+        if (!this._cachedStyles.has(idx)) {
+            this._cachedStyles.set(idx, this._getStyle(this.mapStyle));
         }
-        return this._initialMapStyle;
-    }
-    get linePairs() {
-        const connectables = this.geoObjects.filter(obj => this.connectableFilter(obj));
-        const coords = connectables.map(obj => [obj.lon, obj.lat]);
-        const pairs = [];
-        for (let i = 0; i < coords.length - 1; i++) {
-            pairs.push([coords[i], coords[i + 1]]);
+        return this._cachedStyles.get(idx);
         }
-        return pairs;
-    }
-    pairTracker(pair: Array<Array<number>>) {
-        const tracker1 = pair[0][0].toString() + pair[0][1].toString();
-        const tracker2 = pair[1][0].toString() + pair[1][1].toString();
-        return tracker1 + tracker2;
-    }
-    get labelPoints() {
-        return this.geoObjects.map(obj => ({
-            lon: obj.lon,
-            lat: obj.lat,
-            text: this.labelFunc(obj)
-        }));
-    }
-    labelTracker(labelPoint: any) {
-        return labelPoint.lon.toString() + labelPoint.lat.toString() + labelPoint.text;
-    }
-    getMapStyle() {
-        const keys = Object.keys(this._cachedStyles);
-        if (keys.length == 0 || !keys.includes(this.mapStyle)) {
-            this._cachedStyles[this.mapStyle] = this._getStyle();
+    private _initStyle: any = undefined;
+    get initialStyle() {
+        if (this._initStyle === undefined) {
+            this._initStyle = this.style;
         }
-        return this._cachedStyles[this.mapStyle];
-    }
-    refresh(m: Marker) {
-        const idx = this.geoObjects.findIndex(obj => obj.id === m.id && obj.constructor.name === m.constructor.name);
-        if (idx >= 0) this.geoObjects[idx] = m;
-        else this.geoObjects.push(m);
+        return this._initStyle;
     }
     // dropselect
     onSelectT(obj: any) {
