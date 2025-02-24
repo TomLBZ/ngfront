@@ -1,5 +1,7 @@
 import { Vec2 } from '../vec/vec2';
 
+export type SDFunc = (p: Vec2) => number;
+
 export class SDF {
 
     static clamp(x: number, a: number, b: number) {
