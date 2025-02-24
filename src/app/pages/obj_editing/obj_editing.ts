@@ -42,10 +42,8 @@ export class ObjEditingPage {
             ]
         ]
     }
-    textMode: boolean = false;
-    teststr = "test";
 
-    onUpdate(obj: any) {
+    onApplied(obj: any) {
         this.myObj = obj;
     }
 }

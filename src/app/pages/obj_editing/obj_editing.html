@@ -1,11 +1,12 @@
 <div class="p_full">
     <obj-editor class="flex p_halfh bd_dbl bdc_tint bd_r5 pad10"
         [objToEdit]="myObj" 
-        [textMode]="textMode" 
+        [textMode]="false" 
         [showBorder]="true"
         [defaultExpanded]="true"
         [readOnly]="false"
-        (updated)="onUpdate($event)"
+        [autoApply]="true"
+        (applied)="onApplied($event)"
     ></obj-editor>
     <div class="flex p_halfh">
         <field-editor class="p_halfw bd_dbl bdc_tint bd_r5 pad10"
