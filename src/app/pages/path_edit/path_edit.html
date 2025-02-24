@@ -1,108 +1,114 @@
-<div class="flex grow double">
-    <mapview
-        [geoObjects]="markers"
-        [apiKey]="apiKey"
-        [zoom]="zoom"
-        [centerLat]="center[0]"
-        [centerLng]="center[1]"
-        [iconScale]="iconScale"
-        [mapStyles]="['topo-v2', 'satellite', 'bright-v2']"
-        [mapStyle]="'topo-v2'"
-        [connectableFilter]="connectableFilter"
-        [moveableFilter]="moveableFilter"
-        [showLines]="true"
-        [showSymbols]="true"
-        [labelFunc]="labelFunc"
-        (objectMouseDown)="onObjectMouseDown($event)"
-        (objectMouseUp)="onObjectMouseUp($event)"
-        (objectMoved)="onObjectMoved($event)"
-        (mapMouseDown)="onMapMouseDown($event)"
-        (mapMouseUp)="onMapMouseUp($event)"
-        (mapMouseMove)="onMapMouseMove($event)"
-    ></mapview>    
-</div>
-<div class="flex c hquart">
-    <div class="flex c vhalf double padding">
-        <div class="heading">Mission Path Editor</div>
-        <div class="small padding">
-            <div class="normal italic bold">Edit on Map:</div>
-            <div class="flex justends">
-                <span class="italic">Add WP:</span>
-                <span>Alt + Left Click</span>
+<div class="flex p_full">
+    <div class="flexc grow">
+        <mapview class="flex grow bd_dbl bdc_tint bd_r5"
+            [markerGroups]="markerGroups"
+            [paths]="currentMission.paths"
+            [apiKey]="apiKey"
+            [mapStyles]="['topo-v2', 'satellite', 'bright-v2']"
+            [mapStyle]="'topo-v2'"
+            (mapMouseDown)="onMapMouseDown($event)"
+            (objectMouseDown)="onObjectMouseDown($event)"
+            (objectMouseUp)="onObjectMouseUp($event)"
+            (objectMoved)="onObjectMoved($event)"
+            (objectClicked)="onObjectClicked($event)"
+        ></mapview>    
+        <div class="flex px_h300">
+            <div class="flexc p_halfw bd_dbl bdc_tint bd_r5 pad10h">
+                <obj-editor class="flex bdc_tint bd_r5 bd_sng"
+                    [objToEdit]="leader"
+                    [objName]="'Leader Plane:'"
+                    [readOnly]="true"
+                ></obj-editor>
+                <dropselect #ds class="flex pad5btm"
+                    [items]="nonleaders"
+                    [title]="'Mission ' + (currentMission.lead_id < 0 ? 'Leader' : 'Followers')"
+                    [hoverMode]="true"
+                    [multiSelect]="currentMission.lead_id >= 0"
+                    [representation]="planeRepr"
+                    (selectionChanged)="onPlaneSelected($event)"
+                ></dropselect>
+                <obj-editor class="flex grow bdc_tint bd_r5 bd_sng"
+                    [objToEdit]="currentMission"
+                    [objName]="'Mission Parameters'"
+                    [textMode]="false"
+                    [includeFilter]="mFieldsFilter"
+                    [defaultExpanded]="true"
+                    (updated)="onMissionUpdate($event)"
+                ></obj-editor>
             </div>
-            <div class="flex justends">
-                <span class="italic">Remove WP:</span>
-                <span>Alt + Right Click</span>
+            <div class="p_halfw bd_dbl bdc_tint bd_r5">
+
             </div>
-            <div class="flex justends">
-                <span class="italic">Change LngLat:</span>
-                <span>Left Drag ✥</span>
-            </div>
-            <div class="flex justends">
-                <span class="italic">Change Alt:</span>
-                <span>Right Drag ↕</span>
-            </div>
-            <div class="flex justends">
-                <span class="italic">Change δAlt:</span>
-                <span>Right Drag ↔</span>
-            </div>            
         </div>
-        <div class="small padding">
-            <div class="normal italic bold">Edit Manually Below:</div>
-            <span>Edit value manually and click Apply to see changes.</span>
-        </div>
-        <obj-editor class="flex c grow paddingtop"
-            [objToEdit]="markers"
-            [objName]="'Waypoints'"
-            [textMode]="false"
-            [includeFilter]="includeFilter"
-            [defaultExpanded]="true"
-            (updated)="onUpdate($event)"
-        ></obj-editor>
     </div>
-    <div class="flex c vhalf double padding">
-        <div class="heading">Mission Metadata</div>
-        <div class="round dashed padding">
-            <field-editor
-                [objToEdit]="missionParams.id"
-                [objName]="'ID'"
-                (fieldChanged)="onMissionUpdate($event)"
-            ></field-editor>
-            <field-editor
-                [objToEdit]="missionParams.name"
-                [objName]="'Name'"
-                (fieldChanged)="onMissionUpdate($event)"
-            ></field-editor>
-            <field-editor
-                [objToEdit]="missionParams.description"
-                [objName]="'Description'"
-                (fieldChanged)="onMissionUpdate($event)"
-            ></field-editor>
-            <field-editor
-                [objToEdit]="missionParams.saved_at"
-                [objName]="'Saved At'"
-                (fieldChanged)="onMissionUpdate($event)"
-            ></field-editor>
+    <div class="px_w200 p_fullh">
+        <div class="flexc p_halfh bd_dbl bdc_tint br_r5 pad5">
+            <div class="txt_hdg">Edit Waypoints</div>
+            <div class="ft_smal pad5">
+                <div class="flex justends">
+                    <span class="ital">+ WP:</span>
+                    <span>Ctrl + Left Click</span>
+                </div>
+                <div class="flex justends">
+                    <span class="ital">- WP:</span>
+                    <span>Ctrl + Right Click</span>
+                </div>
+                <div class="flex justends">
+                    <span class="ital">Move WP:</span>
+                    <span>Left Drag ✥</span>
+                </div>
+                <div class="flex justends">
+                    <span class="ital">Edit WP Alt:</span>
+                    <span>Middle Drag ✥</span>
+                </div>            
+            </div>
+            <obj-editor #wp class="flex grow"
+                [objToEdit]="markerGroups[0]"
+                [objName]="'Waypoints'"
+                [textMode]="false"
+                [includeFilter]="wpFieldsFilter"
+                [defaultExpanded]="true"
+                [autoApply]="true"
+                (applied)="onApplyMG($event, 0)"
+            ></obj-editor>
         </div>
-        <div class="round dashed padding">
-            <dropselect class="paddingbottom flex c justcenter"
-                [items]="configs"
-                [title]="'Leader Plane'"
-                [indexMode]="true"
-                [hoverMode]="true"
-                [fixDropdown]="false"
-                [representation]="cfgRepr"
-                (selectionChanged)="onLeaderSelect($event)"
-            ></dropselect>
-            <dropselect class="paddingbottom flex c justcenter"
-                [items]="followerPlanes"
-                [title]="'Follower Planes'"
-                [indexMode]="true"
-                [hoverMode]="true"
-                [multiSelect]="true"
-                [representation]="cfgRepr"
-                (selectionChanged)="onFollowerSelect($event)"
-            ></dropselect>
+        <div class="flexc p_halfh bd_dbl bdc_tint bd_r5 pad5">
+            <div class="txt_hdg">Edit Plane Insts</div>
+            <div class="ft_smal pad5">           
+                <div class="flex justends">
+                    <span class="ital">+ Plane Inst:</span>
+                    <span>Alt + Left Click</span>
+                </div>
+                <div class="flex justends">
+                    <span class="ital">- Plane Inst:</span>
+                    <span>Alt + Right Click</span>
+                </div>
+                <div class="flex justends">
+                    <span class="ital">Assign Leader:</span>
+                    <span>Left Click</span>
+                </div>
+                <div class="flex justends">
+                    <span class="ital">+/- Follower:</span>
+                    <span>Right Click</span>
+                </div>
+                <div class="flex justends">
+                    <span class="ital">Move WP/Plane:</span>
+                    <span>Left Drag ✥</span>
+                </div>
+                <div class="flex justends">
+                    <span class="ital">Rotate Plane:</span>
+                    <span>Right Drag ↻</span>
+                </div>
+            </div>
+            <obj-editor #pl class="flexc grow"
+                [objToEdit]="markerGroups[1]"
+                [objName]="'Plane Instances'"
+                [textMode]="false"
+                [includeFilter]="plFieldsFilter"
+                [defaultExpanded]="true"
+                [autoApply]="true"
+                (applied)="onApplyMG($event, 1)"
+            ></obj-editor>
         </div>
     </div>
 </div>
