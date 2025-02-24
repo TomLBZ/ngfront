@@ -28,8 +28,8 @@ export class MapViewComponent {
     @Input() paths: Array<Path> = [];
     @Input() apiKey: string = '';
     @Input() zoom: number = 12;
-    @Input() centerLat: number = 103.822872;
-    @Input() centerLng: number = 1.364917;
+    @Input() centerLat: number = 1.364917;
+    @Input() centerLng: number = 103.822872;
     @Input() fadeDuration: number = 0;
     @Input() mapStyle: string = 'bright-v2';
     @Input() mapStyles: Array<string> = ['aquarelle', 'backdrop', "basic-v2", 
