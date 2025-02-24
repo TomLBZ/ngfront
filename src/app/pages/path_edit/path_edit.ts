@@ -108,87 +108,141 @@ export class PathEditPage implements OnInit {
         this.markerGroups[1].setColor(mId, Color.Transparent);
         this.currentMission.follower_ids.splice(this.currentMission.follower_ids.indexOf(mId), 1);
     }
-    get followerPlanes() {
-        return this.configs
-            .filter((config) => config.id !== this.missionParams.leader);
+    private updateFollower(mId: number) {
+        if (mId === this.currentMission.lead_id) return; // leader cannot be a follower
+        const isFollower = this.currentMission.follower_ids.includes(mId);
+        if (isFollower) { // remove follower
+            this.removeFollower(mId);
+        } else { // add follower
+            this.addFollower(mId);
+        }
+    }
+    private clearFollowers() {
+        const fIds = [...this.currentMission.follower_ids];
+        for (const fId of fIds) {
+            this.removeFollower(fId);
+        }
+        this.currentMission.follower_ids = [];
+    }
+    private resetFollowers(mIds: Array<number>) {
+        this.clearFollowers();
+        for (const mId of mIds) {
+            this.addFollower(mId);
+        }
+    }
+    @ViewChild('ds', { static: true }) ds!: DropSelectComponent;
+    onPlaneSelected(markers: Array<Marker> | Marker) {
+        if (markers instanceof Marker) { // single selection: leader plane
+            this.setLeader(markers.id);
+        } else { // multiple selection: follower planes
+            this.resetFollowers(markers.map((m) => m.id));
+        }
+    }
+    @ViewChild('wp', { static: true }) wpEditor!: ObjEditorComponent;
+    @ViewChild('pl', { static: true }) plEditor!: ObjEditorComponent;
+    private refreshMarkers(m?: Marker, mgIdx: number = 0, forced: boolean = false) {
+        if (mgIdx < 0) return; // invalid marker group index
+        if (m !== undefined) {
+            this.markerGroups[mgIdx].updateMarker(m, forced);
+        } else {
+            this.markerGroups[mgIdx].refresh();
+        }
+        if (mgIdx === 0) { // waypoints
+            this.currentMission.setPath(this.markerGroups[0].markers, this.ldColor);
+            this.wpEditor.objToEdit = this.markerGroups[mgIdx]; // refresh editor
+        } else if (mgIdx === 1) { // planes
+            this.plEditor.objToEdit = this.markerGroups[mgIdx]; // refresh editor
+        }
     }
 
-    @ViewChild(MapViewComponent) mapView!: MapViewComponent;
-    @ViewChild(ObjEditorComponent) objEditor!: ObjEditorComponent;
-    onUpdate(obj: any) {
-        this.markers = obj as Array<Marker>;
+    onApplyMG(mg: MarkerGroup, mgIdx: number) {
+        this.markerGroups[mgIdx] = mg;
+        this.refreshMarkers(undefined, mgIdx);
     }
     onMissionUpdate(obj: any) {
         console.log(obj);
     }
-    raising = { idx: -1, startLng: -1, startLat: -1, startAlt: -1 };
+    private startAlt = -1;
     onObjectMouseDown(me: MarkerEvent) {
-        if (me.secondaryButton) { // right button down
-            if (!this.isAltPressed) { // without alt: init change altitude field
-                this.raising.idx = me.idx;
-                this.raising.startLng = this.markers[me.idx].lon;
-                this.raising.startLat = this.markers[me.idx].lat;
-                this.raising.startAlt = (this.markers[me.idx] as SimpleMarker).alt;
-            } else if (this.raising.idx < 0) { // with alt and not changing altitude: delete marker
-                this.markers.splice(me.idx, 1);
-                this.objEditor.objToEdit = this.markers; // refresh editor
+        if (me.secondaryButton) { // Alt + right button down
+            const mId = this.markerGroups[me.mgIdx].markers[me.mIdx].id;
+            if (this.isCtrlPressed && me.mgIdx === 0) { // remove waypoint (priority)
+                this.markerGroups[me.mgIdx].removeMarker(me.mIdx);
+            } else if (this.isAltPressed && me.mgIdx === 1) { // remove plane instance
+                if (mId === this.currentMission.lead_id) { // removed leader
+                    this.clearFollowers();
+                    this.unsetLeader();
+                } else if (this.currentMission.follower_ids.includes(mId)) { // removed follower
+                    this.removeFollower(mId);
+                }
+                this.markerGroups[me.mgIdx].removeMarker(me.mIdx);
+                this.refreshDsFollowers();
             }
+            this.refreshMarkers(undefined, me.mgIdx);
+        } else if (me.middleButton) {
+            this.startAlt = this.markerGroups[me.mgIdx].markers[me.mIdx].alt;
+        }
+    }
+    onObjectMouseUp(me: MarkerEvent) {
+        if (me.middleButton) { // only handles middle button up
+            this.startAlt = -1;
         }
     }
     onObjectMoved(me: MarkerEvent) {
-        if (!this.isAltPressed && this.raising.idx < 0 && me.primaryButton) { // left button down
-            const m = new SimpleMarker(me.lat, me.lng, this.markers[me.idx].id, (this.markers[me.idx] as SimpleMarker).alt);
-            this.mapView.refresh(m);
-            this.objEditor.objToEdit = this.markers; // refresh editor
+        if (this.isAltPressed || this.isCtrlPressed) return; // special key is pressed, do not handle move event
+        if (me.primaryButton && this.markerGroups[me.mgIdx].moveable) { // left button dragging: move to new position
+            const m = this.markerGroups[me.mgIdx].markers[me.mIdx].moveTo(me.lat, me.lng);
+            this.refreshMarkers(m, me.mgIdx);
+        } else if (me.secondaryButton && me.mgIdx === 1) { // right button dragging: change hdg for planes
+            const hdg = this.dCoordsToHdg(me.dLat, me.dLng);
+            const m = this.markerGroups[me.mgIdx].markers[me.mIdx].rotateTo(hdg);
+            this.refreshMarkers(m, me.mgIdx);
+        } else if (me.middleButton && me.mgIdx === 0) { // middle button dragging: change alt for WPs
+            const alt = this.dCoordsToAlt(me.dLat, me.dLng, 100);
+            const newAlt = Math.max(0, this.startAlt + alt);
+            const m = this.markerGroups[me.mgIdx].markers[me.mIdx].liftTo(newAlt);
+            this.refreshMarkers(m, me.mgIdx);
         }
-    }
-    onObjectMouseUp(obj: any) {
-        this.missionParams.leader = obj.id;
     }
     onMapMouseDown(mve: MapViewEvent) {
-        if (this.isAltPressed && mve.primaryButton) { // press alt + left click, add marker
-            const newMarker = new SimpleMarker(mve.lat, mve.lng);
-            this.mapView.refresh(newMarker);
-            this.mapView.selectedMarkerId = newMarker.id;
-            this.objEditor.objToEdit = this.markers;
+        if (!this.isAltPressed && !this.isCtrlPressed) return; // no special key pressed
+        if (mve.primaryButton) { // left click
+            const m = new Marker(mve.lat, mve.lng);
+            if (this.isCtrlPressed) { // add waypoint (priority)
+                this.refreshMarkers(m, 0);
+                mve.cancelled = true; // prevent default action
+            } else if (this.isAltPressed) { // add plane instance
+                this.refreshMarkers(m, 1);
+            }
         }
     }
-    onMapMouseUp(mve: MapViewEvent) {
-        if (!this.isAltPressed && mve.secondaryButton && this.raising.idx >= 0) { // right button up
-            this.raising.idx = -1;
-            this.raising.startLng = -1;
-            this.raising.startLat = -1;
-            this.raising.startAlt = -1;
-        }
+    private dCoordsToAlt(diffLat: number, diffLng: number, mPerUnit: number): number {
+        const dx = Math.abs(diffLng) * mPerUnit; // moving left or right has the same effect
+        const dy = diffLat * mPerUnit;
+        return dy * Math.pow(10, dx);
     }
-    onMapMouseMove(mve: MapViewEvent) {
-        if (this.raising.idx >= 0 && mve.secondaryButton) { // right button down
-            const mkr = this.markers[this.raising.idx] as SimpleMarker;
-            const diffLng = mve.lng - this.raising.startLng;
-            const diffLat = mve.lat - this.raising.startLat;
-            const scale = 100; // 1 unit = 100 m
-            const unitLen = Math.pow(10, diffLng * scale); // always positive
-            const diffAlt = diffLat * scale * unitLen;
-            const minStep = 0.01;
-            const change = diffAlt > 0 ? Math.max(diffAlt, minStep) : 
-            diffAlt < 0 ? Math.min(diffAlt, -minStep) : 0;
-            const newAlt = this.raising.startAlt + change;
-            const m = new SimpleMarker(this.raising.startLat, this.raising.startLng, mkr.id, newAlt);
-            this.mapView.refresh(m);
-            this.objEditor.objToEdit = this.markers; // refresh editor
-        }
+    private dCoordsToHdg(diffLat: number, diffLng: number): number {
+        const rawRad = Math.atan2(diffLat, diffLng);
+        const offsetRad = Math.PI / 2 - rawRad;
+        const posRad = offsetRad < 0 ? 2 * Math.PI + offsetRad : offsetRad;
+        return posRad * 180 / Math.PI;
     }
-    isAltPressed = false;
+    private isAltPressed = false;
+    private isCtrlPressed = false;
     @HostListener("window:keydown", ["$event"])
     onKeydown(event: KeyboardEvent) {
         if (event.key === "Alt") {
             this.isAltPressed = true;
+        } else if (event.key === "Control") {
+            this.isCtrlPressed = true;
         }
     }
     @HostListener("window:keyup", ["$event"])
     onKeyup(event: KeyboardEvent) {
         if (event.key === "Alt") {
             this.isAltPressed = false;
+        } else if (event.key === "Control") {
+            this.isCtrlPressed = false;
         }
     }
 }
