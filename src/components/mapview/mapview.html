@@ -1,6 +1,6 @@
 <div class="pos_rel p_full flexc">
     <mgl-map class="p_full"
-        [style]="initialMapStyle"
+        [style]="initialStyle"
         [zoom]="[zoom]"
         [center]="[centerLat, centerLng]"
         [fadeDuration]="fadeDuration"
@@ -9,132 +9,105 @@
         (mapMouseDown)="onMapMouseDown($event)"
         (mapMouseUp)="onMapMouseUp($event)"
     >
-        @if (showLines) {
-            <mgl-geojson-source id="segments">
-                @for (pair of linePairs; track pairTracker(pair)) {
+        @for (path of paths; track path.hash) {
+            @let pathID = "path" + path.id.toString();
+            <mgl-geojson-source [id]="pathID">
+                @for (segment of path.segments; track segment.hash) {
                     <mgl-feature
                         [geometry]="{
                             type: 'LineString',
-                            coordinates: pair
+                            coordinates: segment.raw
                         }"
                     ></mgl-feature>
                 }
             </mgl-geojson-source>
             <mgl-layer
-                id="lines"
+                [id]="'lines' + path.id.toString()"
                 type="line"
-                source="segments"
+                [source]="pathID"
                 [layout]="{}"
                 [paint]="{
-                    'line-color': 'rgba(255, 0, 0, 1)',
-                    'line-width': 2,
+                    'line-color': path.color.RGBAStr,
+                    'line-width': path.weight
                 }"
             ></mgl-layer>
         }
-        @for (geoObj of geoObjects; track geoObj.constructor.name + geoObj.id.toString()) {
-            <mgl-image
-                [id]="geoObj.constructor.name + geoObj.id.toString()"
+        @for (mg of markerGroups; track mg.id) {
+            @let mId = 'mg' + mg.id.toString();
+            @let iconId = 'icon_' + mId;
+            @let ptsId = 'spts_' + mId;
+            @let lBdrId = 'lbdr_' + mId;
+            @let lPtsId = 'lpts_' + mId;
+            <mgl-image [id]="iconId"
                 [data]="{
-                    width: geoObj.iconSize,
-                    height: geoObj.iconSize,
-                    data: geoObj.iconData
+                    width: mg.icon.size,
+                    height: mg.icon.size,
+                    data: mg.icon.data
                 }"
             ></mgl-image>
-        }
-        <mgl-geojson-source id="markers">
-            @for (geoObj of geoObjects; track geoObj.trackTarget) {
-                <mgl-feature
-                    [geometry]="{
-                        type: 'Point',
-                        coordinates: [geoObj.lon, geoObj.lat]
-                    }"
-                    [properties]="{
-                        id: geoObj.id,
-                        icon: geoObj.constructor.name + geoObj.id.toString(),
-                        iconSize: geoObj.iconSize,
-                        iconRadius: geoObj.iconSize * 0.5,
-                        heading: geoObj.hdg,
-                        label: labelFunc(geoObj),
-                        cName: geoObj.constructor.name
-                    }"
-                ></mgl-feature>
-            }
-        </mgl-geojson-source>
-        @if (showSelected) {
-            <mgl-layer
-                id="marker-border"
-                type="circle"
-                source="markers"
-                [filter]="['all', 
-                    ['all', ['has', 'id'], ['has', 'iconRadius']],
-                    ['==', ['get', 'id'], selectedMarkerId],
-                    ['==', ['get', 'cName'], selectedMarkerCName]]"
-                [paint]="{
-                    'circle-radius': ['*', ['get', 'iconRadius'], this.iconScale],
-                    'circle-color': 'rgba(0, 0, 0, 0.2)',
-                    'circle-stroke-width': 2 * iconScale,
-                    'circle-stroke-color': 'rgba(255, 127, 0, 1)',
-                }"
-            ></mgl-layer>
-        }
-        <mgl-layer
-            id="points"
-            type="symbol"
-            source="markers"
-            [filter]="['all', ['has', 'id'], ['has', 'icon'], ['has', 'heading']]"
-            [layout]="{
-                'icon-image': ['get', 'icon'],
-                'icon-size': iconScale,
-                'icon-rotate': ['get', 'heading'],
-                'icon-allow-overlap': true,
-                'icon-ignore-placement': true,
-            }"
-            (layerClick)="onMarkerClick($event)"
-            (layerMouseEnter)="onMarkerEnter($event)"
-            (layerMouseLeave)="onMarkerLeave($event)"
-            (layerMouseDown)="onMarkerDown($event)"
-            (layerMouseUp)="onMarkerUp($event)"
-        >
-        </mgl-layer>
-        @if (showSymbols) {
-            <mgl-geojson-source id="labels">
-                @for (label of labelPoints; track labelTracker(label)) {
+            <mgl-geojson-source [id]="ptsId">
+                @for (m of mg.markers; track m.hash) {
                     <mgl-feature
                         [geometry]="{
                             type: 'Point',
-                            coordinates: [label.lon, label.lat]
+                            coordinates: [m.lng, m.lat]
                         }"
                         [properties]="{
-                            label: label.text
+                            id: m.id,
+                            hdg: m.hdg,
+                            label: $index + 1,
+                            emphColorStr: mg.colorStrByIdx($index)
                         }"
                     ></mgl-feature>
                 }
             </mgl-geojson-source>
             <mgl-layer
-                id="symbols"
+                [id]="lBdrId"
+                type="circle"
+                [source]="ptsId"
+                [filter]="['all', ['!=', ['get', 'emphColorStr'], ''], ['!=', ['get', 'emphColorStr'], '#000000']]"
+                [paint]="{
+                    'circle-radius': ['*', mg.icon.size * 0.5, mg.iconScale],
+                    'circle-color': 'rgba(255, 255, 255, 0)',
+                    'circle-stroke-width': 2 * mg.iconScale,
+                    'circle-stroke-color': ['get', 'emphColorStr']
+                }"
+            ></mgl-layer>
+            <mgl-layer
+                [id]="lPtsId"
                 type="symbol"
-                source="labels"
+                [source]="ptsId"
                 [layout]="{
-                    'text-field': ['get', 'label'],
+                    'icon-image': iconId,
+                    'icon-size': mg.iconScale,
+                    'icon-rotate': ['get', 'hdg'],
+                    'icon-allow-overlap': true,
+                    'icon-ignore-placement': true,
+                    'text-field': ['case', mg.showLabel, ['concat', mg.labelPrefix, ['get', 'label']], ''],
                     'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                    'text-size': 12,
+                    'text-size': 10 * mg.iconScale,
                     'text-allow-overlap': true,
                 }"
                 [paint]="{
-                    'text-color': 'rgba(255, 255, 127, 1)',
-                    'text-halo-color': 'rgba(0, 0, 255, 0.8)',
+                    'text-color': 'rgba(255, 255, 255, 1)',
+                    'text-halo-color': 'rgba(0, 0, 0, 0.8)',
                     'text-halo-width': 1,
                 }"
+                (layerMouseEnter)="onMarkerEnter($event, $index)"
+                (layerMouseLeave)="onMarkerLeave($event, $index)"
+                (layerMouseDown)="onMarkerDown($event, $index)"
+                (layerMouseUp)="onMarkerUp($event, $index)"
             >
             </mgl-layer>
         }
+
         @if (popupVisible) {
             <mgl-popup
                 [lngLat]="popupLonLat"
                 [closeOnClick]="false"
                 [closeButton]="false"
             >
-                <div class="txt_prewrap">{{popupText}}</div>
+                <div class="txt_prewrap lh_smal">{{popupText}}</div>
             </mgl-popup>
         }
     </mgl-map>

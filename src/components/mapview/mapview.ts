@@ -62,7 +62,7 @@ export class MapViewComponent {
             this._cachedStyles.set(idx, this._getStyle(this.mapStyle));
         }
         return this._cachedStyles.get(idx);
-        }
+    }
     private _initStyle: any = undefined;
     get initialStyle() {
         if (this._initStyle === undefined) {
