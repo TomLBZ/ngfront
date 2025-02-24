@@ -1,13 +1,17 @@
 // library imports
-import { Component, ViewChild } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 // custom components
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
-import { MapViewComponent, Marker } from "../../../components/mapview/mapview";
+import { MapViewComponent } from "../../../components/mapview/mapview";
+import { Marker } from "../../../utils/marker/marker";
+import { MarkerGroup } from "../../../utils/marker/markergrp";
 import { OutboxComponent } from "../../../components/outbox/outbox";
 // other custom imports
 import { env } from "../../app.config";
-import { CircleMarker } from "./marker";
+import { Icon } from "../../../utils/icon/icon";
+import { Color } from "../../../utils/color/color";
+import { MarkerEvent } from "../../../components/mapview/event";
 
 @Component({
     selector: "app-playground",
@@ -20,71 +24,53 @@ import { CircleMarker } from "./marker";
     ],
     templateUrl: "./playground.html"
 })
-export class PlaygroundComponent {
-    // top pane
-    markers: Array<Marker> = [
-        new CircleMarker(1.36, 103.82, 0, 1),
-        new CircleMarker(1.37, 103.83, 45, 2),
-        new CircleMarker(1.36, 103.83, 90, 3),
-        new CircleMarker(1.37, 103.82, 135, 4)
-    ];
+export class PlaygroundComponent implements OnInit {
     apiKey = env.mapKey;
-    zoom = 12;
-    center = [103.822872, 1.364917];
-    iconScale = 1.5;
+    mgroup: MarkerGroup = new MarkerGroup(Icon.Circle(16, Color.Green, Color.Blue), true, true);
+    markers: Array<Marker> = [
+        new Marker(1.36, 103.82),
+        new Marker(1.37, 103.83),
+        new Marker(1.36, 103.83),
+        new Marker(1.37, 103.82)
+    ];
     includeFilter = (key: string) => {
-        const excludedFields = ["icon", "iconData"];
-        return !excludedFields.includes(key);
+        const excludedFields = ["hdg", "alt"];
+        if (excludedFields.includes(key)) return false;
+        return !key.includes("_");
+    }
+    repr: Function = (m: Marker) => this.getRepr(this.getIdx(m));
+    getRepr(mIdx: number) {
+        return this.mgroup.labelPrefix + (mIdx + 1);
+    }
+    getIdx(m: Marker) {
+        return this.mgroup.markers.indexOf(m);
     }
 
-    onLayerModeChanged(obj: any) {
-        console.log(obj);
+    ngOnInit() {
+        this.mgroup.markers = this.markers;
+        this.mgroup.popupFields = ["lat", "lng"];
+        this.mgroup.labelPrefix = "M";
     }
+
+    onObjectSelectionChanged(me: MarkerEvent) {
+        this.mIdx = me.mIdx;
+    }
+    onObjectMoved(me: MarkerEvent) {
+        const m = this.markers[me.mIdx].moveTo(me.lat, me.lng);
+        this.mgroup.updateMarker(m, true);
+    }
+
     @ViewChild(ObjEditorComponent) objEditor: ObjEditorComponent | undefined;
-    onObjectClicked(obj: any) {
-        console.log(obj);
-        const idx = this.markers.findIndex((marker) => marker === obj);
-        if (idx >= 0) {
-            this.selIndexR = idx;
-        }
-        if (this.objEditor) {
-            this.objEditor.objToEdit = obj;
-        }
-    }
 
     // bottom pane
-    dropRepr: Function = (obj: any) => obj.name;
-    // left pane
-    selIndicesL: Array<number> = [];
-    // right pane
-    textModeR: boolean = false;
-    private selIndexR: number = -1;
-    get selObjR() {
-        return this.selIndexR >= 0 ? this.markers[this.selIndexR] : null;
-    }
-    get objNameR() {
-        const obj = this.selIndexR >= 0 ? this.markers[this.selIndexR] : null;
-        if (!obj) return "Null";
-        const name = (obj as CircleMarker).name;
-        return name ? name : "Object";
+    mIdx: number = -1;
+
+    onApply(m: Marker) {
+        this.mgroup.updateMarker(m, true);
     }
 
-    @ViewChild(MapViewComponent) mapView: MapViewComponent | undefined;
-    onUpdate(obj: any) {
-        if (this.mapView) {
-            this.mapView.refresh(obj as Marker);
-        }
+    onSelectMarker(n: number) {
+        this.mIdx = n;
     }
 
-    onSelectR(obj: any) {
-        if (typeof obj === 'number') {
-            this.selIndexR = obj;
-        }
-    }
-
-    onSelectL(obj: any) {
-        if (Array.isArray(obj)) {
-            this.selIndicesL = obj;
-        }
-    }
 }
