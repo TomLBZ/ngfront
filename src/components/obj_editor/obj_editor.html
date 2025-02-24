@@ -23,8 +23,8 @@
                     ></field-editor>
                 </div>
                 @if (textBoxShown) {
-                    <textarea class="p_halfw pad5 noresize errorhost"
-                        [class.error]="errorState"
+                    <textarea class="p_halfw pad5 noresize errhost"
+                        [class.err]="errorState"
                         [value]="getObjStr()"
                         (input)="onTextChange($event)"
                     ></textarea>
@@ -38,10 +38,12 @@
                             [checked]="textMode"
                             (change)="toggleText()"
                         >
-                        Toggle Text
+                        Json
                     </Label>
-                    <button class="px_minw50 pad5" (click)="reset()">Reset</button>
-                    <button class="px_minw50 pad5" (click)="apply()">Apply</button>
+                    @if (!autoApply) {
+                        <button class="px_minw50 pad5" (click)="reset()">Reset</button>
+                        <button class="px_minw50 pad5" (click)="apply()">Apply</button>
+                    }
                 </div>    
             }
         }

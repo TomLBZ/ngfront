@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FieldEditorComponent } from './field_editor/field_editor';
 import { Change } from './value_editor/value_editor';
+import { Dates } from '../../utils/date/dates';
 
 export class cloneable {
     public static deepCopy<T>(source: T): T {
@@ -32,8 +33,10 @@ export class ObjEditorComponent {
     @Input() readOnly: boolean = false;
     @Input() defaultExpanded: boolean = false;
     @Input() showBorder: boolean = false;
+    @Input() autoApply: boolean = false;
     @Input() includeFilter: (key: string) => boolean = () => true;
-    @Output() updated = new EventEmitter<any>();
+    @Output() applied = new EventEmitter<any>();
+    @Output() resetted = new EventEmitter<void>();
     private _objToEdit: any = {};
     private _objRef: any = {};
     get objToEdit() {
@@ -110,6 +113,9 @@ export class ObjEditorComponent {
             parent = parent[token];
         }
         parent[lastToken] = change.newValue;
+        if (this.autoApply) {
+            this.apply();
+        }
     }
 
     onTextChange(event: any): void {
@@ -125,6 +131,9 @@ export class ObjEditorComponent {
             this.errorState = false;
             this.updateObj(this._objToEdit, obj, this.objName);
         }
+        if (this.autoApply) {
+            this.apply();
+        }
     }
     private isArray(obj: any): boolean {
         return Array.isArray(obj) || ArrayBuffer.isView(obj);
@@ -133,8 +142,23 @@ export class ObjEditorComponent {
         return typeof obj === 'object' && !isArray;
     }
     updateObj(originalobj: any, targetobj: any, key: string = "Object"): void {
-        if (Object.keys(targetobj).length === 0) {
-            this.onFieldChange({ key, oldValue: originalobj, newValue: targetobj });
+        if (typeof targetobj === 'string') {
+            if (typeof originalobj === 'string') {
+                if (originalobj !== targetobj) {
+                    this.onFieldChange({ key, oldValue: originalobj, newValue: targetobj });
+                }
+            } else {
+                const oStr = Dates.isDate(originalobj) ? originalobj.toISOString() : originalobj.toString();
+                if (oStr !== targetobj) {
+                    targetobj = Dates.parseDate(targetobj) || targetobj;
+                    this.onFieldChange({ key, oldValue: originalobj, newValue: targetobj });
+                }
+            }
+        }
+        else if (Object.keys(targetobj).length === 0) { // leaf node
+            if (originalobj !== targetobj) {
+                this.onFieldChange({ key, oldValue: originalobj, newValue: targetobj });
+            }
         }
         else {
             const isArray = this.isArray(targetobj);
@@ -161,10 +185,11 @@ export class ObjEditorComponent {
 
     reset(): void {
         this._objToEdit = cloneable.deepCopy(this._objRef);
+        this.resetted.emit();
     }
 
     apply(): void {
         this.objToEdit = this._objToEdit; // update reference and create deep copy
-        this.updated.emit(cloneable.deepCopy(this._objToEdit)); // emit deep copy
+        this.applied.emit(cloneable.deepCopy(this._objToEdit)); // emit deep copy
     }
 }

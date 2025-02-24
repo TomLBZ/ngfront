@@ -1,5 +1,6 @@
 import { Component, Input, EventEmitter, Output} from '@angular/core';
 import { ValueEditorComponent, Change } from '../value_editor/value_editor';
+import { Color } from '../../../utils/color/color';
 
 @Component({
   standalone: true,
@@ -42,7 +43,7 @@ export class FieldEditorComponent {
 
   isObjectType(value: any): boolean {
     return value && typeof value === 'object' &&
-      !this._isArray(value) && !(value instanceof Date);
+      !this._isArray(value) && !(value instanceof Date) && !(value instanceof Color);
   }
 
   isArrayType(value: any): boolean {
