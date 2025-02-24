@@ -1,18 +1,32 @@
 <div class="p_full bd_r5 bd_dbl bdc_tint pad10 flexc">
-    <dropselect class="pad10btm"
-        [items]="objList"
-        [title]="'Select Single Object to Edit'"
-        [indexMode]="true"
-        [hoverMode]="true"
-        [multiSelect]="false"
-        [fixDropdown]="false"
-        [representation]="dropRepr"
-        (selectionChanged)="onSelect($event)"
-    ></dropselect>
-    <obj-editor class="flex grow"
-        [objToEdit]="selObj"
-        [textMode]="textMode" 
-        [objName]="selName"
-        (updated)="onUpdate($event)"
-    ></obj-editor>
+    <div class="flexc p_halfh">
+        <dropselect class="pad10btm"
+            [items]="objList"
+            [title]="'Select Single Object to Edit'"
+            [indexMode]="true"
+            [hoverMode]="true"
+            [multiSelect]="false"
+            [fixDropdown]="false"
+            [representation]="dropRepr"
+            (selectionChanged)="onSelect($event)"
+        ></dropselect>
+        <obj-editor class="flex grow"
+            [objToEdit]="selObj"
+            [textMode]="textMode" 
+            [objName]="selName"
+            (updated)="onUpdate($event)"
+        ></obj-editor>
+    </div>
+    <div class="p_halfh">
+        <dropselect class="pad10btm"
+            [items]="objList"
+            [title]="'Select Multiple Objects'"
+            [indexMode]="true"
+            [hoverMode]="true"
+            [multiSelect]="true"
+            [fixDropdown]="false"
+            [representation]="dropRepr"
+            (selectionChanged)="onSelect($event)"
+        ></dropselect>
+    </div>
 </div>

@@ -32,7 +32,11 @@ export class DropSelectPage {
         this.objList[this.selIndex] = obj;
     }
 
-    onSelect(idx: number) {
-        this.selIndex = idx;
+    onSelect(idx: number | Array<number>) {
+        if (Array.isArray(idx)) {
+            console.log(idx);
+        } else {
+            this.selIndex = idx;
+        }
     }
 }
