@@ -71,99 +71,125 @@ export class MapViewComponent {
         return this._initStyle;
     }
     // dropselect
-    onSelectT(obj: any) {
-        if (typeof obj === 'string') {
-            if (this.mapStyle === obj) return; // unchanged
-            this.mapStyle = obj;
-            if (this.map) {
-                const style = this.getMapStyle();
-                this.map.setStyle(style, { diff: false });
-            }
-            this.layerModeChanged.emit(obj);
-        }
-        else throw new Error('Invalid selection (must be string).');
+    onSelectT(style: string) {
+        if (this.mapStyle === style) return; // unchanged
+        this.mapStyle = style;
+        this.map?.setStyle(this.style, { diff: false });
+        this.layerModeChanged.emit(style);
     }
 
     // marker
-    private findIdxFromEvent(event: MapLayerMouseEvent): number {
+    private Event2MkrIdx(event: MapLayerMouseEvent, mgIdx: number): number {
         if (!event.features || event.features.length === 0) return -1;
         const id = event.features[0].properties['id'];
-        const cName = event.features[0].properties['cName'];
         if (id === undefined) return -1;
-        return this.geoObjects.findIndex(obj => obj.id === id && obj.constructor.name === cName);
+        return this.markerGroups[mgIdx].markers.findIndex(obj => obj.id === id);
     }
-    selectedMarkerId: number = -1;
-    selectedMarkerCName: string = '';
-    onMarkerClick(event: MapLayerMouseEvent) {
-        const idx = this.findIdxFromEvent(event);
-        if (idx < 0) return;
-        const m = this.geoObjects[idx];
-        if (this.selectedMarkerId !== m.id) {
-            this.selectedMarkerId = m.id;
-            this.selectedMarkerCName = m.constructor.name;
-        } else {
-            this.selectedMarkerId = -1;
-            this.selectedMarkerCName = '';
+    lastBorder: Color = Color.Transparent;
+    lastSelectedId: number = -1;
+    lastSelectedMgId: number = -1;
+    private select(mgId: number, mId: number) {
+        const mgIdx = this.markerGroups.findIndex((mg) => mg.id === mgId);
+        this.lastBorder = this.markerGroups[mgIdx].getColor(mId);
+        this.markerGroups[mgIdx].setColor(mId, this.markerGroups[mgIdx].selectedBorder);
+        this.lastSelectedId = mId;
+        this.lastSelectedMgId = mgId;
+    }
+    private unselect(mgId: number, mId: number) {
+        const mgIdx = this.markerGroups.findIndex((mg) => mg.id === mgId);
+        this.markerGroups[mgIdx].setColor(mId, this.lastBorder);
+        this.lastBorder = Color.Transparent;
+        this.lastSelectedId = -1;
+        this.lastSelectedMgId = -1;
+    }
+    onMarkerClick(event: MapLayerMouseEvent, mgIdx: number) {
+        const mIdx = this.Event2MkrIdx(event, mgIdx);
+        if (mIdx < 0) return;
+        const me: MarkerEvent = new MarkerEvent(mIdx, mgIdx, event);
+        me.buttons = this.clickingButtons; // set clicking buttons
+        if (this.markerGroups[mgIdx].selectable) {
+            this.objectSelectionChanged.emit(me);
+            if (!me.cancelled) { // if the event is cancelled, do not proceed
+                if (this.lastSelectedId >= 0) { // something is already selected
+                    this.unselect(this.lastSelectedMgId, this.lastSelectedId);
+                }
+                this.select(this.markerGroups[mgIdx].id, this.markerGroups[mgIdx].markers[mIdx].id);
+            }
         }
+        this.objectClicked.emit(me);
+        this.clickingButtons = -1; // reset clicking
     }
-    onMarkerEnter(event: MapLayerMouseEvent) {
-        if (this.isMoving) return;
-        event.target.getCanvas().style.cursor = 'pointer';
-        const idx = this.findIdxFromEvent(event);
-        if (idx < 0) return;
-        const obj = this.geoObjects[idx];
-        const lat = obj.lat;
-        const lon = obj.lon;
-        const desc = obj.popupText;
-        this.popupLonLat = [lon, lat];
-        this.popupText = desc;
-        this.popupVisible = true;
-    }
-    onMarkerLeave(event: MapLayerMouseEvent) {
-        event.target.getCanvas().style.cursor = '';
-        this.popupVisible = false;
-    }
-
     // popup
     popupLonLat: [number, number] = [0, 0];
     popupVisible: boolean = false;
     popupText: string = 'Test';
-
+    private setPopup(mgIdx: number, mIdx: number) {
+        const lat = this.markerGroups[mgIdx].markers[mIdx].lat;
+        const lon = this.markerGroups[mgIdx].markers[mIdx].lng;
+        this.popupLonLat = [lon, lat];
+        this.popupText = this.markerGroups[mgIdx].popup(mIdx);
+        this.popupVisible = true;
+    }
+    onMarkerEnter(event: MapLayerMouseEvent, mgIdx: number) {
+        if (this.opMgIdx >= 0) return;
+        event.target.getCanvas().style.cursor = 'pointer';
+        const mIdx = this.Event2MkrIdx(event, mgIdx);
+        if (mIdx < 0) return;
+        this.setPopup(mgIdx, mIdx);
+    }
+    onMarkerLeave(event: MapLayerMouseEvent, mgIdx: number) {
+        event.target.getCanvas().style.cursor = '';
+        this.popupVisible = false;
+    }
     // map events
     onMapMouseDown(event: MapLayerMouseEvent) {
-        this.mapMouseDown.emit(new MapViewEvent(event));
+        const evt = new MapViewEvent(event);
+        this.mapMouseDown.emit(evt);
+        if (evt.cancelled) event.preventDefault();
     }
     onMapMouseUp(event: MapLayerMouseEvent) {
+        if (this.opMgIdx >= 0) this.onMarkerUp(event, this.opMgIdx);
         this.mapMouseUp.emit(new MapViewEvent(event));
-        if (this.isMoving) this.onMarkerUp(event);
     }
     onMapMouseMove(event: MapLayerMouseEvent) {
+        if (this.opMarkerIdx >= 0) { // marker can be updated
+            this.clickingButtons = -1; // if marker is moving, clicking is not registered
+            event.preventDefault(); // prevent map events
+            this.popupVisible = false; // hide popup
+            const diffLng = event.lngLat.lng - this.markerGroups[this.opMgIdx].markers[this.opMarkerIdx].lng;
+            const diffLat = event.lngLat.lat - this.markerGroups[this.opMgIdx].markers[this.opMarkerIdx].lat;
+            this.objectMoved.emit(new MarkerEvent(this.opMarkerIdx, this.opMgIdx, event, diffLng, diffLat));
+            this.setPopup(this.opMgIdx, this.opMarkerIdx);
+        }
         this.mapMouseMove.emit(new MapViewEvent(event));
-        if (this.movingIdx >= 0) this.objectMoved.emit(new MarkerEvent(this.movingIdx, event));
     }
-    private isMoving: boolean = false;
-    private movingIdx: number = -1;
-    onMarkerDown(event: MapLayerMouseEvent) {
-        const idx = this.findIdxFromEvent(event);
-        if (idx < 0) return;
-        if (this.moveableFilter(this.geoObjects[idx])) { // object is movable
-            event.preventDefault(); // prevent map drag and map pan
-            if (event.originalEvent.button === 0) { // left down
-                this.isMoving = true;
-                this.movingIdx = idx;
-            }
+    private opMgIdx: number = -1;
+    private opMarkerIdx: number = -1;
+    private clickingButtons: number = -1;
+    onMarkerDown(event: MapLayerMouseEvent, mgIdx: number) {
+        this.clickingButtons = event.originalEvent.buttons; // starts clicking
+        const mIdx = this.Event2MkrIdx(event, mgIdx);
+        if (mIdx < 0) return;
+        const me = new MarkerEvent(mIdx, mgIdx, event);
+        if (!me.noButton) { // some button is down on the marker
+            event.preventDefault(); // prevent map default events
+            this.opMgIdx = mgIdx;
+            this.opMarkerIdx = mIdx;
         }
-        this.objectMouseDown.emit(new MarkerEvent(idx, event));
+        this.objectMouseDown.emit(me);
     }
-    onMarkerUp(event: MapLayerMouseEvent) {
-        if (this.isMoving) {
+    onMarkerUp(event: MapLayerMouseEvent, mgIdx: number) {
+        if (this.opMgIdx >= 0) {
             event.preventDefault(); // prevent map drag
-            this.isMoving = false;
-            this.movingIdx = -1;
+            this.opMgIdx = -1;
+            this.opMarkerIdx = -1;
+            this.popupVisible = false; // hide popup
         }
-        this.popupVisible = false;
-        const idx = this.findIdxFromEvent(event);
-        if (idx < 0) return;
-        this.objectMouseUp.emit(new MarkerEvent(idx, event));
+        const mIdx = this.Event2MkrIdx(event, mgIdx);
+        if (mIdx < 0) return;
+        this.objectMouseUp.emit(new MarkerEvent(mIdx, mgIdx, event));
+        if (this.clickingButtons >= 0) { // clicking is done, trigger click event
+            this.onMarkerClick(event, mgIdx);
+        }
     }
 }
