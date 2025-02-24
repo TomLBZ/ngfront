@@ -1,48 +1,112 @@
-import { Component, HostListener, ViewChild } from "@angular/core";
-import { MapViewComponent, MapViewEvent, Marker, MarkerEvent } from "../../../components/mapview/mapview";
+import { Component, HostListener, ViewChild, OnInit } from "@angular/core";
+import { MapViewComponent } from "../../../components/mapview/mapview";
+import { MarkerEvent, MapViewEvent } from "../../../components/mapview/event";
+import { Marker } from "../../../utils/marker/marker";
+import { MarkerGroup } from "../../../utils/marker/markergrp";
 import { env } from "../../app.config";
-import { SimpleMarker } from "./marker";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { Mission } from "./mission";
-import { FieldEditorComponent } from "../../../components/obj_editor/field_editor/field_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
+import { Icon } from "../../../utils/icon/icon";
+import { Color } from "../../../utils/color/color";
 
 @Component({
-    selector: "page-controls",
+    selector: "page-path-edit",
     standalone: true,
-    imports: [MapViewComponent, ObjEditorComponent, FieldEditorComponent, DropSelectComponent],
-    templateUrl: "./path_edit.html",
-    styleUrls: ["./path_edit.less"]
+    imports: [MapViewComponent, ObjEditorComponent, DropSelectComponent],
+    templateUrl: "./path_edit.html"
 })
-export class PathEditPage {
-    markers: Array<Marker> = [];
+export class PathEditPage implements OnInit {
+    private readonly iconSize: number = 16;
+    private readonly iconScale: number = 1.2;
+    private readonly wpColor: Color = Color.Purple.lighten(0.5);
+    private readonly plColor: Color = Color.blend(Color.Blue, Color.Cyan, 0.5);
+    private readonly flColor: Color = Color.Green;
+    private readonly ldColor: Color = Color.Red;
+    markerGroups: Array<MarkerGroup> = [
+        new MarkerGroup(Icon.Circle(this.iconSize, this.wpColor), true), // wps
+        new MarkerGroup(Icon.Poly(this.iconSize, Icon.polyPlaneVecs, this.plColor), true), // planes
+    ];
     apiKey = env.mapKey;
-    zoom = 12;
-    center = [103.822872, 1.364917];
-    iconScale = 1.5;
-    includeFilter = (key: string) => {
-        if (key.startsWith("_")) return false;
-        if (key.startsWith("icon")) return false;
-        const excludedFields = ["id", "hdg"];
-        if (excludedFields.includes(key)) return false;
+    private mGrpFieldsFilter(key: string, mgIdx: number): boolean {
+        const generalExcluded = ["icon", "id", "iconScale", "selectable", "selectedBorder", "showLabel", "popupFields"];
+        if (generalExcluded.includes(key)) return false;
+        const privateExcludedStr = "_";
+        if (key.includes(privateExcludedStr)) return false;
+        if (mgIdx === 0) return key !== "hdg";
+        if (mgIdx === 1) return key !== "alt";
         return true;
     }
-    labelFunc = (obj: Marker) => this.markers.indexOf(obj).toString();
-    connectableFilter = (obj: Marker) => obj instanceof SimpleMarker;
-    moveableFilter = (obj: Marker) => obj instanceof SimpleMarker;
-    missionParams = new Mission(0, "Mission 1");
-    configs = [
-        {id: 1, type: "quadrotor", name: "Q1"}, 
-        {id: 2, type: "fixedwing", name: "F1"},
-        {id: 3, type: "quadrotor", name: "Q2"},
-        {id: 4, type: "fixedwing", name: "F2"},
-    ];
-    cfgRepr = (obj: any) => `${obj.id}: ${obj.name} (${obj.type})`;
-    onLeaderSelect(index: number) {
-        this.missionParams.leader = this.configs[index].id;
+    wpFieldsFilter = (key: string) => { return this.mGrpFieldsFilter(key, 0); }
+    plFieldsFilter = (key: string) => { return this.mGrpFieldsFilter(key, 1); }
+    mFieldsFilter = (key: string) => { return ["id", "name", "description", "saved_at"].includes(key); }
+    currentMission = new Mission(0, "Mission 1");
+    planeRepr = (m: Marker) => `${this.markerGroups[1].labelPrefix}${this.markerGroups[1].markers.indexOf(m) + 1}`;
+    public get leader(): string {
+        const lId = this.currentMission.lead_id;
+        const idx = this.markerGroups[1].markers.findIndex((m) => m.id === lId);
+        if (idx < 0) return "Select on Map";
+        return this.planeRepr(this.markerGroups[1].markers[idx]);
     }
-    onFollowerSelect(indices: Array<number>) {
-        this.missionParams.followers = indices.map((index) => this.configs[index].id);
+    public get nonleaders(): Array<Marker> {
+        return this.markerGroups[1].markers.filter((m) => m.id !== this.currentMission.lead_id);
+    }
+    ngOnInit(): void {
+        for (const mg of this.markerGroups) {
+            mg.iconScale = this.iconScale;
+        }
+        this.markerGroups[0].popupFields = ["lat", "lng", "alt"];
+        this.markerGroups[0].labelPrefix = "W";
+        this.markerGroups[1].popupFields = ["lat", "lng", "hdg"];
+        this.markerGroups[1].labelPrefix = "P";
+    }
+    onObjectClicked(me: MarkerEvent) {
+        if (me.mgIdx === 1) { // planes
+            const currentId = this.markerGroups[1].markers[me.mIdx].id;
+            if (this.currentMission.lead_id < 0) { // no leader selected yet
+                if (me.primaryButton) { // only listens for left click - leader selection
+                    this.setLeader(currentId);
+                    this.refreshMarkers(this.markerGroups[me.mgIdx].markers[me.mIdx], me.mgIdx);
+                }
+            } else {
+                if (me.primaryButton && currentId !== this.currentMission.lead_id) { // left click
+                    if (this.currentMission.follower_ids.includes(currentId)) { // clicked follower
+                        this.removeFollower(currentId);
+                    }
+                    this.unsetLeader();
+                    this.setLeader(currentId);
+                } else if (me.secondaryButton) { // right click
+                    this.updateFollower(currentId);
+                }
+                this.refreshDsFollowers();
+                this.refreshMarkers(undefined, me.mgIdx);
+            }
+        }
+    }
+    private fIds2FIndices(ids: Array<number>): Array<number> {
+        return ids.map((id) => this.nonleaders.findIndex((m) => m.id === id)).filter((idx) => idx >= 0);
+    }
+    private refreshDsFollowers() {
+        const fIndices = this.fIds2FIndices(this.currentMission.follower_ids);
+        this.ds.reset(fIndices);
+    }
+    private leaderPrevColor: Color = Color.Transparent;
+    private setLeader(mId: number) {
+        this.leaderPrevColor = this.markerGroups[1].getColor(mId);
+        this.markerGroups[1].setColor(mId, this.ldColor);
+        this.currentMission.lead_id = mId;
+    }
+    private unsetLeader() {
+        this.markerGroups[1].setColor(this.currentMission.lead_id, this.leaderPrevColor);
+        this.currentMission.lead_id = -1;
+    }
+    private addFollower(mId: number) {
+        this.markerGroups[1].setColor(mId, this.flColor);
+        this.currentMission.follower_ids.push(mId);
+    }
+    private removeFollower(mId: number) {
+        this.markerGroups[1].setColor(mId, Color.Transparent);
+        this.currentMission.follower_ids.splice(this.currentMission.follower_ids.indexOf(mId), 1);
     }
     get followerPlanes() {
         return this.configs
