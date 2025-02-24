@@ -1,4 +1,6 @@
 import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { Dates } from "../../../utils/date/dates";
+import { Color } from "../../../utils/color/color";
 
 export interface Change {
     key: string;
@@ -35,18 +37,18 @@ export class ValueEditorComponent {
     }
 
     get checked(): boolean {
-        return this.isBooleanType(this.itemToEdit) ? this.itemToEdit : false;
+        return this.isBoolean(this.itemToEdit) ? this.itemToEdit : false;
     }
 
-    isStringType(value: any): boolean {
+    isString(value: any): boolean {
         return typeof value === "string";
     }
 
-    isNumberType(value: any): boolean {
+    isNumber(value: any): boolean {
         return typeof value === "number";
     }
 
-    isBooleanType(value: any): boolean {
+    isBoolean(value: any): boolean {
         return typeof value === "boolean";
     }
 
@@ -57,9 +59,9 @@ export class ValueEditorComponent {
     onItemChange(event: any): void {
         const targetValue: string = event.target.value;
         let newValue: any;
-        if (this.isNumberType(this.itemToEdit)) {
+        if (this.isNumber(this.itemToEdit)) {
             newValue = targetValue ? parseFloat(targetValue) : 0;
-        } else if (this.isBooleanType(this.itemToEdit)) {
+        } else if (this.isBoolean(this.itemToEdit)) {
             newValue = event.target.checked;
         } else if (Dates.isDate(this.itemToEdit)) {
             newValue = Dates.fromInputString(targetValue);
@@ -73,15 +75,5 @@ export class ValueEditorComponent {
             this.itemToEdit = newValue;
             this.itemChanged.emit({ key: this.itemName, oldValue, newValue });
         }
-    }
-
-    formatDateForInput(value: any): string {
-        if (!this.isDateType(value)) return "";
-        const dateObj = typeof value === "string" ? this.parseDate(value) : (value as Date);
-        if (!dateObj) return "";
-        const year = dateObj.getFullYear();
-        const month = ('0' + (dateObj.getMonth() + 1)).slice(-2);
-        const day = ('0' + dateObj.getDate()).slice(-2);
-        return `${year}-${month}-${day}`;
     }
 }
