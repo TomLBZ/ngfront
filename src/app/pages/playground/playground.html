@@ -1,26 +1,15 @@
 <div class="p_full">
     <mapview class="flexc p_halfh bd_dbl bdc_tint bd_r5"
-        [geoObjects]="markers"
+        [markerGroups]="[mgroup]"
         [apiKey]="apiKey"
-        [zoom]="zoom"
-        [centerLat]="center[0]"
-        [centerLng]="center[1]"
-        [iconScale]="iconScale"
-        (layerModeChanged)="onLayerModeChanged($event)"
-        (objectClicked)="onObjectClicked($event)"
+        [zoom]="12"
+        [centerLat]="1.364917"
+        [centerLng]="103.822872"
+        (objectSelectionChanged)="onObjectSelectionChanged($event)"
+        (objectMoved)="onObjectMoved($event)"
     ></mapview>
     <div class="flex p_halfh">
-        <dropselect class="p_thirdw bd_dbl bdc_tint bd_r5 pad5"
-            [items]="markers"
-            [title]="'Multiselect Markers'"
-            [indexMode]="true"
-            [hoverMode]="true"
-            [multiSelect]="true"
-            [fixDropdown]="true"
-            [representation]="dropRepr"
-            (selectionChanged)="onSelectL($event)"
-        ></dropselect>
-        <div class="flexc p_thirdw bd_dbl bdc_tint bd_r5 pad5">
+        <div class="flexc p_2thirdw bd_dbl bdc_tint bd_r5 pad5">
             <dropselect class="pad10btm"
                 [items]="markers"
                 [title]="'Select Marker to Edit'"
@@ -28,16 +17,19 @@
                 [hoverMode]="true"
                 [multiSelect]="false"
                 [fixDropdown]="false"
-                [representation]="dropRepr"
-                (selectionChanged)="onSelectR($event)"
+                [representation]="repr"
+                (selectionChanged)="onSelectMarker($event)"
             ></dropselect>
-            <obj-editor class="flex grow"
-                [objToEdit]="selObjR"
-                [objName]="objNameR"
-                [textMode]="textModeR" 
-                [includeFilter]="includeFilter"
-                (updated)="onUpdate($event)"
-            ></obj-editor>
+            @if(mIdx >= 0) {
+                <obj-editor class="flex grow"
+                    [objToEdit]="mgroup.markers[mIdx]"
+                    [objName]="getRepr(mIdx)"
+                    [textMode]="false" 
+                    [includeFilter]="includeFilter"
+                    [autoApply]="true"
+                    (applied)="onApply($event)"
+                ></obj-editor>
+            }
         </div>
         <outbox class="p_thirdw bd_dbl bdc_tint bd_r5 pad5"
             [text]="'123'"
