@@ -134,6 +134,7 @@ export class PathEditPage implements OnInit {
     onPlaneSelected(markers: Array<Marker> | Marker) {
         if (markers instanceof Marker) { // single selection: leader plane
             this.setLeader(markers.id);
+            this.refreshDsFollowers(); // refresh followers
         } else { // multiple selection: follower planes
             this.resetFollowers(markers.map((m) => m.id));
         }
