@@ -19,15 +19,18 @@ export class ValueEditorComponent {
     @Output() itemChanged = new EventEmitter<Change>();
 
     getInputType(): string {
-        if (this.isStringType(this.itemToEdit)) return "text";
-        if (this.isNumberType(this.itemToEdit)) return "number";
-        if (this.isBooleanType(this.itemToEdit)) return "checkbox";
-        if (this.isDateType(this.itemToEdit)) return "date";
+        if (this.isString(this.itemToEdit)) return "text";
+        if (this.isNumber(this.itemToEdit)) return "number";
+        if (this.isBoolean(this.itemToEdit)) return "checkbox";
+        if (Dates.isDate(this.itemToEdit)) return "datetime-local";
+        if (this.isColor(this.itemToEdit)) return "color";
         return "unsupported";
     }
 
     get itemStr(): string {
-        if (this.isDateType(this.itemToEdit)) return this.formatDateForInput(this.itemToEdit);
+        if (Dates.isDate(this.itemToEdit)) return Dates.toInputString(this.itemToEdit);
+        else if (this.isColor(this.itemToEdit)) return (this.itemToEdit as Color).hex7;
+        else if (this.isString(this.itemToEdit)) return this.itemToEdit;
         return this.itemToEdit.toString();
     }
 
@@ -47,26 +50,8 @@ export class ValueEditorComponent {
         return typeof value === "boolean";
     }
 
-    isDateType(value: any): boolean {
-        if (value instanceof Date) return true;
-        if (typeof value === "string") return this.parseDate(value) !== null;
-        return false;
-    }
-
-    parseDate(value: string): Date | null {
-        if (!value) return null;
-        const dateStringRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
-        if (dateStringRegex.test(value)) return new Date(value);
-        // test for date string in the format yyyy-mm-dd
-        const yyyymmddRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (yyyymmddRegex.test(value)) {
-            const dateParts = value.split("-");
-            const year = parseInt(dateParts[0]);
-            const month = parseInt(dateParts[1]) - 1;
-            const day = parseInt(dateParts[2]);
-            return new Date(year, month, day);
-        }
-        return null;
+    isColor(value: any): boolean {
+        return value !== null && value !== undefined && value instanceof Color;
     }
 
     onItemChange(event: any): void {
@@ -76,8 +61,10 @@ export class ValueEditorComponent {
             newValue = targetValue ? parseFloat(targetValue) : 0;
         } else if (this.isBooleanType(this.itemToEdit)) {
             newValue = event.target.checked;
-        } else if (this.isDateType(this.itemToEdit)) {
-            newValue = this.parseDate(targetValue);
+        } else if (Dates.isDate(this.itemToEdit)) {
+            newValue = Dates.fromInputString(targetValue);
+        } else if (this.isColor(this.itemToEdit)) {
+            newValue = Color.fromHex7(targetValue);
         } else {
             newValue = targetValue;
         }
