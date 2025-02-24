@@ -71,6 +71,30 @@ export class DropSelectComponent {
         }
     }
 
+    reset(selectedIndices: number[] = [], triggerEvent: boolean = false) {
+        this.selectedIndices = [];
+        const lastIdx = selectedIndices.pop();
+        for (const idx of selectedIndices) {
+            this.onSelectItem(idx, false);
+        }
+        if (lastIdx !== undefined) {
+            this.onSelectItem(lastIdx, triggerEvent);
+        } else if (triggerEvent) {
+            this.searchTerm = '';
+            this.selectionChanged.emit(this.selected);
+        }
+    }
+
+    toggle(indices: number[], triggerEvent: boolean = false) {
+        for (const idx of indices) {
+            this.onSelectItem(idx, triggerEvent);
+        }
+        if (indices.length == 0 && triggerEvent) {
+            this.searchTerm = '';
+            this.selectionChanged.emit(this.selected);
+        }
+    }
+
     toggleDropdown() {
         if (!this.hoverMode) this.showDropdown = this.fixDropdown || !this.showDropdown;
     }
