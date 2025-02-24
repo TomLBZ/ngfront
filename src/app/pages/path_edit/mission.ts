@@ -1,29 +1,42 @@
+import { Cache } from "../../../utils/cache/cache";
+import { Color } from "../../../utils/color/color";
+import { Path } from "../../../utils/path/path";
+import { IPoint } from "../../../utils/point/point";
+
 export class Mission {
-    id: number;
-    name: string;
-    description: string = "";
-    saved_at: Date = new Date();
-    type: string = "waypoint";
-    radius: number = -1;
-    duration: number = 0;
-    path: Array<{lat: number, lon: number, alt: number}> = [];
-    leader: number = 0;
-    followers: Array<number> = [];
+    public id: number;
+    public name: string;
+    public description: string = "";
+    public lead_id: number = -1;
+    public follower_ids: Array<number> = [];
+    public get lead_path(): Array<IPoint> {
+        return this._traces.get(this.lead_id).points;
+    }
+    private _traces: Cache<Path> = new Cache<Path>();
+    private _path: Path = new Path(-1);
+    public get paths(): Array<Path> {
+        const followerPaths = this.follower_ids.map((id) => this._traces.get(id)).filter((p) => p !== undefined && p.length > 0);
+        return [...followerPaths, this._path];
+    }
     constructor(id: number, name: string) {
         this.id = id;
         this.name = name;
         console.log(this);
     }
-    setParams(config: any) {
-        if (config.id) this.id = config.id;
-        if (config.name) this.name = config.name;
-        if (config.description) this.description = config.description;
-        if (config.saved_at) this.saved_at = config.saved_at;
-        if (config.type) this.type = config.type;
-        if (config.radius) this.radius = config.radius;
-        if (config.duration) this.duration = config.duration;
-        if (config.path) this.path = config.path;
-        if (config.leader) this.leader = config.leader;
-        if (config.followers) this.followers = config.followers;
+    public setPath(points: Array<IPoint>, color?: Color) {
+        this._path.setPoints(points);
+        if (color !== undefined) {
+            this._path.color = color;
+        }
+    }
+    public setTrace(id: number, points: Array<IPoint>, color?: Color) {
+        if (!this._traces.has(id)) {
+            this._traces.set(id, new Path(id));
+            if (color !== undefined) {
+                this._traces.get(id).color = color;
+            }
+        } else {
+            this._traces.get(id).setPoints(points);
+        }
     }
 }
