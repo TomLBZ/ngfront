@@ -52,18 +52,19 @@ export class PlaygroundComponent implements OnInit {
         this.mgroup.labelPrefix = "M";
     }
 
+    mIdx: number = -1;
+    @ViewChild(DropSelectComponent) ds!: DropSelectComponent;
+    @ViewChild(OutboxComponent) ob!: OutboxComponent;
     onObjectSelectionChanged(me: MarkerEvent) {
         this.mIdx = me.mIdx;
+        this.ds.reset([this.mIdx]);
+        this.ob.append("Marker " + this.getRepr(this.mIdx) + " selected", true);
     }
+
     onObjectMoved(me: MarkerEvent) {
         const m = this.markers[me.mIdx].moveTo(me.lat, me.lng);
         this.mgroup.updateMarker(m, true);
     }
-
-    @ViewChild(ObjEditorComponent) objEditor: ObjEditorComponent | undefined;
-
-    // bottom pane
-    mIdx: number = -1;
 
     onApply(m: Marker) {
         this.mgroup.updateMarker(m, true);
