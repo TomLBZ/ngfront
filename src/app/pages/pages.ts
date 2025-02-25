@@ -13,6 +13,7 @@ export class PagesComponent implements OnInit {
         {label: 'Object Editing', path: 'object-editing'},
         {label: 'Drop Select', path: 'drop-select'},
         {label: 'Controls', path: 'controls'},
+        {label: 'Monitor', path: 'monitor'},
         {label: 'Path Edit', path: 'path-edit'},
         {label: 'Logs', path: 'logs'}
     ];
