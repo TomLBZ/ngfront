@@ -4,6 +4,7 @@ import { Icon } from '../../../utils/icon/icon';
 import { Color } from '../../../utils/color/color';
 import { MapViewComponent } from '../../../components/mapview/mapview';
 import { OutboxComponent } from '../../../components/outbox/outbox';
+import { WebGLShaderHostComponent, UniformDict } from '../../../components/webglshaderhost/webglshaderhost';
 import { env } from '../../app.config';
 import { RTOS } from '../../../utils/rtos/rtos';
 import { MissedDeadlinePolicy } from '../../../utils/rtos/rtostypes';
@@ -12,12 +13,17 @@ import { AppService } from '../../app.service';
 
 @Component({
     selector: 'page-monitor',
-    imports: [MapViewComponent, OutboxComponent],
+    imports: [MapViewComponent, OutboxComponent, WebGLShaderHostComponent],
     templateUrl: 'monitor.html'
 })
-export class MonitorPage implements OnInit {
+export class MonitorPage implements OnInit, OnDestroy {
     planes: MarkerGroup = new MarkerGroup(Icon.Poly(16, Icon.polyPlaneVecs, Color.Blue, Color.Blue));
     apiKey: string = env.mapKey;
+    uniforms: UniformDict = {
+        u_pitch: 0.25,
+        u_roll: 0.25,
+        u_yaw: 0.25
+    }
     private _rtos: RTOS = new RTOS({
         cycleIntervalMs: 100,
         continueAfterInterrupt: true,
@@ -40,7 +46,12 @@ export class MonitorPage implements OnInit {
             this._flags.set("Heartbeat");
         }, 50);
     }
+    @ViewChild(WebGLShaderHostComponent) shaderHost?: WebGLShaderHostComponent;
     private draw() {
+        if (!this.shaderHost) return;
+        this.shaderHost.drawFrame();
+        this.outbox?.clear("On Draw " + this.timeStr);
+        this._flags.clear("Draw");
     }
     private onHeartbeat() {
         this.outbox?.clear("On Heartbeat " + this.timeStr);

@@ -13,7 +13,11 @@
     </div>
     <div class="flexc px_w300">
         <div class="flexc p_3quarth bd_r5 bd_dbl bdc_tint">
-            <canvas class="bd_r5 bd_sng bdc_tint" id="hud"></canvas>
+            <webglshaderhost class="px_h200 px_w300 db_sng bd_r5 bdc_tint"
+                [vertexShaderPath]="'/shaders/hud.vert'"
+                [fragmentShaderPath]="'/shaders/hud.frag'"
+                [uniforms]="uniforms"
+            ></webglshaderhost>
         </div>
         <div class="flexc px_h200 bd_r5 bd_dbl bdc_tint">
         </div>
