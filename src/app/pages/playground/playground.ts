@@ -24,7 +24,7 @@ import { MarkerEvent } from "../../../components/mapview/event";
     ],
     templateUrl: "./playground.html"
 })
-export class PlaygroundComponent implements OnInit {
+export class PlaygroundPage implements OnInit {
     apiKey = env.mapKey;
     mgroup: MarkerGroup = new MarkerGroup(Icon.Circle(16, Color.Green, Color.Blue), true, true);
     markers: Array<Marker> = [
