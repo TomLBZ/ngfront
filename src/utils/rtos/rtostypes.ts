@@ -5,12 +5,10 @@ export enum MissedDeadlinePolicy {
 }
 
 export interface RTOSOptions {
-    // The scheduling cycle in ms. call `runLoop()` at this interval.
     cycleIntervalMs: number;
-    //  If true, after an interrupt fires, continue with normal tasks in the same cycle.
     continueAfterInterrupt: boolean;
-    // If true, measure how long each task runs, and skip new tasks if we exceed the cycle time.
     timeSlicePerCycle: boolean;
+    useAnimationFrame?: boolean;
 }
 
 export type RTOSTaskCallback = () => void;

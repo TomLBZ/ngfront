@@ -52,15 +52,24 @@ export class RTOS {
         if (this.running) return;
         this.running = true;
         this.startTime = performance.now();
-        this.timerId = window.setInterval(
-            () => this.runLoop(),
-            this.options.cycleIntervalMs
-        );
+        if (this.options.useAnimationFrame) {
+            const frame = () => {
+                if (!this.running) return;
+                this.runLoop();
+                requestAnimationFrame(frame);
+            };
+            requestAnimationFrame(frame);
+        } else {
+            this.timerId = window.setInterval(
+                () => this.runLoop(),
+                this.options.cycleIntervalMs
+            );
+        }
     }
     public stop(): void {
         if (!this.running) return;
         this.running = false;
-        if (this.timerId !== null) {
+        if (this.timerId !== null) { // timer needs to be cancelled while RAF automatically stops
             clearInterval(this.timerId);
             this.timerId = null;
         }
