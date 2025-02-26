@@ -6,15 +6,15 @@ import { provideHttpClient } from '@angular/common/http';
 import * as Config from '../configs/config';
 
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }), 
-    provideRouter(routes),
-    provideHttpClient()
-  ]
+    providers: [
+        provideZoneChangeDetection({ eventCoalescing: true }), 
+        provideRouter(routes),
+        provideHttpClient()
+    ]
 };
 
 export const env = {
-  production: false,
-  apiUrl: Config.API_URL,
-  mapKey: Config.MAP_KEY
+    production: false,
+    apiUrl: Config.API_URL,
+    mapKey: Config.MAP_KEY
 };
