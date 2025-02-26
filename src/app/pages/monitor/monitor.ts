@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { MarkerGroup } from '../../../utils/marker/markergrp';
 import { Icon } from '../../../utils/icon/icon';
 import { Color } from '../../../utils/color/color';
@@ -7,6 +7,7 @@ import { OutboxComponent } from '../../../components/outbox/outbox';
 import { env } from '../../app.config';
 import { RTOS } from '../../../utils/rtos/rtos';
 import { MissedDeadlinePolicy } from '../../../utils/rtos/rtostypes';
+import { Flag } from '../../../utils/flag/flag';
 
 @Component({
     selector: 'page-monitor',
@@ -20,31 +21,30 @@ export class MonitorPage implements OnInit {
         cycleIntervalMs: 100,
         continueAfterInterrupt: true,
         timeSlicePerCycle: true,
+        useAnimationFrame: true,
     });
-    @ViewChild(OutboxComponent) outbox!: OutboxComponent;
+    private _flags: Flag = new Flag([
+        "Heartbeat",
+        "Task 1",
+        "Interrupt",
+    ]);
     private get timeStr(): string {
         return performance.now().toFixed(0);
     }
     private heartbeatCallback() {
-        this.outbox.append("Heartbeat " + this.timeStr, true);
-    }
-    private sensorPoolCallback() {
-        this.outbox.append("Sensor Pool " + this.timeStr, true);
+        console.log("Heartbeat " + this.timeStr);
+        setTimeout(() => {
+            this._flags.set("Heartbeat");
+        }, 50);
     }
     private task1Callback() {
-        this.outbox.append("Task 1 " + this.timeStr, true);
     }
-    private task2Callback() {
-        this.outbox.append("Task 2 " + this.timeStr, true);
-    }
-    private task3Callback() {
-        this.outbox.append("Task 3 " + this.timeStr, true);
-    }
-    private interruptRandomCondition(): boolean {
-        return Math.random() < 0.2;
+    private interruptCondition(): boolean {
+        return this._flags.get("Heartbeat");
     }
     private interruptCallback() {
-        this.outbox.append("Interrupt " + this.timeStr, true);
+        console.log("Interrupt " + this.timeStr);
+        this._flags.clear("Heartbeat");
     }
     constructor() {
         this._rtos.addTask(() => this.heartbeatCallback(), {
@@ -53,38 +53,23 @@ export class MonitorPage implements OnInit {
             intervalMs: 1000,
             missedPolicy: MissedDeadlinePolicy.RUN_ONCE,
         });
-        this._rtos.addTask(() => this.sensorPoolCallback(), {
-            name: "Sensor Pool",
-            priority: 5,
-            intervalMs: 500,
-            missedPolicy: MissedDeadlinePolicy.SKIP,
-        });
         this._rtos.addTask(() => this.task1Callback(), {
             name: "Task 1",
             priority: 3,
             deadlineMs: 400,
         });
-        this._rtos.addTask(() => this.task2Callback(), {
-            name: "Task 2",
-            priority: 3,
-            deadlineMs: 200,
-        });
-        this._rtos.addTask(() => this.task3Callback(), {
-            name: "Task 3",
-            priority: 2,
-            deadlineMs: 200,
-        });
-        this._rtos.addInterrupt(() => this.interruptRandomCondition(), () => this.interruptCallback());
+        this._rtos.addInterrupt(() => this.interruptCondition(), () => this.interruptCallback());
     }
     
+    @ViewChild(OutboxComponent) outbox?: OutboxComponent;
     ngOnInit(): void {
         this._rtos.start();
-        // after 5 seconds, stop the RTOS
-        setTimeout(() => {
-            this._rtos.stop();
-            this.outbox.append("=== RTOS stopped ===", true);
-            this.outbox.append(this._rtos.stats, true);
-        }, 3000);
+    }
+
+    ngOnDestroy(): void {
+        this._rtos.stop();
+        console.log("RTOS stopped");
+        console.log(this._rtos.stats);
     }
 
 }
