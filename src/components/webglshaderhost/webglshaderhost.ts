@@ -1,6 +1,7 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 
-export type DrawFunction = (gl: WebGLRenderingContext | WebGL2RenderingContext) => void;
+export type VertLoader = () => Array<number>;
+export type UniformDict = { [key: string]: number | Array<number> };
 
 @Component({
     selector: 'webglshaderhost',
@@ -11,13 +12,15 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
     @ViewChild('canvasRef', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
     @Input() vertexShaderPath: string = '/shaders/hud.vert';
     @Input() fragmentShaderPath: string = '/shaders/hud.frag';
-    @Input() uniforms: { [key: string]: any } = {};
+    @Input() uniforms: UniformDict = {};
     @Output() onDraw = new EventEmitter<WebGLRenderingContext | WebGL2RenderingContext>();
     private gl!: WebGLRenderingContext | WebGL2RenderingContext;
     private program!: WebGLProgram | null;
     private isProgramReady = false;
     private uniformLocations: Map<string, WebGLUniformLocation> = new Map();
     ngAfterViewInit(): void {
+        // this.canvasRef.nativeElement.width = this.width;
+        // this.canvasRef.nativeElement.height = this.height;
         const glContext = this.canvasRef.nativeElement.getContext('webgl2') ||
             this.canvasRef.nativeElement.getContext('webgl');
         if (!glContext) {
@@ -42,8 +45,14 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         }
     }
   
-    public drawFrame(df?: DrawFunction): void {
+    public drawFrame(vloader?: VertLoader): void {
         if (!this.isProgramReady || !this.gl || !this.program) return;
+        // update canvas size
+        this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.clientWidth;
+        this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.clientHeight;
+        // assign auto uniforms
+        this.uniforms['u_time'] = performance.now() / 1000; // time in ms
+        this.uniforms['u_resolution'] = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
         const gl = this.gl;
         // Set up the viewport
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -53,11 +62,18 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         gl.useProgram(this.program);
         // Upload uniforms
         this.updateUniforms(gl);
-        if (df) {
-            df(gl);
-        } else{
-            this.bindDummyGeometry(gl); // This just draws a simple quad.
+        const verticesArr = vloader !== undefined ? vloader() : this.dummyVertLoader();
+        const vertices = new Float32Array(verticesArr);
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+        const positionLocation = gl.getAttribLocation(this.program!, 'a_position');
+        if (positionLocation !== -1) {
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
         }
+        const nVerts = Math.floor(vertices.length / 2); // 2 floats per vertex
+        gl.drawArrays(gl.TRIANGLES, 0, nVerts);
         this.onDraw.emit(this.gl);
     }
   
@@ -107,33 +123,16 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         }
         return shader;
     }
-  
-    /**
-     * Binds a simple dummy geometry (a screen-filling quad) to draw something.
-     * You could replace this with actual geometry for your use case.
-     */
-    private bindDummyGeometry(gl: WebGLRenderingContext | WebGL2RenderingContext): void {
-        // A single full-screen quad: 2 triangles forming a rectangle
-        // Full clip-space coordinates
-        const vertices = new Float32Array([
-          -1, -1, 
-           1, -1, 
-          -1,  1, 
-          -1,  1, 
-           1, -1, 
-           1,  1
-        ]);
-        const buffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-        const positionLocation = gl.getAttribLocation(this.program!, 'a_position');
-        if (positionLocation !== -1) {
-            gl.enableVertexAttribArray(positionLocation);
-            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-        }
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
+    private dummyVertLoader(): Array<number> {
+        return [
+            -1, -1, 
+            1, -1, 
+           -1,  1, 
+           -1,  1, 
+            1, -1, 
+            1,  1
+        ]
     }
-  
     private updateUniforms(gl: WebGLRenderingContext | WebGL2RenderingContext): void {
         for (const key of Object.keys(this.uniforms)) {
             const value = this.uniforms[key];
