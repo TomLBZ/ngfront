@@ -15,7 +15,8 @@ export class PagesComponent implements OnInit {
         {label: 'Controls', path: 'controls'},
         {label: 'Monitor', path: 'monitor'},
         {label: 'Path Edit', path: 'path-edit'},
-        {label: 'Logs', path: 'logs'}
+        {label: 'Logs', path: 'logs'},
+        {label: 'Test', path: 'test'},
     ];
     selectedTabPath = 'playground';
     private helpStrMultiline = `Help

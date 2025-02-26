@@ -6,6 +6,7 @@ import { ControlsPage } from './controls/controls';
 import { PathEditPage } from './path_edit/path_edit';
 import { LogsPage } from './logs/logs';
 import { MonitorPage } from './monitor/monitor';
+import { TestPage } from './test/test';
 
 export const routes : Routes = [
     {path: '', redirectTo: 'playground', pathMatch: 'full'},
@@ -15,5 +16,6 @@ export const routes : Routes = [
     {path: 'controls', component: ControlsPage},
     {path: 'monitor', component: MonitorPage},
     {path: 'path-edit', component: PathEditPage},
-    {path: 'logs', component: LogsPage}
+    {path: 'logs', component: LogsPage},
+    {path: 'test', component: TestPage},
 ]
