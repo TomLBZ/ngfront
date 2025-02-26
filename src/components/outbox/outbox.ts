@@ -9,8 +9,8 @@ export class OutboxComponent {
     @Input() text: string = '';
     @Input() title: string = 'Outbox';
 
-    clear() {
-        this.text = '';
+    clear(txt: string = "") {
+        this.text = txt;
     }
 
     append(str: string, newline: boolean = true) {
