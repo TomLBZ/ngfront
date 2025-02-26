@@ -8,6 +8,7 @@ import { env } from '../../app.config';
 import { RTOS } from '../../../utils/rtos/rtos';
 import { MissedDeadlinePolicy } from '../../../utils/rtos/rtostypes';
 import { Flag } from '../../../utils/flag/flag';
+import { AppService } from '../../app.service';
 
 @Component({
     selector: 'page-monitor',
@@ -25,40 +26,39 @@ export class MonitorPage implements OnInit {
     });
     private _flags: Flag = new Flag([
         "Heartbeat",
-        "Task 1",
-        "Interrupt",
+        "Draw",
     ]);
     private get timeStr(): string {
         return performance.now().toFixed(0);
     }
-    private heartbeatCallback() {
+    private heartbeat() {
+        // this.svc.call("br/health", (d: any) => {
+        //     console.log(d);
+        // });
         console.log("Heartbeat " + this.timeStr);
         setTimeout(() => {
             this._flags.set("Heartbeat");
         }, 50);
     }
-    private task1Callback() {
+    private draw() {
     }
-    private interruptCondition(): boolean {
-        return this._flags.get("Heartbeat");
-    }
-    private interruptCallback() {
-        console.log("Interrupt " + this.timeStr);
+    private onHeartbeat() {
+        this.outbox?.clear("On Heartbeat " + this.timeStr);
         this._flags.clear("Heartbeat");
     }
-    constructor() {
-        this._rtos.addTask(() => this.heartbeatCallback(), {
+    constructor(private svc: AppService) {
+        this._rtos.addTask(() => this.heartbeat(), {
             name: "Heartbeat",
             priority: 10,
             intervalMs: 1000,
             missedPolicy: MissedDeadlinePolicy.RUN_ONCE,
         });
-        this._rtos.addTask(() => this.task1Callback(), {
-            name: "Task 1",
-            priority: 3,
-            deadlineMs: 400,
+        this._rtos.addTask(() => this.draw(), {
+            name: "Draw",
+            priority: 1,
+            deadlineMs: 30,
         });
-        this._rtos.addInterrupt(() => this.interruptCondition(), () => this.interruptCallback());
+        this._rtos.addInterrupt(() => this._flags.get("Heartbeat"), () => this.onHeartbeat());
     }
     
     @ViewChild(OutboxComponent) outbox?: OutboxComponent;
