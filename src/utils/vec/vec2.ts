@@ -1,19 +1,23 @@
-export class Vec2 {
-    constructor(
-        public x: number,
-        public y: number
-    ) { }
+import { Vec } from './vec';
 
-    To(rad: number, len: number) {
-        return new Vec2(this.x + len * Math.cos(rad), this.y + len * Math.sin(rad));
+export class Vec2 implements Vec<Vec2> {
+    [index: number]: number;
+    public readonly length: number = 2;
+    constructor(public x: number, public y: number) {
+        this[0] = x;
+        this[1] = y;
     }
 
-    Rot(rad: number) {
-        return new Vec2(this.x * Math.cos(rad) - this.y * Math.sin(rad), this.x * Math.sin(rad) + this.y * Math.cos(rad));
+    get(index: number): number {
+        if (index === 0) return this.x;
+        if (index === 1) return this.y;
+        throw new Error('Index out of bounds');
     }
 
-    RotAbout(center: Vec2, rad: number) {
-        return this.Sub(center).Rot(rad).Add(center);
+    set(index: number, value: number): void {
+        if (index === 0) this.x = value;
+        else if (index === 1) this.y = value;
+        else throw new Error('Index out of bounds');
     }
 
     Dot(v: Vec2) {
@@ -24,31 +28,59 @@ export class Vec2 {
         return Math.sqrt(Math.pow(p.x - this.x, 2) + Math.pow(p.y - this.y, 2));
     }
 
+    sub(s: number) {
+        return new Vec2(this.x - s, this.y - s);
+    }
+
     Sub(v: Vec2) {
         return new Vec2(this.x - v.x, this.y - v.y);
+    }
+
+    add(s: number) {
+        return new Vec2(this.x + s, this.y + s);
     }
 
     Add(v: Vec2) {
         return new Vec2(this.x + v.x, this.y + v.y);
     }
 
-    Mul(s: number) {
+    mul(s: number) {
         return new Vec2(this.x * s, this.y * s);
     }
 
-    MulV(v: Vec2) {
+    Mul(v: Vec2) {
         return new Vec2(this.x * v.x, this.y * v.y);
     }
 
-    Div(s: number) {
+    div(s: number) {
         return new Vec2(this.x / s, this.y / s);
+    }
+
+    Div(v: Vec2) {
+        return new Vec2(this.x / v.x, this.y / v.y);
     }
 
     Len() {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
+    min() {
+        return Math.min(this.x, this.y);
+    }
+
     Min(v: Vec2) {
         return new Vec2(Math.min(this.x, v.x), Math.min(this.y, v.y));
+    }
+
+    max() {
+        return Math.max(this.x, this.y);
+    }
+
+    Max(v: Vec2) {
+        return new Vec2(Math.max(this.x, v.x), Math.max(this.y, v.y));
+    }
+
+    Norm() {
+        return this.div(this.Len());
     }
 }
