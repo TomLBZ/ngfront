@@ -23,6 +23,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         uniform vec3 u_campos; // Camera position in world space.
         uniform vec3 u_camdir; // Camera direction in world space.
         uniform vec3 u_camright; // Camera right vector in world space.
+        uniform vec3 u_camdown; // Camera down vector in world space.
         uniform vec3 u_sundir; // Sun direction in world space.
     */
     uniforms: UniformDict = {
@@ -30,6 +31,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         u_campos: [0, 0, 0],
         u_camdir: [0, 0, 1],
         u_camright: [1, 0, 0],
+        u_camdown: [0, -1, 0],
         u_sundir: [1, 1, 1],
     }
     private _rtos: RTOS = new RTOS({
