@@ -19,10 +19,18 @@ import { AppService } from '../../app.service';
 export class MonitorPage implements OnInit, OnDestroy {
     planes: MarkerGroup = new MarkerGroup(Icon.Poly(16, Icon.polyPlaneVecs, Color.Blue, Color.Blue));
     apiKey: string = env.mapKey;
+    /*
+        uniform vec3 u_campos; // Camera position in world space.
+        uniform vec3 u_camdir; // Camera direction in world space.
+        uniform vec3 u_camright; // Camera right vector in world space.
+        uniform vec3 u_sundir; // Sun direction in world space.
+    */
     uniforms: UniformDict = {
-        u_pitch: 0.25,
-        u_roll: 0.25,
-        u_yaw: 0.25
+        u_time: 0,
+        u_campos: [0, 0, 0],
+        u_camdir: [0, 0, 1],
+        u_camright: [1, 0, 0],
+        u_sundir: [1, 1, 1],
     }
     private _rtos: RTOS = new RTOS({
         cycleIntervalMs: 100,

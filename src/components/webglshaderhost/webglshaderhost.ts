@@ -51,7 +51,7 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.clientWidth;
         this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.clientHeight;
         // assign auto uniforms
-        this.uniforms['u_time'] = performance.now() / 1000; // time in ms
+        this.uniforms['u_time'] = performance.now() / 1000; // time in seconds
         this.uniforms['u_resolution'] = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
         const gl = this.gl;
         // Set up the viewport
