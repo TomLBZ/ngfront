@@ -25,7 +25,7 @@ export class Icon {
     static Poly(iconSize: number, vecs: Array<Vec2>, fillColor: Color, lineColor?: Color, epsilon: number = Icon.epsilon) {
         const bmp = new Bitmap(iconSize, iconSize);
         const sdf = (p: Vec2) => {
-            return SDF.poly(p, vecs.map(v => v.Mul(Icon.r)));
+            return SDF.poly(p, vecs.map(v => v.mul(Icon.r)));
         };
         const lc = lineColor === undefined ? fillColor : lineColor;
         bmp.drawSDF(sdf, lc, fillColor, epsilon);

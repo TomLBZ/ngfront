@@ -24,7 +24,7 @@ export class SDF {
         const pa = p.Sub(a);
         const ba = b.Sub(a);
         const h = SDF.clamp(pa.Dot(ba) / ba.Dot(ba), 0, 1);
-        return pa.Sub(ba.Mul(h)).Len();
+        return pa.Sub(ba.mul(h)).Len();
     }
 
     static circle(p: Vec2, r: number) {
@@ -34,8 +34,8 @@ export class SDF {
     static isoTriangle(p: Vec2, q: Vec2) {
         const pp = new Vec2(Math.abs(p.x), p.y - q.y);
         const qq = new Vec2(q.x, -q.y);
-        const a = pp.Sub(qq.Mul(SDF.clamp(pp.Dot(qq) / qq.Dot(qq), 0, 1)));
-        const b = pp.Sub(qq.MulV(new Vec2(SDF.clamp(pp.x / qq.x, 0, 1), 1)));
+        const a = pp.Sub(qq.mul(SDF.clamp(pp.Dot(qq) / qq.Dot(qq), 0, 1)));
+        const b = pp.Sub(qq.Mul(new Vec2(SDF.clamp(pp.x / qq.x, 0, 1), 1)));
         const k = Math.sign(qq.y);
         const d = Math.min(a.Dot(a), b.Dot(b));
         const s = Math.max(k * (pp.x * qq.y - pp.y * qq.x), k * (pp.y - qq.y));
@@ -51,7 +51,7 @@ export class SDF {
             // distance
             const e = v[j].Sub(v[i]);
             const w = p.Sub(v[i]);
-            const b = w.Sub(e.Mul(SDF.clamp(w.Dot(e) / e.Dot(e), 0, 1)));
+            const b = w.Sub(e.mul(SDF.clamp(w.Dot(e) / e.Dot(e), 0, 1)));
             d = SDF.union(d, b.Dot(b));
             // winding number
             const c1 = p.y >= v[i].y;
