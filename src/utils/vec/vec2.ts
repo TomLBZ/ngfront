@@ -3,9 +3,21 @@ import { Vec } from './vec';
 export class Vec2 implements Vec<Vec2> {
     [index: number]: number;
     public readonly length: number = 2;
-    constructor(public x: number, public y: number) {
+    constructor(public x: number = 0, public y: number = 0) {
         this[0] = x;
         this[1] = y;
+    }
+    ToArray(): Array<number> {
+        return [this.x, this.y];
+    }
+
+    FromArray(arr: Array<number>): Vec2 {
+        if (arr.length !== 2) {
+            throw new Error('Array must have exactly two elements.');
+        }
+        this.x = arr[0];
+        this.y = arr[1];
+        return this;
     }
 
     get(index: number): number {
@@ -82,5 +94,9 @@ export class Vec2 implements Vec<Vec2> {
 
     Norm() {
         return this.div(this.Len());
+    }
+
+    toString(): string {
+        return `(${this.x}, ${this.y})`;
     }
 }
