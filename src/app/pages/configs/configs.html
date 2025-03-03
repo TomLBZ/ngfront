@@ -1,0 +1,90 @@
+
+<div class="flex p_full">
+    <div class="flexc p_2thirdw bdc_tint bd_r5 bd_dbl">
+        <div class="txt_hdg ft_big p_fullw pad5">Aircraft Configs</div>
+        <div class="flex grow">
+            <div class="flexc p_halfw bdc_tint bd_r5 bd_sng">
+                <div class="txt_hdg p_fullw pad5">Default (LisaM)</div>
+                <div class="flexc grow p_fullw bdc_tint bd_tdsh bd_bdsh pad10">
+                    <dropselect class="pad10btm"
+                        [items]="djsbvers"
+                        [title]="'JSB Config Version'"
+                        [indexMode]="true"
+                        [hoverMode]="true"
+                        [multiSelect]="false"
+                        [fixDropdown]="false"
+                        (selectionChanged)="onSelectionChanged($event, D_JSB)"
+                    ></dropselect>
+                    <button class="pad5 mar5" (click)="onDownload(D_JSB)">Download</button>
+                    <button class="pad5 mar5" (click)="onUpload(D_JSB)">Upload</button>
+                    <button class="pad5 mar5" (click)="onApply(D_JSB)">Apply</button>
+                </div>
+                <div class="flexc grow p_fullw pad10">
+                    <dropselect class="pad10btm"
+                        [items]="djsbvers"
+                        [title]="'Paparazzi Config Version'"
+                        [indexMode]="true"
+                        [hoverMode]="true"
+                        [multiSelect]="false"
+                        [fixDropdown]="false"
+                        (selectionChanged)="onSelectionChanged($event, D_PAP)"
+                    ></dropselect>
+                    <button class="pad5 mar5" (click)="onDownload(D_PAP)">Download</button>
+                    <button class="pad5 mar5" (click)="onUpload(D_PAP)">Upload</button>
+                    <button class="pad5 mar5" (click)="onApply(D_PAP)">Apply</button>
+                </div>
+            </div>
+            <div class="flexc p_halfw bdc_tint bd_r5 bd_sng">
+                <div class="txt_hdg p_fullw bdc_tint pad5">Custom Type</div>
+                <div class="flexc grow p_fullw bdc_tint bd_tdsh bd_bdsh pad10">
+                    <dropselect class="pad10btm"
+                        [items]="cjsbvers"
+                        [title]="'JSB Config Version'"
+                        [indexMode]="true"
+                        [hoverMode]="true"
+                        [multiSelect]="false"
+                        [fixDropdown]="false"
+                        (selectionChanged)="onSelectionChanged($event, C_JSB)"
+                    ></dropselect>
+                    <button class="pad5 mar5" (click)="onDownload(C_JSB)">Download</button>
+                    <button class="pad5 mar5" (click)="onUpload(C_JSB)">Upload</button>
+                    <button class="pad5 mar5" (click)="onApply(C_JSB)">Apply</button>
+                </div>
+                <div class="flexc grow p_fullw pad10">
+                    <dropselect class="pad10btm"
+                        [items]="cjsbvers"
+                        [title]="'Paparazzi Config Version'"
+                        [indexMode]="true"
+                        [hoverMode]="true"
+                        [multiSelect]="false"
+                        [fixDropdown]="false"
+                        (selectionChanged)="onSelectionChanged($event, C_PAP)"
+                    ></dropselect>
+                    <button class="pad5 mar5" (click)="onDownload(C_PAP)">Download</button>
+                    <button class="pad5 mar5" (click)="onUpload(C_PAP)">Upload</button>
+                    <button class="pad5 mar5" (click)="onApply(C_PAP)">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="flexc p_thirdw bdc_tint bd_r5 bd_dbl">
+        <div class="txt_hdg ft_big p_fullw pad5">Algorithms</div>
+        <div class="flexc grow p_fullw bdc_tint bd_r5 bd_sng">
+            <div class="txt_hdg bd_bdsh p_fullw bdc_tint pad5">Flocking</div>
+            <div class="flexc grow p_fullw bdc_tint bd_tdsh bd_bdsh pad10">
+                <dropselect class="pad10btm"
+                    [items]="fvers"
+                    [title]="'Flocking Algorithm Version'"
+                    [indexMode]="true"
+                    [hoverMode]="true"
+                    [multiSelect]="false"
+                    [fixDropdown]="false"
+                    (selectionChanged)="onSelectionChanged($event, F)"
+                ></dropselect>
+                <button class="pad5 mar5" (click)="onDownload(F)">Download</button>
+                <button class="pad5 mar5" (click)="onUpload(F)">Upload</button>
+                <button class="pad5 mar5" (click)="onApply(F)">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
