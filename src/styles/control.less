@@ -4,11 +4,11 @@ button {
     cursor: pointer;
     transition: background-color 0.5s ease, color 0.5s ease;
     &:hover {
-        background-color: @c_dtint;
-        color: @c_white;
+        &:not(:disabled) {
+            background-color: @c_dtint;
+            color: @c_white;
+        }
         &:disabled {
-            background-color: @c_lgrey;
-            color: @c_dgrey;
             cursor: not-allowed;
         }
     }
