@@ -1,25 +1,64 @@
 <div class="flex p_full">
     <div class="flexc p_4pentaw">
         <mapview class="p_4pentah bd_r5 bd_dbl bdc_tint"
-            [markerGroups]="[planes]"
-            [paths]="[]"
+            [markerGroups]="[planeMgrp]"
+            [paths]="paths"
             [apiKey]="apiKey"
             [mapStyles]="['topo-v2', 'satellite']"
             [mapStyle]="'topo-v2'"
         ></mapview>   
-        <div class="flex px_h300 bd_r5 bd_dbl bdc_tint c_ltint bold ft_huge centcont justcent">
+        <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_ltint bold ft_huge centcont justcent">
             Manual Flight in Next Phase
-        </div>
-    </div>
-    <div class="flexc px_w300">
-        <div class="flexc p_3quarth bd_r5 bd_dbl bdc_tint">
             <webglshaderhost class="px_h200 px_w300 db_sng bd_r5 bdc_tint"
                 [vertexShaderPath]="'/shaders/hud.vert'"
                 [fragmentShaderPath]="'/shaders/hud.frag'"
                 [uniforms]="uniforms"
             ></webglshaderhost>
         </div>
-        <div class="flexc px_h200 bd_r5 bd_dbl bdc_tint">
+    </div>
+    <div class="flexc px_w300">
+        <div class="flexc grow bd_r5 bd_dbl bdc_tint pad5 zeromin">
+            <dropselect class="pad5btm"
+                [items]="telemetries"
+                [title]="'Select Planes to show Telemetry'"
+                [indexMode]="true"
+                [hoverMode]="true"
+                [multiSelect]="true"
+                [representation]="nameRepr"
+                [fixDropdown]="false"
+                (selectionChanged)="onPlaneSelected($event)"
+            ></dropselect>
+            <div class="zeromin flexc v_3pentah">
+                @for (idx of editableTelemetryIndices; track $index) {
+                    <obj-editor
+                        [objToEdit]="telemetries[idx]"
+                        [includeFilter]="telemetryFilter"
+                        [readOnly]="true"
+                        [defaultExpanded]="true"
+                        [objName]="telemetries[idx].name"
+                    ></obj-editor>
+                }
+            </div>
+        </div>
+        <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5">
+            <dropselect class="pad5btm"
+                [items]="missions"
+                [title]="'Select Mission'"
+                [representation]="nameRepr"
+                [hoverMode]="true"
+                [multiSelect]="false"
+                [fixDropdown]="false"
+                (selectionChanged)="onMissionSelected($event)"
+            ></dropselect>
+            <value-editor class="pad10lft pad10rht"
+                [itemName]="'Enable FlightGear'"
+                [itemToEdit]="fgEnabled"
+                (itemChanged)="onFgToggle($event)"
+            ></value-editor>
+            <button class="pad5 mar5" (click)="onRefreshData()">Refresh Data</button>
+            <button class="pad5 mar5" [disabled]="!isLaunchEnabled" (click)="onLaunch()">{{launchText}}</button>
+            <button class="pad5 mar5" [disabled]="!isSigLostEnabled" (click)="onSigLoss()">{{sigLossText}}</button>
+            <button class="pad5 mar5" (click)="onStop()">Stop</button>
         </div>
         <outbox class="px_h200 bd_r5 bd_dbl bdc_tint"></outbox>
     </div>    
