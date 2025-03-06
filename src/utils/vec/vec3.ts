@@ -101,6 +101,10 @@ export class Vec3 implements Vec<Vec3> {
         return new Vec3(this.x / len, this.y / len, this.z / len);
     }
 
+    Neg(): Vec3 {
+        return new Vec3(-this.x, -this.y, -this.z);
+    }
+
     rotateX(rad: number): Vec3 {
         const c = Math.cos(rad);
         const s = Math.sin(rad);

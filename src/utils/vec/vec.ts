@@ -19,6 +19,7 @@ export interface Vec<T> {
     max(): number;
     Max(v: T): T;
     Norm(): T;
+    Neg(): T;
     ToArray(): Array<number>;
     FromArray(arr: Array<number>): T;
     toString(): string;
