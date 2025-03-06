@@ -7,14 +7,16 @@ import { PathEditPage } from './path_edit/path_edit';
 import { LogsPage } from './logs/logs';
 import { MonitorPage } from './monitor/monitor';
 import { TestPage } from './test/test';
+import { ConfigsPage } from './configs/configs';
 
 export const routes : Routes = [
-    {path: '', redirectTo: 'playground', pathMatch: 'full'},
+    {path: '', redirectTo: 'monitor', pathMatch: 'full'},
     {path: 'playground', component: PlaygroundPage},
     {path: 'object-editing', component: ObjEditingPage},
     {path: 'drop-select', component: DropSelectPage},
     {path: 'controls', component: ControlsPage},
     {path: 'monitor', component: MonitorPage},
+    {path: 'configs', component: ConfigsPage},
     {path: 'path-edit', component: PathEditPage},
     {path: 'logs', component: LogsPage},
     {path: 'test', component: TestPage},
