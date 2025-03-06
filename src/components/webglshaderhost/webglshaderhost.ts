@@ -1,7 +1,10 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 
 export type VertLoader = () => Array<number>;
-export type UniformDict = { [key: string]: number | Array<number> };
+export type UniformDict = { [key: string]: number | Array<number> | Texture };
+export class Texture {
+    constructor(public texture: WebGLTexture, public textureUnit: number = 0) {}
+}
 
 @Component({
     selector: 'webglshaderhost',
@@ -19,8 +22,6 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
     private isProgramReady = false;
     private uniformLocations: Map<string, WebGLUniformLocation> = new Map();
     ngAfterViewInit(): void {
-        // this.canvasRef.nativeElement.width = this.width;
-        // this.canvasRef.nativeElement.height = this.height;
         const glContext = this.canvasRef.nativeElement.getContext('webgl2') ||
             this.canvasRef.nativeElement.getContext('webgl');
         if (!glContext) {
@@ -44,14 +45,34 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
             this.program = null;
         }
     }
-  
+    private textureCache = new Map<string, WebGLTexture>();
+    public async loadTexture(url: string): Promise<WebGLTexture> {
+        if (this.textureCache.has(url)) {
+            return this.textureCache.get(url)!;
+        }
+        const image = new Image();
+        image.src = url;
+        await image.decode();
+        const gl = this.gl;
+        const texture = gl.createTexture()!;
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        this.textureCache.set(url, texture);
+        return texture;
+    }
+    
+    private start_t: number = -1;
     public drawFrame(vloader?: VertLoader): void {
         if (!this.isProgramReady || !this.gl || !this.program) return;
         // update canvas size
         this.canvasRef.nativeElement.width = this.canvasRef.nativeElement.clientWidth;
         this.canvasRef.nativeElement.height = this.canvasRef.nativeElement.clientHeight;
         // assign auto uniforms
-        this.uniforms['u_time'] = performance.now() / 1000; // time in seconds
+        if (this.start_t < 0) {
+            this.start_t = performance.now() / 1000;
+        }
+        this.uniforms['u_time'] = performance.now() / 1000 - this.start_t; // time in seconds
         this.uniforms['u_resolution'] = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
         const gl = this.gl;
         // Set up the viewport
@@ -172,6 +193,12 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
                         break;
                     // Expand as needed for your use case
                 }
+            } else if (value instanceof Texture) {
+                if (value.texture) {
+                    gl.activeTexture(gl.TEXTURE0 + value.textureUnit);
+                    gl.bindTexture(gl.TEXTURE_2D, value.texture);
+                }
+                gl.uniform1i(location, value.textureUnit);
             }
         }
     }
