@@ -1,10 +1,9 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
+import { AppService } from '../../app/app.service';
+import { Uniform, UniformMat, UniformSingle, UniformTexture, UniformTextureArray, UniformVec, UniformVec2, UniformVec4 } from '../../utils/uniform/u';
 
 export type VertLoader = () => Array<number>;
-export type UniformDict = { [key: string]: number | Array<number> | Texture };
-export class Texture {
-    constructor(public texture: WebGLTexture, public textureUnit: number = 0) {}
-}
+export type UniformDict = { [key: string]: Uniform };
 
 @Component({
     selector: 'webglshaderhost',
@@ -21,6 +20,11 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
     private program!: WebGLProgram | null;
     private isProgramReady = false;
     private uniformLocations: Map<string, WebGLUniformLocation> = new Map();
+    private textureCache = new Map<string, ImageBitmap>();
+    private glTextureCache = new Map<string, WebGLTexture>();
+    private glTextureArrayCache = new Map<string, WebGLTexture>();
+    private start_t: number = -1;
+    constructor(private svc: AppService) {}
     ngAfterViewInit(): void {
         const glContext = this.canvasRef.nativeElement.getContext('webgl2') ||
             this.canvasRef.nativeElement.getContext('webgl');
@@ -45,24 +49,6 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
             this.program = null;
         }
     }
-    private textureCache = new Map<string, WebGLTexture>();
-    public async loadTexture(url: string): Promise<WebGLTexture> {
-        if (this.textureCache.has(url)) {
-            return this.textureCache.get(url)!;
-        }
-        const image = new Image();
-        image.src = url;
-        await image.decode();
-        const gl = this.gl;
-        const texture = gl.createTexture()!;
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-        gl.generateMipmap(gl.TEXTURE_2D);
-        this.textureCache.set(url, texture);
-        return texture;
-    }
-    
-    private start_t: number = -1;
     public drawFrame(vloader?: VertLoader): void {
         if (!this.isProgramReady || !this.gl || !this.program) return;
         // update canvas size
@@ -73,7 +59,7 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
             this.start_t = performance.now() / 1000;
         }
         this.uniforms['u_time'] = performance.now() / 1000 - this.start_t; // time in seconds
-        this.uniforms['u_resolution'] = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
+        this.uniforms['u_resolution'] = new UniformVec2([this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight]);
         const gl = this.gl;
         // Set up the viewport
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -154,6 +140,165 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
             1,  1
         ]
     }
+    private updateVectorValueUniform(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformVec | UniformMat, location: WebGLUniformLocation): void {
+        const a = value.arr;
+        switch (a.length) {
+            case 2:
+                gl.uniform2f(location, a[0], a[1]); // UniformVec2
+                break;
+            case 3:
+                gl.uniform3f(location, a[0], a[1], a[2]); // UniformVec3
+                break;
+            case 4:
+                if (value instanceof UniformVec4) {
+                    gl.uniform4f(location, a[0], a[1], a[2], a[3]); // UniformVec4
+                } else {
+                    gl.uniformMatrix2fv(location, false, new Float32Array(a)); // UniformMat2
+                }
+                break;
+            case 9:
+                gl.uniformMatrix3fv(location, false, new Float32Array(a)); // UniformMat3
+                break
+            case 16:
+                gl.uniformMatrix4fv(location, false, new Float32Array(a)); // UniformMat4
+                break;
+        }
+    }
+    private loadBitmap(t: UniformTexture): void {
+        if (this.textureCache.has(t.url)) { return; } // already loaded
+        const pixel: Array<number> = [0, 0, 255, 255]; // single blue opaque pixel
+        const data: ImageData = new ImageData(new Uint8ClampedArray(pixel), 1, 1);
+        createImageBitmap(data).then((bmp: ImageBitmap) => {
+            this.textureCache.set(t.url, bmp); // set in cache to prevent further loading
+        }).then(() => this.svc.downloadImage(t.url)).then((bmp: ImageBitmap) => { // early returned, will run async
+            this.textureCache.set(t.url, bmp); // overwrite cache with real texture after loading
+        });
+    }
+    private loadTexture(gl: WebGLRenderingContext | WebGL2RenderingContext, t: UniformTexture, bmp: ImageBitmap): WebGLTexture {
+        if (this.glTextureCache.has(t.url)) {
+            return this.glTextureCache.get(t.url)!;
+        }
+        const texture = gl.createTexture()!;
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        this.glTextureCache.set(t.url, texture);
+        return texture;
+    }
+    private loadTextureArray(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformTextureArray): WebGLTexture | undefined {
+        const key = value.textures.map((t) => t.url).join("::");
+        let texture = this.glTextureArrayCache.get(key);
+        if (texture) return texture;
+        const bitmaps: ImageBitmap[] = [];
+        let w = 1, h = 1;
+        for (const t of value.textures) {
+            const bmp = this.textureCache.get(t.url);
+            if (!bmp) return undefined;
+            w = Math.max(w, bmp.width);
+            h = Math.max(h, bmp.height);
+            bitmaps.push(bmp);
+        }
+        if (gl instanceof WebGL2RenderingContext) {
+            texture = gl.createTexture()!;
+            gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+            gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, w, h, bitmaps.length);
+            for (let i = 0; i < bitmaps.length; i++) {
+                gl.texSubImage3D(
+                    gl.TEXTURE_2D_ARRAY,
+                    0,             // level
+                    0, 0, i,       // x, y, layer
+                    w, h, 1,       // width, height, depth=1
+                    gl.RGBA,
+                    gl.UNSIGNED_BYTE,
+                    bitmaps[i]
+                );
+            }
+            gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+            this.glTextureArrayCache.set(key, texture);
+            return texture;
+        }
+      
+        // -----------------------------
+        // WebGL1 fallback: create multiple 2D textures, one per bitmap.
+        // (only if you actually need this fallback)
+        // -----------------------------
+        /*
+        // If you want to handle WebGL1 fallback via multiple 2D textures/samplers,
+        // create an array of textures here, store them in a separate Map, etc.
+        // Then return undefined or a dummy to signal your rendering code.
+        const fallbackTextures: WebGLTexture[] = [];
+        for (let i = 0; i < bitmaps.length; i++) {
+          const tex = gl.createTexture()!;
+          gl.bindTexture(gl.TEXTURE_2D, tex);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmaps[i]);
+          gl.generateMipmap(gl.TEXTURE_2D);
+          fallbackTextures.push(tex);
+        }
+        this.glTextureArrayFallback.set(key, fallbackTextures);
+        return undefined; // or some sentinel
+        */
+      
+        // If you're only targeting WebGL2, you can omit the fallback entirely.
+        return undefined;
+    }
+    private updateSingleValueUniform(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformSingle, location: WebGLUniformLocation): void {
+        if (typeof value === 'number') {
+            gl.uniform1f(location, value);
+        } else if (value instanceof UniformTexture) {
+            this.loadBitmap(value); // load texture
+            const bmp = this.textureCache.get(value.url)!; // texture must exist
+            const texture = this.loadTexture(gl, value, bmp);
+            gl.activeTexture(gl.TEXTURE0 + value.unit);
+            gl.bindTexture(gl.TEXTURE_2D, texture); // bind texture first before loading
+            gl.uniform1i(location, value.unit);
+        } else if (value instanceof UniformTextureArray) {
+            for (const t of value.textures) {
+                this.loadBitmap(t);
+            }
+            const texObj = this.loadTextureArray(gl, value);
+            if (!texObj) return; // texture not loaded yet
+            if (gl instanceof WebGL2RenderingContext) {
+                gl.activeTexture(gl.TEXTURE0 + value.unit);
+                gl.bindTexture(gl.TEXTURE_2D_ARRAY, texObj);
+                gl.uniform1i(location, value.unit);
+            } else {
+                // If you implemented the WebGL1 fallback with multiple 2D textures,
+                // you'd bind them all here and set uniform1iv (sampler array).
+                // ...
+            }
+            // const bitmaps: Array<ImageBitmap> = [];
+            // let w = 1;
+            // let h = 1;
+            // for (const t of value.textures) {
+            //     this.loadBitmap(t); // load texture
+            //     const bmp = this.textureCache.get(t.url); // texture must exist
+            //     if (bmp === undefined) return; // texture not loaded yet
+            //     w = Math.max(w, bmp.width);
+            //     h = Math.max(h, bmp.height);
+            //     bitmaps.push(bmp); // texture must exist
+            // }
+            // if (gl instanceof WebGL2RenderingContext) {
+            //     const texture = gl.createTexture()!; // create texture
+            //     gl.activeTexture(gl.TEXTURE0 + value.unit);
+            //     gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+            //     gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, w, h, bitmaps.length);
+            //     for (let i = 0; i < bitmaps.length; i++) {
+            //         gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, i, w, h, 1, gl.RGBA, gl.UNSIGNED_BYTE, bitmaps[i]);
+            //     }
+            //     gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+            //     gl.uniform1i(location, value.unit);
+            // } else {
+            //     for (let i = 0; i < bitmaps.length; i++) {
+            //         const texture = gl.createTexture()!; // create texture for each bitmap
+            //         gl.activeTexture(gl.TEXTURE0 + value.unit + i);
+            //         gl.bindTexture(gl.TEXTURE_2D, texture);
+            //         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmaps[i]);
+            //         gl.generateMipmap(gl.TEXTURE_2D);
+            //     }
+            //     gl.uniform1iv(location, Array.from({ length: bitmaps.length }, (_, i) => value.unit + i));
+            // }
+        }
+    }
     private updateUniforms(gl: WebGLRenderingContext | WebGL2RenderingContext): void {
         for (const key of Object.keys(this.uniforms)) {
             const value = this.uniforms[key];
@@ -168,37 +313,11 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
                     continue;
                 }
             }
-            // For simplicity, handle a few types by example:
-            if (typeof value === 'number') {
-                gl.uniform1f(location, value);
-            } else if (Array.isArray(value)) {
-                // Decide by array length, e.g. uniform2f, uniform3f, uniform4f, uniformMatrix4fv, etc.
-                // Example for 1D float arrays:
-                switch (value.length) {
-                    case 1:
-                        gl.uniform1f(location, value[0]);
-                        break;
-                    case 2:
-                        gl.uniform2f(location, value[0], value[1]);
-                        break;
-                    case 3:
-                        gl.uniform3f(location, value[0], value[1], value[2]);
-                        break;
-                    case 4:
-                        gl.uniform4f(location, value[0], value[1], value[2], value[3]);
-                        break;
-                    case 16:
-                        // Possibly a 4x4 matrix
-                        gl.uniformMatrix4fv(location, false, new Float32Array(value));
-                        break;
-                    // Expand as needed for your use case
-                }
-            } else if (value instanceof Texture) {
-                if (value.texture) {
-                    gl.activeTexture(gl.TEXTURE0 + value.textureUnit);
-                    gl.bindTexture(gl.TEXTURE_2D, value.texture);
-                }
-                gl.uniform1i(location, value.textureUnit);
+            const arr = Object.getOwnPropertyDescriptor(value, 'arr');
+            if (arr) {
+                this.updateVectorValueUniform(gl, value as UniformVec | UniformMat, location);
+            } else {
+                this.updateSingleValueUniform(gl, value as UniformSingle, location);
             }
         }
     }
