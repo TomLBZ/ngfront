@@ -18,6 +18,7 @@ import { Marker } from '../../../utils/marker/marker';
 import { ObjEditorComponent } from '../../../components/obj_editor/obj_editor';
 import { Path } from '../../../utils/path/path';
 import { Point } from '../../../utils/point/point';
+import { UniformVec3 } from '../../../utils/uniform/u';
 
 @Component({
     selector: 'page-monitor',
@@ -49,11 +50,11 @@ export class MonitorPage implements OnInit, OnDestroy {
     sigLossText: string = "Block Signal";
     uniforms: UniformDict = {
         u_time: 0,
-        u_campos: [0, 0, 0],
-        u_camdir: [0, 0, 1],
-        u_camright: [1, 0, 0],
-        u_camdown: [0, -1, 0],
-        u_sundir: [1, 1, 1],
+        u_campos  : new UniformVec3([0, 0, 0]),
+        u_camdir  : new UniformVec3([0, 0, 1]),
+        u_camright: new UniformVec3([1, 0, 0]),
+        u_camdown : new UniformVec3([0, -1, 0]),
+        u_sundir  : new UniformVec3([1, 1, 1]),
     }
     @ViewChild(WebGLShaderHostComponent) shaderHost?: WebGLShaderHostComponent;
     @ViewChild(OutboxComponent) outbox?: OutboxComponent;
