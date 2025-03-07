@@ -75,4 +75,14 @@ export class AppService {
     searchFlags(searchStr: string): Array<string> {
         return this.apiFlags.searchNames(searchStr);
     }
+
+    async download(url: string): Promise<Blob> {
+        const res = await fetch(url);
+        return await res.blob();
+    }
+
+    async downloadImage(url: string): Promise<ImageBitmap> {
+        const blob = await this.download(url);
+        return await createImageBitmap(blob);
+    }
 }
