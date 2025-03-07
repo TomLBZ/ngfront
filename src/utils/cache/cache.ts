@@ -36,6 +36,9 @@ export class Cache<T> {
     public get entries(): Array<[number, T]> {
         return Object.entries(this._cache).map(([k, v]) => [parseInt(k), v]);
     }
+    public get length(): number {
+        return this.values.length;
+    }
     public clear() {
         this._cache = {};
     }
