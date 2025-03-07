@@ -1,5 +1,5 @@
 import { RTOSTask, RTOSInterrupt, RTOSTaskOptions, RTOSOptions, RTOSTaskCallback, MissedDeadlinePolicy, RTOSInterruptCheck, RTOSIntervalOptions } from "./rtostypes";
-import { PriorityQueue } from "../pq/pq";
+import { PriorityQueue } from "../queue/pq";
 
 export class RTOS {
     private tasks: RTOSTask[] = [];
