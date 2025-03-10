@@ -1,6 +1,7 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { AppService } from '../../app/app.service';
 import { Uniform, UniformMat, UniformSingle, UniformTexture, UniformTextureArray, UniformVec, UniformVec2, UniformVec4 } from '../../utils/uniform/u';
+import { Downloader } from '../../utils/api/downloader';
 
 export type VertLoader = () => Array<number>;
 export type UniformDict = { [key: string]: Uniform };
@@ -20,9 +21,10 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
     private program!: WebGLProgram | null;
     private isProgramReady = false;
     private uniformLocations: Map<string, WebGLUniformLocation> = new Map();
-    private textureCache = new Map<string, ImageBitmap>();
+    private bmpCache = new Map<string, ImageBitmap>();
     private glTextureCache = new Map<string, WebGLTexture>();
     private glTextureArrayCache = new Map<string, WebGLTexture>();
+    private glTextureArrayFallback = new Map<string, WebGLTexture[]>();
     private start_t: number = -1;
     constructor(private svc: AppService) {}
     ngAfterViewInit(): void {
@@ -165,14 +167,17 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         }
     }
     private loadBitmap(t: UniformTexture): void {
-        if (this.textureCache.has(t.url)) { return; } // already loaded
-        const pixel: Array<number> = [0, 0, 255, 255]; // single blue opaque pixel
-        const data: ImageData = new ImageData(new Uint8ClampedArray(pixel), 1, 1);
-        createImageBitmap(data).then((bmp: ImageBitmap) => {
-            this.textureCache.set(t.url, bmp); // set in cache to prevent further loading
-        }).then(() => this.svc.downloadImage(t.url)).then((bmp: ImageBitmap) => { // early returned, will run async
-            this.textureCache.set(t.url, bmp); // overwrite cache with real texture after loading
+        if (this.bmpCache.has(t.url)) { return; } // already loaded
+        Downloader.downloadImage(t.url).then((bmp: ImageBitmap) => { // early returned, will run async
+            this.bmpCache.set(t.url, bmp); // overwrite cache with real texture after loading
         });
+        // const pixel: Array<number> = [0, 0, 255, 255]; // single blue opaque pixel
+        // const data: ImageData = new ImageData(new Uint8ClampedArray(pixel), 1, 1);
+        // createImageBitmap(data).then((bmp: ImageBitmap) => {
+        //     this.bmpCache.set(t.url, bmp); // set in cache to prevent further loading
+        // }).then(() => this.svc.downloadImage(t.url)).then((bmp: ImageBitmap) => { // early returned, will run async
+        //     this.bmpCache.set(t.url, bmp); // overwrite cache with real texture after loading
+        // });
     }
     private loadTexture(gl: WebGLRenderingContext | WebGL2RenderingContext, t: UniformTexture, bmp: ImageBitmap): WebGLTexture {
         if (this.glTextureCache.has(t.url)) {
@@ -188,12 +193,12 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
     private loadTextureArray(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformTextureArray): WebGLTexture | undefined {
         const key = value.textures.map((t) => t.url).join("::");
         let texture = this.glTextureArrayCache.get(key);
-        if (texture) return texture;
+        if (texture !== undefined) return texture;
         const bitmaps: ImageBitmap[] = [];
         let w = 1, h = 1;
         for (const t of value.textures) {
-            const bmp = this.textureCache.get(t.url);
-            if (!bmp) return undefined;
+            const bmp = this.bmpCache.get(t.url);
+            if (bmp === undefined) return undefined;
             w = Math.max(w, bmp.width);
             h = Math.max(h, bmp.height);
             bitmaps.push(bmp);
@@ -216,37 +221,25 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
             gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
             this.glTextureArrayCache.set(key, texture);
             return texture;
+        } else { // WebGL1 fallback: create multiple 2D textures, one per bitmap.
+            const fallbackTextures: WebGLTexture[] = [];
+            for (let i = 0; i < bitmaps.length; i++) {
+                const tex = gl.createTexture()!;
+                gl.bindTexture(gl.TEXTURE_2D, tex);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmaps[i]);
+                gl.generateMipmap(gl.TEXTURE_2D);
+                fallbackTextures.push(tex);
+            }
+            this.glTextureArrayFallback.set(key, fallbackTextures);
+            return undefined; // or some sentinel
         }
-      
-        // -----------------------------
-        // WebGL1 fallback: create multiple 2D textures, one per bitmap.
-        // (only if you actually need this fallback)
-        // -----------------------------
-        /*
-        // If you want to handle WebGL1 fallback via multiple 2D textures/samplers,
-        // create an array of textures here, store them in a separate Map, etc.
-        // Then return undefined or a dummy to signal your rendering code.
-        const fallbackTextures: WebGLTexture[] = [];
-        for (let i = 0; i < bitmaps.length; i++) {
-          const tex = gl.createTexture()!;
-          gl.bindTexture(gl.TEXTURE_2D, tex);
-          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmaps[i]);
-          gl.generateMipmap(gl.TEXTURE_2D);
-          fallbackTextures.push(tex);
-        }
-        this.glTextureArrayFallback.set(key, fallbackTextures);
-        return undefined; // or some sentinel
-        */
-      
-        // If you're only targeting WebGL2, you can omit the fallback entirely.
-        return undefined;
     }
     private updateSingleValueUniform(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformSingle, location: WebGLUniformLocation): void {
         if (typeof value === 'number') {
             gl.uniform1f(location, value);
         } else if (value instanceof UniformTexture) {
             this.loadBitmap(value); // load texture
-            const bmp = this.textureCache.get(value.url)!; // texture must exist
+            const bmp = this.bmpCache.get(value.url)!; // texture must exist
             const texture = this.loadTexture(gl, value, bmp);
             gl.activeTexture(gl.TEXTURE0 + value.unit);
             gl.bindTexture(gl.TEXTURE_2D, texture); // bind texture first before loading
@@ -256,47 +249,20 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
                 this.loadBitmap(t);
             }
             const texObj = this.loadTextureArray(gl, value);
-            if (!texObj) return; // texture not loaded yet
             if (gl instanceof WebGL2RenderingContext) {
+                if (!texObj) return; // texture not loaded yet
                 gl.activeTexture(gl.TEXTURE0 + value.unit);
                 gl.bindTexture(gl.TEXTURE_2D_ARRAY, texObj);
                 gl.uniform1i(location, value.unit);
-            } else {
-                // If you implemented the WebGL1 fallback with multiple 2D textures,
-                // you'd bind them all here and set uniform1iv (sampler array).
-                // ...
+            } else { // WebGL1 fallback
+                const fallbackTextures = this.glTextureArrayFallback.get(value.textures.map((t) => t.url).join("::"));
+                if (!fallbackTextures) return; // texture not loaded yet
+                for (let i = 0; i < fallbackTextures.length; i++) {
+                    gl.activeTexture(gl.TEXTURE0 + value.unit + i);
+                    gl.bindTexture(gl.TEXTURE_2D, fallbackTextures[i]);
+                }
+                gl.uniform1iv(location, Array.from({ length: fallbackTextures.length }, (_, i) => value.unit + i));
             }
-            // const bitmaps: Array<ImageBitmap> = [];
-            // let w = 1;
-            // let h = 1;
-            // for (const t of value.textures) {
-            //     this.loadBitmap(t); // load texture
-            //     const bmp = this.textureCache.get(t.url); // texture must exist
-            //     if (bmp === undefined) return; // texture not loaded yet
-            //     w = Math.max(w, bmp.width);
-            //     h = Math.max(h, bmp.height);
-            //     bitmaps.push(bmp); // texture must exist
-            // }
-            // if (gl instanceof WebGL2RenderingContext) {
-            //     const texture = gl.createTexture()!; // create texture
-            //     gl.activeTexture(gl.TEXTURE0 + value.unit);
-            //     gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
-            //     gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, w, h, bitmaps.length);
-            //     for (let i = 0; i < bitmaps.length; i++) {
-            //         gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, i, w, h, 1, gl.RGBA, gl.UNSIGNED_BYTE, bitmaps[i]);
-            //     }
-            //     gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
-            //     gl.uniform1i(location, value.unit);
-            // } else {
-            //     for (let i = 0; i < bitmaps.length; i++) {
-            //         const texture = gl.createTexture()!; // create texture for each bitmap
-            //         gl.activeTexture(gl.TEXTURE0 + value.unit + i);
-            //         gl.bindTexture(gl.TEXTURE_2D, texture);
-            //         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmaps[i]);
-            //         gl.generateMipmap(gl.TEXTURE_2D);
-            //     }
-            //     gl.uniform1iv(location, Array.from({ length: bitmaps.length }, (_, i) => value.unit + i));
-            // }
         }
     }
     private updateUniforms(gl: WebGLRenderingContext | WebGL2RenderingContext): void {
