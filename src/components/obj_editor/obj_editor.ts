@@ -5,12 +5,9 @@ import { Dates } from '../../utils/date/dates';
 
 export class cloneable {
     public static deepCopy<T>(source: T): T {
-      return Array.isArray(source)
-      ? source.map(item => this.deepCopy(item))
-      : ArrayBuffer.isView(source)
-      ? structuredClone(source)
-      : source instanceof Date
-      ? new Date(source.getTime())
+      return Array.isArray(source) ? source.map(item => this.deepCopy(item)) as T
+      : ArrayBuffer.isView(source) ? structuredClone(source)
+      : source instanceof Date ? new Date(source.getTime()) as T
       : source && typeof source === 'object'
             ? Object.getOwnPropertyNames(source).reduce((o, prop) => {
                Object.defineProperty(o, prop, Object.getOwnPropertyDescriptor(source, prop)!);
