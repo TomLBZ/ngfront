@@ -61,7 +61,7 @@ export class MapTiler {
                     tiles.push(await this.getTile(z, i, j));
                 }
             }
-            // TODO: CHANGE ALGORITHM TO INCLUDE SKIRTS
+            // TODO: CHANGE ALGORITHM TO INCLUDE SKIRTS!
         }
         return tiles;
     }
