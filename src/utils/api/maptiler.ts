@@ -45,7 +45,7 @@ export class MapTiler {
                 }
             }
         } else { // append 3 tiles based on distance from center as skirts, then recursively call autoTilesXYZ
-            
+            // TODO: FIND A BETTER WAY TO DO THIS
         }
         return tiles;
     }
@@ -61,6 +61,7 @@ export class MapTiler {
                     tiles.push(await this.getTile(z, i, j));
                 }
             }
+            // TODO: CHANGE ALGORITHM TO INCLUDE SKIRTS
         }
         return tiles;
     }
