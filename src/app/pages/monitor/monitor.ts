@@ -23,7 +23,7 @@ import { UniformVec3 } from '../../../utils/uniform/u';
 @Component({
     selector: 'page-monitor',
     imports: [
-        MapViewComponent, OutboxComponent, WebGLShaderHostComponent, 
+        MapViewComponent, OutboxComponent, 
         DropSelectComponent, ValueEditorComponent, ObjEditorComponent
     ],
     templateUrl: 'monitor.html'

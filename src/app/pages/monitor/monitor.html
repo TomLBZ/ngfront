@@ -5,15 +5,16 @@
             [paths]="paths"
             [apiKey]="apiKey"
             [mapStyles]="['topo-v2', 'satellite']"
-            [mapStyle]="'topo-v2'"
+            [mapStyle]="'satellite'"
+            [projection]="'globe'"
         ></mapview>   
         <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_ltint bold ft_huge centcont justcent">
             Manual Flight in Next Phase
-            <webglshaderhost class="px_h200 px_w300 db_sng bd_r5 bdc_tint"
+            <!-- <webglshaderhost class="px_h200 px_w300 db_sng bd_r5 bdc_tint"
                 [vertexShaderPath]="'/shaders/hud.vert'"
                 [fragmentShaderPath]="'/shaders/hud.frag'"
                 [uniforms]="uniforms"
-            ></webglshaderhost>
+            ></webglshaderhost> -->
         </div>
     </div>
     <div class="flexc px_w300">
