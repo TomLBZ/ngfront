@@ -1,7 +1,9 @@
 import { Component, ViewChild, OnInit, OnDestroy } from "@angular/core";
 import { WebGLShaderHostComponent, UniformDict } from "../../../components/webglshaderhost/webglshaderhost";
 import { RTOS } from "../../../utils/rtos/rtos";
-import { AU, Earth, ObserverOnEarth, SUNR } from "../../../utils/geo/geo";
+import { AU, SUNR } from "../../../utils/geo/geo";
+import { Earth } from "../../../utils/geo/earth";
+import { ObserverOnEarth } from "../../../utils/geo/observer";
 import { OnceFunction } from "../../../utils/once/once";
 import { Vec3 } from "../../../utils/vec/vec3";
 import { Queue } from "../../../utils/queue/q";
