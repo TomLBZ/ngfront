@@ -7,7 +7,8 @@ export class ObserverOnEarth {
     private _Z: Vec3; // up axis in earth frame
     private _Y: Vec3; // front axis in earth frame
     private _X: Vec3; // right axis in earth frame
-    public readonly oposE: Vec3; // in earth frame
+    private _oposE: Vec3; // in earth frame
+    public get oposE(): Vec3 { return this._oposE; }
     public get up(): Vec3 { return this._Z; }
     public get front(): Vec3 { return this._Y; }
     public get right(): Vec3 { return this._X; }
@@ -25,8 +26,8 @@ export class ObserverOnEarth {
         this._RT = this._R.T();
     }
     constructor(public lng: number, public lat: number, public alt: number) {
-        this.oposE = Earth.getPosition(lng, lat, alt);
-        this._Z = this.oposE.Norm(); // up vector is along the position vector in earth coordinates
+        this._oposE = Earth.getPosition(lng, lat, alt);
+        this._Z = this._oposE.Norm(); // up vector is along the position vector in earth coordinates
         this._Y = Earth.getNorthAtPos(this._Z); // forward vector is perpendicular to the surface of the earth and points north
         this._X = this._Y.Cross(this._Z).Norm(); // right vector is perpendicular to the surface of the earth and points east
         this.update();
@@ -43,11 +44,14 @@ export class ObserverOnEarth {
         this._X = this._Y.Cross(this._Z).Norm();
         this.update();
     }
+    public forward(distance: number) {
+        this._oposE = this._oposE.Add(this._Y.mul(distance));
+    }
     public O2E_p(vo: Vec3): Vec3 { // vo is in the observer frame, should be converted to the Earth frame
-        return this._R.MulV(vo).Add(this.oposE);
+        return this._R.MulV(vo).Add(this._oposE);
     }
     public E2O_p(ve: Vec3): Vec3 { // ve is in the Earth frame, should be converted to the observer frame
-        return this._RT.MulV(ve.Sub(this.oposE));
+        return this._RT.MulV(ve.Sub(this._oposE));
     }
     public O2E_v(vo: Vec3): Vec3 { // vo is in the observer frame, should be converted to the Earth frame
         return this._R.MulV(vo);
