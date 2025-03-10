@@ -11,8 +11,8 @@ Auto-reload on code changes.
     ```
 2. Create and edit the src/assets/config.ts file
     ```bash
-    cp src/assets/config_template.ts src/assets/config.ts
-    vim src/assets/config.ts
+    cp src/configs/config_template.ts src/assets/config.ts
+    vim src/configs/config.ts
     ```
 3. Toggle between development and production mode by changing the `command` field in the `compose.yaml` file
     ```bash
