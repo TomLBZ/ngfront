@@ -1,10 +1,13 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { AppService } from '../../app/app.service';
-import { Uniform, UniformMat, UniformSingle, UniformTexture, UniformTextureArray, UniformVec, UniformVec2, UniformVec4 } from '../../utils/uniform/u';
+import { UniformDict, UniformTexture, UniformTextureArray, UniformVec4Array, 
+    UniformValueLike, UniformArrayLike, UniformVecLike, 
+    UniformVec2, UniformVec4, 
+    isUniformValueLike, isUniformVecLike, isUniformArrayLike,
+    } from '../../utils/uniform/u';
 import { Downloader } from '../../utils/api/downloader';
 
 export type VertLoader = () => Array<number>;
-export type UniformDict = { [key: string]: Uniform };
 
 @Component({
     selector: 'webglshaderhost',
@@ -142,30 +145,6 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
             1,  1
         ]
     }
-    private updateVectorValueUniform(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformVec | UniformMat, location: WebGLUniformLocation): void {
-        const a = value.arr;
-        switch (a.length) {
-            case 2:
-                gl.uniform2f(location, a[0], a[1]); // UniformVec2
-                break;
-            case 3:
-                gl.uniform3f(location, a[0], a[1], a[2]); // UniformVec3
-                break;
-            case 4:
-                if (value instanceof UniformVec4) {
-                    gl.uniform4f(location, a[0], a[1], a[2], a[3]); // UniformVec4
-                } else {
-                    gl.uniformMatrix2fv(location, false, new Float32Array(a)); // UniformMat2
-                }
-                break;
-            case 9:
-                gl.uniformMatrix3fv(location, false, new Float32Array(a)); // UniformMat3
-                break
-            case 16:
-                gl.uniformMatrix4fv(location, false, new Float32Array(a)); // UniformMat4
-                break;
-        }
-    }
     private loadBitmap(t: UniformTexture): void {
         if (this.bmpCache.has(t.url)) { return; } // already loaded
         Downloader.downloadImage(t.url).then((bmp: ImageBitmap) => { // early returned, will run async
@@ -234,12 +213,13 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
             return undefined; // or some sentinel
         }
     }
-    private updateSingleValueUniform(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformSingle, location: WebGLUniformLocation): void {
+    private updateValueUniform(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformValueLike, location: WebGLUniformLocation): void {
         if (typeof value === 'number') {
             gl.uniform1f(location, value);
         } else if (value instanceof UniformTexture) {
             this.loadBitmap(value); // load texture
-            const bmp = this.bmpCache.get(value.url)!; // texture must exist
+            const bmp = this.bmpCache.get(value.url); // texture must exist
+            if (!bmp) return; // texture not loaded yet
             const texture = this.loadTexture(gl, value, bmp);
             gl.activeTexture(gl.TEXTURE0 + value.unit);
             gl.bindTexture(gl.TEXTURE_2D, texture); // bind texture first before loading
@@ -265,6 +245,55 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
             }
         }
     }
+    private updateVectorUniform(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformVecLike, location: WebGLUniformLocation): void {
+        const a = value.v;
+        switch (a.length) {
+            case 2:
+                gl.uniform2f(location, a[0], a[1]); // UniformVec2
+                break;
+            case 3:
+                gl.uniform3f(location, a[0], a[1], a[2]); // UniformVec3
+                break;
+            case 4:
+                if (value instanceof UniformVec4) {
+                    gl.uniform4f(location, a[0], a[1], a[2], a[3]); // UniformVec4
+                } else {
+                    gl.uniformMatrix2fv(location, false, new Float32Array(a)); // UniformMat2
+                }
+                break;
+            case 9:
+                gl.uniformMatrix3fv(location, false, new Float32Array(a)); // UniformMat3
+                break
+            case 16:
+                gl.uniformMatrix4fv(location, false, new Float32Array(a)); // UniformMat4
+                break;
+        }
+    }
+    private updateArrayUniforms(gl: WebGLRenderingContext | WebGL2RenderingContext, value: UniformArrayLike, location: WebGLUniformLocation): void {
+        const arr = value.arr;
+        const vlen = value.vlen;
+        const flat = arr.map((v) => v.v).flat();
+        switch (vlen) {
+            case 2:
+                gl.uniform2fv(location, flat);
+                break;
+            case 3:
+                gl.uniform3fv(location, flat);
+                break;
+            case 4:
+                if (value instanceof UniformVec4Array) {
+                    gl.uniform4fv(location, flat);
+                }
+                else gl.uniformMatrix2fv(location, false, flat);
+                break;
+            case 9:
+                gl.uniformMatrix3fv(location, false, flat);
+                break;
+            case 16:
+                gl.uniformMatrix4fv(location, false, flat);
+                break;
+        }
+    }
     private updateUniforms(gl: WebGLRenderingContext | WebGL2RenderingContext): void {
         for (const key of Object.keys(this.uniforms)) {
             const value = this.uniforms[key];
@@ -279,11 +308,12 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
                     continue;
                 }
             }
-            const arr = Object.getOwnPropertyDescriptor(value, 'arr');
-            if (arr) {
-                this.updateVectorValueUniform(gl, value as UniformVec | UniformMat, location);
-            } else {
-                this.updateSingleValueUniform(gl, value as UniformSingle, location);
+            if (isUniformValueLike(value)) {
+                this.updateValueUniform(gl, value as UniformValueLike, location);
+            } else if (isUniformVecLike(value)) {
+                this.updateVectorUniform(gl, value as UniformVecLike, location);
+            } else if (isUniformArrayLike(value)) {
+                this.updateArrayUniforms(gl, value as UniformArrayLike, location);
             }
         }
     }
