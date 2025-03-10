@@ -4,7 +4,6 @@ precision highp float;
 uniform float u_time; // Time in seconds since the program started.
 uniform vec2 u_resolution; // Viewport resolution
 uniform vec2 u_texzones; // Texture zones
-uniform vec2 u_tids; // Texture IDs
 uniform vec3 u_epos; // Earth position in camera space.
 uniform vec3 u_ex; // Earth front vector in camera space.
 uniform vec3 u_ey; // Earth right vector in camera space.
@@ -13,9 +12,10 @@ uniform vec3 u_sundir; // Sun direction in world space.
 uniform float u_rE; // Earth radius in million meters
 uniform float u_dS; // Sun distance in 1e9 meters
 uniform float u_rS; // Sun radius in 1e9 meters
-uniform highp sampler2DArray u_tc; // texture at center (high res)
-uniform highp sampler2DArray u_ad; // The day texture array (lower res)
-uniform highp sampler2DArray u_an; // The night texture array (lower res)
+
+uniform highp sampler2DArray u_tx; // The texture array
+uniform vec4 u_bd[17]; // the bounding boxes of the texture
+uniform float u_nbd; // the zoom level, the number of skirts and the number of tiles
 // TODO: change from earth frame to camera frame to prevent jitter
 
 in vec2 v_p; // Texture coordinate from the vertex shader.
@@ -161,40 +161,37 @@ vec3 march(vec3 rd, float eps_c) {
     }
     return vec3(inf, 100, -1.0); // didn't hit earth
 }
-vec3 tcoords(float lon, float lat) {
-    float lngstep = PI2 / u_texzones.x;
-    float latstep = PI / u_texzones.y;
-    float mlon = mod(lon + PI, PI2); // range is 0 to 2pi (not including 2pi)
-    float mlat = mod(lat + PI_2, PI); // range is 0 to pi (not including pi)
-    float zlon = floor(mlon / lngstep);
-    float zlat =  floor(mlat / latstep);
-    float rzlat = u_texzones.y - zlat - 1.0; // reversed v
-    float id = zlon + rzlat * u_texzones.x;
-    float u = (mlon - zlon * lngstep) / lngstep; // range is 0 to 1
-    float v = (mlat - zlat * latstep) / latstep; // range is 0 to 1
-    return vec3(id, u, -v);
-}
 vec3 mixc(vec3 d, vec3 n, float r, float dl) {
     if (dl > r) return d;
     if (dl < -r) return n;
     float ratio = (dl + r) / (2.0 * r);
     return mix(n, d, ratio);
 }
+vec3 p2xyz(vec2 p) { // returns the bound id if p is in the bounding box, otherwise -1
+    int nbds = min(17, int(u_nbd));
+    float d2r = PI / 180.0;
+    for (int z = 0; z < nbds; z++) {
+        vec2 tl = vec2(u_bd[z].x * d2r, u_bd[z].y * d2r);
+        vec2 br = vec2(u_bd[z].z * d2r, u_bd[z].w * d2r);
+        bool lngbtw = p.x >= tl.x && p.x <= br.x;
+        bool latbtw = p.y <= tl.y && p.y >= br.y;
+        if (lngbtw && latbtw) {
+            float x = (p.x - tl.x) / (br.x - tl.x);
+            float y = (p.y - br.y) / (tl.y - br.y);
+            return vec3(x, -y, z);
+        }
+    }
+    return vec3(-1);
+}
 vec3 tmap(vec3 pe, float dl) {
     float lon = atan(pe.y, pe.x); // range is -pi to pi
     float lat = atan(pe.z, length(pe.xy)); // range is -pi/2 to pi/2
     float blurr = 0.2;
-    vec3 tc = tcoords(lon, lat);
-    vec3 dayc = dpc;
-    vec3 nightc = npc;
-    if (tc.x == u_tids.x) {
-        dayc = texture(u_tc, vec3(tc.yz, 0.0)).rgb;
-        nightc = texture(u_tc, vec3(tc.yz, 1.0)).rgb;
-    } else if (tc.x == u_tids.y) {
-        dayc = texture(u_ad, vec3(tc.yz, 0.0)).rgb;
-        nightc = texture(u_an, vec3(tc.yz, 0.0)).rgb;
-    }
-    return mixc(dayc, nightc, blurr, dl);
+    vec3 xyz = p2xyz(vec2(lon, lat));
+    vec3 dnc = mixc(dpc, npc, blurr, dl);
+    if (int(xyz.z) == -1) return u3;
+    vec3 txt = texture(u_tx, xyz).rgb;
+    return mix(txt, dnc, 0.1);
 }
 vec3 o2e(vec3 p) {
     mat3x3 r = mat3x3(u_ex, u_ey, u_ez);
