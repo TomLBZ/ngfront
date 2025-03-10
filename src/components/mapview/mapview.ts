@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { MapComponent, LayerComponent, GeoJSONSourceComponent, 
     FeatureComponent, ImageComponent, PopupComponent } from "@maplibre/ngx-maplibre-gl";
 import { DropSelectComponent } from '../dropselect/dropselect';
-import { Map, MapLayerMouseEvent } from 'maplibre-gl';
+import { Map, MapLayerMouseEvent, ProjectionSpecification } from 'maplibre-gl';
 import { MarkerEvent, MapViewEvent } from './event';
 import { MarkerGroup } from '../../utils/marker/markergrp';
 import { Path } from '../../utils/path/path';
@@ -31,11 +31,12 @@ export class MapViewComponent {
     @Input() centerLat: number = 1.364917;
     @Input() centerLng: number = 103.822872;
     @Input() fadeDuration: number = 0;
-    @Input() mapStyle: string = 'bright-v2';
+    @Input() mapStyle: string = 'satellite';
     @Input() mapStyles: Array<string> = ['aquarelle', 'backdrop', "basic-v2", 
         "bright-v2", "dataviz", "landscape", "ocean", "openstreetmap", 
         "outdoor-v2", "satellite", "streets-v2", "toner-v2", "topo-v2", "winter-v2"
     ];
+    @Input() projection: string = 'globe';
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectSelectionChanged = new EventEmitter<MarkerEvent>();
     @Output() objectClicked = new EventEmitter<MarkerEvent>();
@@ -45,6 +46,9 @@ export class MapViewComponent {
     @Output() mapMouseDown = new EventEmitter<MapViewEvent>();
     @Output() mapMouseUp = new EventEmitter<MapViewEvent>();
     @Output() mapMouseMove = new EventEmitter<MapViewEvent>();
+    public get projSpec(): ProjectionSpecification {
+        return { type: this.projection };
+    }
     // mapstyle
     map!: Map;
     onMapLoad(map: Map) { this.map = map; }
