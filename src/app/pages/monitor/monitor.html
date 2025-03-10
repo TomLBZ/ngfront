@@ -1,12 +1,12 @@
 <div class="flex p_full">
     <div class="flexc p_4pentaw">
+            <!-- [projection]="'globe'" -->
         <mapview class="p_4pentah bd_r5 bd_dbl bdc_tint"
             [markerGroups]="[planeMgrp]"
             [paths]="paths"
             [apiKey]="apiKey"
             [mapStyles]="['topo-v2', 'satellite']"
             [mapStyle]="'satellite'"
-            [projection]="'globe'"
         ></mapview>   
         <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_ltint bold ft_huge centcont justcent">
             Manual Flight in Next Phase
