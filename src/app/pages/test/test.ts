@@ -1,13 +1,14 @@
 import { Component, ViewChild, OnInit, OnDestroy } from "@angular/core";
 import { WebGLShaderHostComponent, UniformDict } from "../../../components/webglshaderhost/webglshaderhost";
 import { RTOS } from "../../../utils/rtos/rtos";
-import { AU, c, Earth, ObserverOnEarth, SUNR } from "../../../utils/geo/geo";
+import { AU, Earth, ObserverOnEarth, SUNR } from "../../../utils/geo/geo";
 import { OnceFunction } from "../../../utils/once/once";
 import { Vec3 } from "../../../utils/vec/vec3";
 import { Queue } from "../../../utils/queue/q";
 import { MissedDeadlinePolicy } from "../../../utils/rtos/rtostypes";
 import { GeoZones } from "../../../utils/geo/zone";
 import { CreateUniformVec, UniformTexture, UniformTextureArray, UniformVec2, UniformVec3 } from "../../../utils/uniform/u";
+import { KeyController } from "../../../utils/controller/keyctrl";
 
 @Component({
     selector: 'page-test',
@@ -37,10 +38,15 @@ export class TestPage implements OnInit, OnDestroy {
     private lastFrameTime: number = Date.now();
     private lastIntFps: number = 0;
     private frameCount: number = 0;
+    private keyCtrl: KeyController = new KeyController();
+    private lng = 103.85; // longitude changes 10 degrees per second
+    private lat = 0.0; // latitude is fixed at the equator
+    private alt = 637100;
     @ViewChild(WebGLShaderHostComponent) shaderHost?: WebGLShaderHostComponent;
     private draw() {
         if (!this.shaderHost) return;
         this.loadZones.call(); // load zones only once
+        this.updatePos();
         this.updateUniforms();
         this.shaderHost.drawFrame();
         const now = Date.now();
@@ -55,20 +61,31 @@ export class TestPage implements OnInit, OnDestroy {
             console.log(`FPS: ${fps.toFixed(2)}`);
         }
     }
+    private updatePos() {
+        if (this.keyCtrl.getKeyState("w")) this.lat += 0.1;
+        if (this.keyCtrl.getKeyState("s")) this.lat -= 0.1;
+        if (this.keyCtrl.getKeyState("a")) this.lng -= 0.1;
+        if (this.keyCtrl.getKeyState("d")) this.lng += 0.1;
+        if (this.keyCtrl.getKeyState("q")) this.alt += 1000;
+        if (this.keyCtrl.getKeyState("e")) this.alt -= 1000;
+        if (this.keyCtrl.getKeyState("ArrowUp")) this.tilt += 0.01;
+        if (this.keyCtrl.getKeyState("ArrowDown")) this.tilt -= 0.01;
+        if (this.keyCtrl.getKeyState("ArrowLeft")) this.turn -= 0.01;
+        if (this.keyCtrl.getKeyState("ArrowRight")) this.turn += 0.01;
+        if (this.keyCtrl.getKeyState(" ")) this.lift += 0.01;
+        if (this.keyCtrl.getKeyState("Shift")) this.lift -= 0.01;
+    }
     private updateUniforms() {
         const msInMin = 60 * 1000; // number of milliseconds in a minute
         const dt = new Date(Math.round(Date.now() / msInMin) * msInMin); // round to the nearest minute
         const sunVec = Earth.getSunPositionVector(dt); // updated only in a minute
-        const lng = Date.now() / 100 % 360 - 180; // longitude changes 10 degrees per second
-        const lat = 0.0; // latitude is fixed at the equator
-        const alt = 6371000;
-        const observer = new ObserverOnEarth(lng, lat, alt); // updated each cycle
+        const observer = new ObserverOnEarth(this.lng, this.lat, this.alt); // updated each cycle
         observer.transform(this.tilt, this.lift, this.turn); // updated each cycle
         const eScale = 1e-6; // scale for earth related values
         const sScale = 1e-9; // scale for sun related values
-        const rE = Earth.getRadius(lat) * eScale; // in million meters
+        const rE = Earth.getRadius(this.lat) * eScale; // in million meters
         const dS = Earth.R_AU * AU * sScale; // in million meters
-        const texids = this.dayzones.getDualZoneIds(lng, lat); // get the zone id
+        const texids = this.dayzones.getDualZoneIds(this.lng, this.lat); // get the zone id
         const cid = texids.shift() as number; // get the center zone id
         const tc: Array<UniformTexture> = [this.dayzones.getData(cid), this.nightzones.getData(cid)];
         const ad = texids.map((id) => this.dayzones.getData(id));
@@ -84,9 +101,9 @@ export class TestPage implements OnInit, OnDestroy {
             u_rS: SUNR * sScale,
             u_texzones: new UniformVec2(this.dayzones.zones.ToArray()),
             u_tids: CreateUniformVec([cid, ...texids]),
-            u_tc: new UniformTextureArray(tc, 0),
-            u_ad: new UniformTextureArray(ad, 1),
-            u_an: new UniformTextureArray(an, 2),
+            u_tc: new UniformTextureArray(tc, 0), // center texture, high res, day and night
+            u_ad: new UniformTextureArray(ad, 1), // adjacent textures, low res, day
+            u_an: new UniformTextureArray(an, 2), // adjacent textures, low res, night
         };
         this.uniforms = new_uniforms;
         // console.log("TexIDs: ", texids); // should be 0, 1, 2, 3
