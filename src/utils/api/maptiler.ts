@@ -34,6 +34,7 @@ export class MapTiler {
         if (skirts === 0) return tiles; // base case, no skirts
         if (z === 0) return tiles; // base case, no more zoom levels
         const [x, y] = this.lnglat2xy(z, lng, lat);
+        if (isNaN(x) || isNaN(y)) return tiles; // base case, out of bounds
         if (z === 1) { // only 4 tiles at z = 1, tiles are either 0 or 1
             tiles.push(this.getTileByXY(z, 1 - x, y));
             tiles.push(this.getTileByXY(z, x, 1 - y));
@@ -52,8 +53,9 @@ export class MapTiler {
     }
     public autoTiles(lng: number, lat: number, alt: number, skirts: number = 1): MapTile[] {
         const z: number = this.alt2z(alt);
-        const [x, y] = this.lnglat2xy(z, lng, lat);
         const tiles: MapTile[] = [];
+        const [x, y] = this.lnglat2xy(z, lng, lat);
+        if (isNaN(x) || isNaN(y)) return tiles; // base case, out of bounds
         tiles.push(this.getTileByXY(z, x, y)); // center tile is always pushed
         return this.recursiveSkirts(z, lng, lat, skirts, tiles);
     }
