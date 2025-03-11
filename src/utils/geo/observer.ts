@@ -10,6 +10,8 @@ export class ObserverOnEarth {
     private _oposE: Vec3; // in earth frame
     private _absH: number = 0; // absolute height from earth origin
     private _RE: number = Earth.R; // earth radius right below the observer
+    public get H(): number { return this._absH; }
+    public get RE(): number { return this._RE; }
     public get oposE(): Vec3 { return this._oposE; }
     public get up(): Vec3 { return this._Z; }
     public get front(): Vec3 { return this._Y; }
@@ -55,18 +57,19 @@ export class ObserverOnEarth {
         return Math.asin(this._RE / this._absH);
     }
     public get estm_raylen(): number {
-        const alookdown = Math.PI - Math.acos(this._oposE.Dot(this._Y) / this._absH);
-        if (alookdown >= this.estm_tanangle) return this.estm_tanlen;
-        const sld = Math.sin(alookdown);
-        // FIX: broken sine rule!
+        const anglookdn = Math.acos(-this._oposE.Dot(this._Y) / this._absH);
+        if (anglookdn >= this.estm_tanangle) return this.estm_tanlen;
+        const sld = Math.sin(anglookdn);
         const soppo = this._absH * sld / this._RE;
-        const angr = Math.PI - Math.asin(soppo) - alookdown;
-        const rl = this._absH * Math.sin(angr) / soppo;
-        console.log(soppo);
+        const angoppo = Math.PI - Math.asin(soppo); // always obtuse
+        const angr = Math.PI - angoppo - anglookdn;
         return this._absH * Math.sin(angr) / soppo;
     }
-    public lookingAtLngLatAlt(): Vec3 {
-        return Earth.getLngLatAlt(this._oposE.Add(this._Y.mul(this.estm_raylen)));
+    public lookingAtLngLatAlt(aggressionFunc: Function, overwritez: boolean = false): Vec3 {
+        const step = aggressionFunc(this.estm_raylen);
+        const estVec = Earth.getLngLatAlt(this._oposE.Add(this._Y.mul(step)));
+        if (overwritez) estVec.z = step;
+        return estVec;
     }
     public forward(distance: number) { // no need to update because forward does not change the frame
         this._oposE = this._oposE.Add(this._Y.mul(distance));
