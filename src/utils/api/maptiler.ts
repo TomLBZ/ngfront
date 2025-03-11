@@ -1,5 +1,5 @@
 export class MapTile {
-    constructor(public url: string, public tl: [number, number], public br: [number, number]) {}
+    constructor(public url: string, public xyz: [number, number, number]) {}
 }
 export class MapTiler {
     public constructor(public key: string) { }
@@ -18,9 +18,7 @@ export class MapTiler {
     }
     public getTileByXY(z: number, x: number, y: number): MapTile {
         const url = `https://api.maptiler.com/tiles/satellite-v2/${z}/${x}/${y}.jpg?key=${this.key}`;
-        const tl = this.xy2lnglat(z, x, y);
-        const br = this.xy2lnglat(z, x + 1, y + 1);
-        return new MapTile(url, tl, br);
+        return new MapTile(url, [x, y, z]);
     }
     public getTileByLngLat(z: number, lng: number, lat: number): MapTile {
         const xy = this.lnglat2xy(lng, lat, z);
@@ -28,7 +26,7 @@ export class MapTiler {
     }
     public alt2z(alt: number) {
         const r = 6371000; // earth radius in meters
-        const _z = Math.floor(Math.log2(r / alt));
+        const _z = Math.floor(Math.log2(r * 4 / alt)); // when 4 radius above the earth, z = 0
         if (isNaN(_z)) return 0;
         return Math.max(0, Math.min(19, _z));
     }
@@ -36,15 +34,18 @@ export class MapTiler {
         if (skirts === 0) return tiles; // base case, no skirts
         if (z === 0) return tiles; // base case, no more zoom levels
         const [x, y] = this.lnglat2xy(z, lng, lat);
+        if (z === 1) { // only 4 tiles at z = 1, tiles are either 0 or 1
+            tiles.push(this.getTileByXY(z, 1 - x, y));
+            tiles.push(this.getTileByXY(z, x, 1 - y));
+            tiles.push(this.getTileByXY(z, 1 - x, 1 - y));
+            return tiles;
+        }
         const zfactor = 1 << z;
-        const maxX = Math.min(zfactor - 1, x + 1);
-        const maxY = Math.min(zfactor - 1, y + 1);
-        const minX = Math.max(0, x - 1);
-        const minY = Math.max(0, y - 1);
-        for (let i = minX; i <= maxX; i++) {
-            for (let j = minY; j <= maxY; j++) {
+        const wrap: Function = (a: number) => (a + zfactor) % zfactor;
+        for (let j = y - 1; j <= y + 1; j++) {
+            for (let i = x - 1; i <= x + 1; i++) {
                 if (i === x && j === y) continue;
-                tiles.push(this.getTileByXY(z, i, j));
+                tiles.push(this.getTileByXY(z, wrap(i), wrap(j)));
             }
         }
         return this.recursiveSkirts(z - 1, lng, lat, skirts - 1, tiles);
