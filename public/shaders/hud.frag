@@ -1,7 +1,7 @@
 #version 300 es
 precision highp float;
 // consts
-#define BD_MAXLEN   18
+#define BD_MAXLEN   25
 const float EPS     = 1e-3                              ;
 const float PI      = 3.1415926535897932384626433832795 ;
 const float PI2     = 6.283185307179586476925286766559  ;
@@ -118,7 +118,7 @@ float hud(vec2 p) {
     float ltsc = scale(place2d(p, ts, 0.0), l, vec2(a, 0.0), bt, t);
     float inner = add(add(lsc, rsc), add(tsc, bsc));
     float outer = add(add(llsc, lrsc), ltsc);
-    return  add(rhom, add(inner, outer));
+    return add(rhom, add(inner, outer));
 }
 vec4 p2rdc(vec2 p) { // screen 1m from camera / origin, scale 1m per unit
     float ang = atan(p.y, p.x);
@@ -193,10 +193,11 @@ vec3 tmap(vec3 pe, float dl, float dist) {
     }
     float blurr = 0.2;
     vec3 dnc = mixc(dpc, npc, blurr, dl);
+    vec3 inten = mixc(u3 * 1.1, u3 * 0.9, blurr, dl);
     vec3 xyz = p2xyz(vec2(lon, lat));
     if (xyz.z < 0.0) return dnc;
     vec3 txt = texture(u_tx, xyz).rgb;
-    return mix(txt, dnc, 0.25);
+    return mix(txt, dnc, 0.25) * inten;
 }
 vec3 o2e(vec3 p) {
     mat3x3 r = mat3x3(u_ex, u_ey, u_ez);
