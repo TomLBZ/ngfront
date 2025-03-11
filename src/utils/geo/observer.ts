@@ -8,6 +8,8 @@ export class ObserverOnEarth {
     private _Y: Vec3; // front axis in earth frame
     private _X: Vec3; // right axis in earth frame
     private _oposE: Vec3; // in earth frame
+    private _absH: number = 0; // absolute height from earth origin
+    private _RE: number = Earth.R; // earth radius right below the observer
     public get oposE(): Vec3 { return this._oposE; }
     public get up(): Vec3 { return this._Z; }
     public get front(): Vec3 { return this._Y; }
@@ -27,6 +29,8 @@ export class ObserverOnEarth {
     }
     constructor(public lng: number, public lat: number, public alt: number) {
         this._oposE = Earth.getPosition(lng, lat, alt);
+        this._absH = this._oposE.Len();
+        this._RE = Earth.getRadius(lat);
         this._Z = this._oposE.Norm(); // up vector is along the position vector in earth coordinates
         this._Y = Earth.getNorthAtPos(this._Z); // forward vector is perpendicular to the surface of the earth and points north
         this._X = this._Y.Cross(this._Z).Norm(); // right vector is perpendicular to the surface of the earth and points east
@@ -44,8 +48,31 @@ export class ObserverOnEarth {
         this._X = this._Y.Cross(this._Z).Norm();
         this.update();
     }
-    public forward(distance: number) {
+    public get estm_tanlen(): number {
+        return Math.sqrt(this._absH ** 2 - this._RE ** 2);
+    }
+    public get estm_tanangle(): number {
+        return Math.asin(this._RE / this._absH);
+    }
+    public get estm_raylen(): number {
+        const alookdown = Math.PI - Math.acos(this._oposE.Dot(this._Y) / this._absH);
+        if (alookdown >= this.estm_tanangle) return this.estm_tanlen;
+        const sld = Math.sin(alookdown);
+        // FIX: broken sine rule!
+        const soppo = this._absH * sld / this._RE;
+        const angr = Math.PI - Math.asin(soppo) - alookdown;
+        const rl = this._absH * Math.sin(angr) / soppo;
+        console.log(soppo);
+        return this._absH * Math.sin(angr) / soppo;
+    }
+    public lookingAtLngLatAlt(): Vec3 {
+        return Earth.getLngLatAlt(this._oposE.Add(this._Y.mul(this.estm_raylen)));
+    }
+    public forward(distance: number) { // no need to update because forward does not change the frame
         this._oposE = this._oposE.Add(this._Y.mul(distance));
+        this._absH = this._oposE.Len();
+        const lla = Earth.getLngLatAlt(this._oposE);
+        this._RE = Earth.getRadius(lla[1]);
     }
     public O2E_p(vo: Vec3): Vec3 { // vo is in the observer frame, should be converted to the Earth frame
         return this._R.MulV(vo).Add(this._oposE);
