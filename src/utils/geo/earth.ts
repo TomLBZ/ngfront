@@ -109,7 +109,7 @@ export class Earth {
     private static _date: Date;
     public static JD: number;
     public static lambdaDeg: number;
-    public static R_AU: number;
+    public static DS_AU: number;
     public static epsilonDeg: number;
     public static alphaDeg: number;
     public static deltaDeg: number;
@@ -119,7 +119,7 @@ export class Earth {
         this.JD = JD;
         const { lambdaDeg, R_AU, epsilonDeg } = this.getSunEcliptic(JD);
         this.lambdaDeg = lambdaDeg;
-        this.R_AU = R_AU;
+        this.DS_AU = R_AU;
         this.epsilonDeg = epsilonDeg;
         const { alphaDeg, deltaDeg } = this.eclipticToEquatorial(lambdaDeg, epsilonDeg);
         this.alphaDeg = alphaDeg;
@@ -146,9 +146,9 @@ export class Earth {
         const alpha = this.alphaDeg * Math.PI / 180;
         const delta = this.deltaDeg * Math.PI / 180;
         // inertial frame
-        const xEq = this.R_AU * Math.cos(delta) * Math.cos(alpha);
-        const yEq = this.R_AU * Math.cos(delta) * Math.sin(alpha);
-        const zEq = this.R_AU * Math.sin(delta);
+        const xEq = this.DS_AU * Math.cos(delta) * Math.cos(alpha);
+        const yEq = this.DS_AU * Math.cos(delta) * Math.sin(alpha);
+        const zEq = this.DS_AU * Math.sin(delta);
         // earth frame (rotating with the earth)
         const GMSTrad = this.GMSTDeg * Math.PI / 180;
         const cosT = Math.cos(-GMSTrad);
