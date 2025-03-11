@@ -74,13 +74,17 @@ export class TestPage implements OnInit, OnDestroy {
         if (this.keyCtrl.getKeyState("f")) this.alt *= 0.99;
         return observer;
     }
-    private bdCount = 0;
     private updateUniforms(observer: ObserverOnEarth) {
         const msInMin = 60 * 1000; // number of milliseconds in a minute
         const dt = new Date(Math.round(Date.now() / msInMin) * msInMin); // round to the nearest minute
         const sunVec = Earth.getSunPositionVector(dt); // updated only in a minute
-        const estm_mp = observer.lookingAtLngLatAlt(); // estimated midpoint of the view
-        const mts = this.mapTiler.autoTiles(estm_mp.x, estm_mp.y, observer.estm_raylen / 2, 2); // get the urls
+        const aggressionFunc: Function = (r: number) => {
+            const compression = Math.pow(r / observer.alt, 1 / 2);
+            return compression * observer.alt; // aggression function
+        };
+        const estm_mp = observer.lookingAtLngLatAlt(aggressionFunc, true); // estimated midpoint of the view
+        const tiledist = Math.max(estm_mp.z, observer.alt); // distance to the tile in meters
+        const mts = this.mapTiler.autoTiles(estm_mp.x, estm_mp.y, tiledist, 3); // get the urls
         const textures = mts.map((t, i) => new UniformTexture(t.url, i)); // create textures
         const xyzs = mts.map((t) => new UniformVec3(t.xyz));
         const new_uniforms = {
@@ -96,10 +100,6 @@ export class TestPage implements OnInit, OnDestroy {
             u_ntx: xyzs.length, // number of tile bounds
             u_gridl: 1, // grid level
         };
-        if (this.bdCount !== new_uniforms.u_ntx) {
-            console.log(new_uniforms.u_txyz);
-            this.bdCount = new_uniforms.u_ntx;
-        }
         this.uniforms = new_uniforms;
     }
     constructor() {
