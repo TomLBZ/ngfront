@@ -184,30 +184,51 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         }
         if (gl instanceof WebGL2RenderingContext) {
             texture = gl.createTexture()!;
+            const depth = Math.max(1, bitmaps.length);
             gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
-            gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, w, h, bitmaps.length);
-            for (let i = 0; i < bitmaps.length; i++) {
+            gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, w, h, depth);
+            if (bitmaps.length === 0) {
                 gl.texSubImage3D(
                     gl.TEXTURE_2D_ARRAY,
                     0,             // level
-                    0, 0, i,       // x, y, layer
+                    0, 0, 0,       // x, y, layer
                     w, h, 1,       // width, height, depth=1
                     gl.RGBA,
                     gl.UNSIGNED_BYTE,
-                    bitmaps[i]
+                    new Uint8Array([0, 0, 0, 0])
                 );
+            } else {
+                for (let i = 0; i < bitmaps.length; i++) {
+                    gl.texSubImage3D(
+                        gl.TEXTURE_2D_ARRAY,
+                        0,             // level
+                        0, 0, i,       // x, y, layer
+                        w, h, 1,       // width, height, depth=1
+                        gl.RGBA,
+                        gl.UNSIGNED_BYTE,
+                        bitmaps[i]
+                    );
+                }
             }
             gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
             this.glTextureArrayCache.set(key, texture);
             return texture;
         } else { // WebGL1 fallback: create multiple 2D textures, one per bitmap.
             const fallbackTextures: WebGLTexture[] = [];
-            for (let i = 0; i < bitmaps.length; i++) {
+            if (bitmaps.length === 0) {
                 const tex = gl.createTexture()!;
                 gl.bindTexture(gl.TEXTURE_2D, tex);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmaps[i]);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
                 gl.generateMipmap(gl.TEXTURE_2D);
                 fallbackTextures.push(tex);
+            } else {
+                for (let i = 0; i < bitmaps.length; i++) {
+                    const tex = gl.createTexture()!;
+                    gl.bindTexture(gl.TEXTURE_2D, tex);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmaps[i]);
+                    gl.generateMipmap(gl.TEXTURE_2D);
+                    fallbackTextures.push(tex);
+                }
             }
             this.glTextureArrayFallback.set(key, fallbackTextures);
             return undefined; // or some sentinel
@@ -275,22 +296,30 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         const flat = arr.map((v) => v.v).flat();
         switch (vlen) {
             case 2:
-                gl.uniform2fv(location, flat);
+                if (flat.length > 0) gl.uniform2fv(location, flat);
+                else gl.uniform2f(location, 0, 0);
                 break;
             case 3:
-                gl.uniform3fv(location, flat);
+                if (flat.length > 0) gl.uniform3fv(location, flat);
+                else gl.uniform3f(location, 0, 0, 0);
                 break;
             case 4:
                 if (value instanceof UniformVec4Array) {
-                    gl.uniform4fv(location, flat);
+                    if (flat.length > 0) gl.uniform4fv(location, flat);
+                    else gl.uniform4f(location, 0, 0, 0, 0);
                 }
-                else gl.uniformMatrix2fv(location, false, flat);
+                else {
+                    if (flat.length > 0) gl.uniformMatrix2fv(location, false, flat);
+                    else gl.uniformMatrix2fv(location, false, new Float32Array([1, 0, 0, 1]));
+                }
                 break;
             case 9:
-                gl.uniformMatrix3fv(location, false, flat);
+                if (flat.length > 0) gl.uniformMatrix3fv(location, false, flat);
+                else gl.uniformMatrix3fv(location, false, new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
                 break;
             case 16:
-                gl.uniformMatrix4fv(location, false, flat);
+                if (flat.length > 0) gl.uniformMatrix4fv(location, false, flat);
+                else gl.uniformMatrix4fv(location, false, new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]));
                 break;
         }
     }
