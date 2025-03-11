@@ -1,31 +1,39 @@
 #version 300 es
 precision highp float;
-
+// consts
+#define BD_MAXLEN   18
+const float EPS     = 1e-3                              ;
+const float PI      = 3.1415926535897932384626433832795 ;
+const float PI2     = 6.283185307179586476925286766559  ;
+const float PI_2    = 1.5707963267948966192313216916398 ;
+const float RC4     = -1.42770400e-02                   ;
+const float RC3     = -1.53923793e+00                   ;
+const float RC2     = -1.77213122e+02                   ;
+const float RC1     = -2.12059191e+04                   ;
+const float RC0     = 6.37813700e+06                    ;
+// uniforms
 uniform float u_time; // Time in seconds since the program started.
 uniform vec2 u_resolution; // Viewport resolution
-uniform vec2 u_texzones; // Texture zones
+uniform vec2 u_ses; // Earch scale factor and sun scale factor
+uniform vec2 u_srd; // Sun radius and distance in meters
 uniform vec3 u_epos; // Earth position in camera space.
+uniform vec3 u_sundir; // Sun direction in world space.
 uniform vec3 u_ex; // Earth front vector in camera space.
 uniform vec3 u_ey; // Earth right vector in camera space.
 uniform vec3 u_ez; // Earth up vector in camera space.
-uniform vec3 u_sundir; // Sun direction in world space.
-uniform float u_rE; // Earth radius in million meters
-uniform float u_dS; // Sun distance in 1e9 meters
-uniform float u_rS; // Sun radius in 1e9 meters
-
 uniform highp sampler2DArray u_tx; // The texture array
-uniform vec4 u_bd[17]; // the bounding boxes of the texture
-uniform float u_nbd; // the zoom level, the number of skirts and the number of tiles
-// TODO: change from earth frame to camera frame to prevent jitter
+uniform vec3 u_txyz[BD_MAXLEN]; // the bounding boxes of the texture
+uniform float u_ntx; // the number of tiles
+uniform float u_gridl; // the grid level
 
 in vec2 v_p; // Texture coordinate from the vertex shader.
 out vec4 outColor;
 
-// consts
-const float PI = 3.1415926535897932384626433832795;
-const float PI2 = 6.283185307179586476925286766559;
-const float PI_2 = 1.5707963267948966192313216916398;
-const float EPS = 1e-3;
+// calculated vars
+vec3 EPOS() { return u_epos * u_ses.x; }
+float RS() { return u_srd.x * u_ses.y; }
+float DS() { return u_srd.y * u_ses.y; }
+
 const vec2 o2 = vec2(0.0, 0.0);
 const vec3 o3 = vec3(0.0, 0.0, 0.0);
 const vec2 u2 = vec2(1.0, 1.0);
@@ -58,18 +66,8 @@ float trig2d(vec2 p, vec2 q ) { // adapted from iq
     return -sqrt(d.x)*sign(d.y);
 }
 // 3d sdf
-float sph3d(vec3 p, float s) {
-    return length(p)-s;
-}
-float box3d(vec3 p, vec3 b) {
-  vec3 q = abs(p) - b;
-  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
-}
-float seg3d(vec3 p, vec3 a, vec3 b, float r)
-{
-  vec3 pa = p - a, ba = b - a;
-  float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
-  return length( pa - ba*h ) - r;
+float sph3d(vec3 p, float r) {
+    return length(p) - r;
 }
 // ops
 float add(float d1, float d2) {
@@ -79,12 +77,11 @@ float border(float p) {
     return abs(p);
 }
 vec2 place2d(vec2 p, vec2 o, float angle) {
-    vec2 rp = vec2(p.x * cos(angle) - p.y * sin(angle), p.x * sin(angle) + p.y * cos(angle));
-    vec2 ro = vec2(o.x * cos(angle) - o.y * sin(angle), o.x * sin(angle) + o.y * cos(angle));
+    float sa = sin(angle);
+    float ca = cos(angle);
+    vec2 rp = vec2(p.x * ca - p.y * sa, p.x * sa + p.y * ca);
+    vec2 ro = vec2(o.x * ca - o.y * sa, o.x * sa + o.y * ca);
     return rp - ro;
-}
-vec3 place3d(vec3 p, vec3 o) {
-    return p - o;
 }
 // components
 float scale(vec2 p, float l, vec2 a, vec2 s, float tb) {
@@ -131,12 +128,15 @@ vec4 p2rdc(vec2 p) { // screen 1m from camera / origin, scale 1m per unit
     return vec4(normalize(pix), c);
 }
 float earth(vec3 p) {
-    vec3 earthp = place3d(p, u_epos);
-    return sph3d(earthp, u_rE);
+    vec3 pos = p - EPOS();
+    float r = length(pos);          // length of pos vector
+    float s2 = (pos.z * pos.z) / (r * r); // = sin(lat)^2
+    float R = RC0 + s2 * (RC1 + s2 * (RC2 + s2 * (RC3 + s2 * RC4)));
+    return r - R * u_ses.x;
 }
 float sun(vec3 p) {
-    vec3 sunp = place3d(p, u_epos + u_sundir * u_dS);
-    return sph3d(sunp, u_rS);
+    vec3 spos = EPOS() + u_sundir * DS();
+    return sph3d(p - spos, RS());
 }
 vec2 world(vec3 p) {
     float e = earth(p);
@@ -162,48 +162,53 @@ vec3 march(vec3 rd, float eps_c) {
     return vec3(inf, 100, -1.0); // didn't hit earth
 }
 vec3 mixc(vec3 d, vec3 n, float r, float dl) {
-    if (dl > r) return d;
-    if (dl < -r) return n;
-    float ratio = (dl + r) / (2.0 * r);
+    float ratio = clamp((dl + r) / (2.0 * r), 0.0, 1.0);
     return mix(n, d, ratio);
 }
-vec3 p2xyz(vec2 p) { // returns the bound id if p is in the bounding box, otherwise -1
-    int nbds = min(17, int(u_nbd));
-    float d2r = PI / 180.0;
-    for (int z = 0; z < nbds; z++) {
-        vec2 tl = vec2(u_bd[z].x * d2r, u_bd[z].y * d2r);
-        vec2 br = vec2(u_bd[z].z * d2r, u_bd[z].w * d2r);
-        bool lngbtw = p.x >= tl.x && p.x <= br.x;
-        bool latbtw = p.y <= tl.y && p.y >= br.y;
-        if (lngbtw && latbtw) {
-            float x = (p.x - tl.x) / (br.x - tl.x);
-            float y = (p.y - br.y) / (tl.y - br.y);
-            return vec3(x, -y, z);
-        }
+vec2 ll2xyi(int z, vec2 p, out vec2 fracs) { // lng and lat are in radians
+    float zfactor = float(1 << z);
+    float x = (p.x + PI) / PI2 * zfactor;
+    float y = (1.0 - log(tan(p.y) + 1.0 / cos(p.y)) / PI) * 0.5 * zfactor;
+    fracs = vec2(fract(x), fract(y));
+    return vec2(floor(x), floor(y));
+}
+vec3 p2xyz(vec2 p) { // returns the sample vector for 3d texture, otherwise v3 of -1
+    for (int i = 0; i < int(u_ntx); i++) {
+        vec2 fracs;
+        vec2 pxy = ll2xyi(int(u_txyz[i].z), p, fracs);
+        if (pxy == u_txyz[i].xy) return vec3(fracs, i);
     }
     return vec3(-1);
 }
-vec3 tmap(vec3 pe, float dl) {
+vec3 tmap(vec3 pe, float dl, float dist) {
     float lon = atan(pe.y, pe.x); // range is -pi to pi
     float lat = atan(pe.z, length(pe.xy)); // range is -pi/2 to pi/2
+    for (int i = int(u_gridl); i > 0; i--) {
+        float scale = float(1 << i) * 3.0 / PI;
+        float gdifflng = lon * scale;
+        float gdifflat = lat * scale;
+        bool onLngDiv = abs(gdifflng - round(gdifflng)) < EPS * dist;
+        bool onLatDiv = abs(gdifflat - round(gdifflat)) < EPS * dist;
+        if (onLngDiv || onLatDiv) return u3;
+    }
     float blurr = 0.2;
-    vec3 xyz = p2xyz(vec2(lon, lat));
     vec3 dnc = mixc(dpc, npc, blurr, dl);
-    if (int(xyz.z) == -1) return u3;
+    vec3 xyz = p2xyz(vec2(lon, lat));
+    if (xyz.z < 0.0) return dnc;
     vec3 txt = texture(u_tx, xyz).rgb;
-    return mix(txt, dnc, 0.1);
+    return mix(txt, dnc, 0.25);
 }
 vec3 o2e(vec3 p) {
     mat3x3 r = mat3x3(u_ex, u_ey, u_ez);
-    return transpose(r) * (p - u_epos);
+    return transpose(r) * (p - EPOS());
 }
 float speci(vec3 no, vec3 rd, float tightness) { // normal, ray direction
     return pow(max(dot(no, rd), 0.0), tightness);
 }
-vec3 colorEarth(vec3 po, vec3 no, int i) { // no is the surface normal in object frame
+vec3 colorEarth(vec3 po, vec3 no, int i, float dist) { // no is the surface normal in object frame
     vec3 pe = o2e(po); // intersection in earth frame
-    float dl = dot(normalize(po - u_epos), u_sundir); // daylight value: -1 to 1
-    vec3 tmap = tmap(pe, dl);
+    float dl = dot(normalize(po - EPOS()), u_sundir); // daylight value: -1 to 1
+    vec3 tmap = tmap(pe, dl, dist);
     float spi = speci(no, u_sundir, 16.0); // specular intensity
     vec3 objc = tmap * (spi + 0.9); // object color
     float iterp = 1.0 - exp(-float(i) * 0.01);
@@ -224,7 +229,7 @@ vec3 c3d(vec3 m, vec3 rd) {
     vec3 no = n(po); // normal in plane frame
     switch (id) {
         case 0:
-            return colorEarth(po, no, iter);
+            return colorEarth(po, no, iter, dist);
         default:
             return u3;
     }
