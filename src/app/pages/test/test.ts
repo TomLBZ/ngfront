@@ -9,7 +9,7 @@ import { Queue } from "../../../utils/queue/q";
 import { MissedDeadlinePolicy } from "../../../utils/rtos/rtostypes";
 import { UniformDict, UniformTexture, UniformTextureArray, UniformVec2, UniformVec2Array, UniformVec3, UniformVec3Array } from "../../../utils/uniform/u";
 import { KeyController } from "../../../utils/controller/keyctrl";
-import { MapTiler } from "../../../utils/api/maptiler";
+import { MapTile, MapTiler } from "../../../utils/api/maptiler";
 import { env } from "../../app.config";
 
 @Component({
@@ -78,13 +78,14 @@ export class TestPage implements OnInit, OnDestroy {
         const msInMin = 60 * 1000; // number of milliseconds in a minute
         const dt = new Date(Math.round(Date.now() / msInMin) * msInMin); // round to the nearest minute
         const sunVec = Earth.getSunPositionVector(dt); // updated only in a minute
-        const aggressionFunc: Function = (r: number) => {
-            const compression = Math.pow(r / observer.alt, 1 / 2);
-            return compression * observer.alt; // aggression function
-        };
-        const estm_mp = observer.lookingAtLngLatAlt(aggressionFunc, true); // estimated midpoint of the view
-        const tiledist = Math.max(estm_mp.z, observer.alt); // distance to the tile in meters
-        const mts = this.mapTiler.autoTiles(estm_mp.x, estm_mp.y, tiledist, 3); // get the urls
+        // const aggressionFunc: Function = (r: number) => {
+        //     const compression = Math.pow(r / observer.alt, 1 / 2);
+        //     return compression * observer.alt; // aggression function
+        // };
+        // const estm_mp = observer.lookingAtLngLatAlt(aggressionFunc, true); // estimated midpoint of the view
+        // const tiledist = Math.max(estm_mp.z, observer.alt); // distance to the tile in meters
+        const dftx = new Array(8).fill(0).map((_, i) => new UniformTexture(`textures/day/${i + 1}.jpg`, i)); // day textures
+        const mts = this.mapTiler.autoTiles(this.lng, this.lat, this.alt, 1); // get the urls
         const textures = mts.map((t, i) => new UniformTexture(t.url, i)); // create textures
         const xyzs = mts.map((t) => new UniformVec3(t.xyz));
         const new_uniforms = {
@@ -95,9 +96,10 @@ export class TestPage implements OnInit, OnDestroy {
             u_ex: new UniformVec3(observer.eX.ToArray()), // earth's front in observer frame
             u_ey: new UniformVec3(observer.eY.ToArray()), // earth's right in observer frame
             u_ez: new UniformVec3(observer.eZ.ToArray()), // earth's up in observer frame
-            u_tx: new UniformTextureArray(textures, 0), // textures of map tiles
-            u_txyz: new UniformVec3Array(xyzs), // bounds of map tiles
-            u_ntx: xyzs.length, // number of tile bounds
+            u_dftx: new UniformTextureArray(dftx, 0), // textures of day, default textures
+            u_tx: new UniformTextureArray(textures, 1), // textures of map tiles
+            u_txyz: new UniformVec3Array(xyzs), // xyz of map tiles
+            u_ntx: xyzs.length, // number of tiles
             u_gridl: 1, // grid level
         };
         this.uniforms = new_uniforms;
