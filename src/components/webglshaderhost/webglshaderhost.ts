@@ -149,6 +149,8 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         if (this.bmpCache.has(t.url)) { return; } // already loaded
         Downloader.downloadImage(t.url).then((bmp: ImageBitmap) => { // early returned, will run async
             this.bmpCache.set(t.url, bmp); // overwrite cache with real texture after loading
+        }, (err) => {
+            console.log(err); // do not fail if texture cannot be loaded
         });
         // const pixel: Array<number> = [0, 0, 255, 255]; // single blue opaque pixel
         // const data: ImageData = new ImageData(new Uint8ClampedArray(pixel), 1, 1);
