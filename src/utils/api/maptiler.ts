@@ -1,3 +1,5 @@
+import { Earth } from "../geo/earth";
+
 export class MapTile {
     constructor(public url: string, public xyz: [number, number, number]) {}
 }
@@ -34,39 +36,46 @@ export class MapTiler {
         const xy = this.lnglat2xy(lng, lat, z);
         return this.getTileByXY(z, xy[0], xy[1]);
     }
-    public alt2z(alt: number) {
-        const r = 6371000; // earth radius in meters
+    public alt2z(alt: number, r: number = 6371000): number {
         const _z = Math.floor(Math.log2(r * 5 / alt)); // when 5 radius above the earth, z = 0
         if (isNaN(_z)) return 0;
         return Math.max(0, Math.min(19, _z));
     }
-    private recursiveSkirts(z: number, uex: number, uey: number, skirts: number, tiles: MapTile[]): void {
-        if (z * skirts === 0) return; // base case, no more zoom levels or skirts
-        const [x, y] = this.ueXY2xy(z, uex, uey); // z > 0, skirts > 0
+    private singleSkirt(z: number, uex: number, uey: number, center: boolean, tiles: MapTile[]): void {
+        if (z === 0) { // no need to skirt, but if center is required, push the only tile at z = 0
+            if (center) tiles.push(this.getTileByXY(0, 0, 0));
+            return; // count = 1
+        }
+        const [x, y] = this.ueXY2xy(z, uex, uey);
         if (z === 1) { // only 4 tiles at z = 1, tiles are either 0 or 1, push all 3 other tiles
+            if (center) tiles.push(this.getTileByXY(z, x, y));
             tiles.push(this.getTileByXY(z, 1 - x, y));
             tiles.push(this.getTileByXY(z, x, 1 - y));
             tiles.push(this.getTileByXY(z, 1 - x, 1 - y));
-            return; // no need to skirt further even if skirt > 1 since no more tiles exist
-        } // below this function, z > 1 and skirts >= 1
+            return; // count = 1 + 3
+        }
         const zfactor = 1 << z;
         const wrap: Function = (a: number) => (a + zfactor) % zfactor;
         for (let j = y - 1; j <= y + 1; j++) { // push 8 surrounding tiles at the zoom level
             for (let i = x - 1; i <= x + 1; i++) {
-                if (i === x && j === y) continue; // center tile is already pushed
+                if (i === x && j === y && !center) continue; // skip the center tile
                 tiles.push(this.getTileByXY(z, wrap(i), wrap(j))); // push the tile
             }
         }
-        this.recursiveSkirts(z - 1, uex, uey, skirts - 1, tiles); // zoom out by one level and skirt further
     }
-    public autoTiles(lng: number, lat: number, alt: number, skirts: number = 1): MapTile[] {
-        const z: number = this.alt2z(alt);
+    public autoTiles(lng: number, lat: number, alt: number, skirts: number = 1, bgdz: number = 3): MapTile[] {
+        const z: number = this.alt2z(alt, Earth.getRadius(lat));
         const tiles: MapTile[] = [];
         const [uex, uey] = this.lnglat2UnscaledExactXY(lng, lat);
-        const [x, y] = this.ueXY2xy(z, uex, uey);
-        tiles.push(this.getTileByXY(z, x, y)); // center tile is always pushed
-        this.recursiveSkirts(z, uex, uey, skirts, tiles);
-        // tiles.push(this.getTileByXY(0, 0, 0)); // global tile is always pushed
+        const bgz = Math.max(0, z - bgdz); // guard zoom level
+        const skz = Math.max(0, z - skirts + 1); // skirt zoom level
+        for (let zz = z; zz >= skz; zz--) { // skirts pushed down to the skirt zoom level
+            this.singleSkirt(zz, uex, uey, false, tiles); // push the skirt, with center tile at the current zoom level
+        }
+        if (bgz < skz) { // push the guard tiles
+            if (bgz === 0) tiles.push(this.getTileByXY(0, 0, 0)); // guardz = 0, push the only tile at z = 0
+            else this.singleSkirt(bgz, uex, uey, skz - bgz > 1, tiles); // push the surrounding tiles at the guard zoom
+        }
         return tiles; // count = 1 + 8 * skirts + 1
     }
 }
