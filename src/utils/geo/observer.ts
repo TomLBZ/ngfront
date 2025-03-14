@@ -1,4 +1,5 @@
 import { Mat3 } from "../mat/mat3";
+import { Vec2 } from "../vec/vec2";
 import { Vec3 } from "../vec/vec3";
 import { Earth } from "./earth";
 
@@ -65,11 +66,15 @@ export class ObserverOnEarth {
         const angr = Math.PI - angoppo - anglookdn;
         return this._absH * Math.sin(angr) / soppo;
     }
-    public lookingAtLngLatAlt(aggressionFunc: Function, overwritez: boolean = false): Vec3 {
+    public lookingAtLngLatAlt(aggressionFunc: Function, overwriteZwithL: boolean = false): Vec3 {
         const step = aggressionFunc(this.estm_raylen);
         const estVec = Earth.getLngLatAlt(this._oposE.Add(this._Y.mul(step)));
-        if (overwritez) estVec.z = step;
+        if (overwriteZwithL) estVec.z = step;
         return estVec;
+    }
+    public offset(distance: number): Vec3 {
+        const pos = this._oposE.Add(this._Y.mul(distance));
+        return Earth.getLngLatAlt(pos);
     }
     public forward(distance: number) { // no need to update because forward does not change the frame
         this._oposE = this._oposE.Add(this._Y.mul(distance));
