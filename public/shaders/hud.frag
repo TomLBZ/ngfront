@@ -1,7 +1,7 @@
 #version 300 es
 precision highp float;
 // consts
-#define BD_MAXLEN   18
+#define BD_MAXLEN   19
 const float EPS     = 1e-3                              ;
 const float PI      = 3.1415926535897932384626433832795 ;
 const float PI2     = 6.283185307179586476925286766559  ;
@@ -13,6 +13,7 @@ const float RC1     = -2.12059191e+04                   ;
 const float RC0     = 6.37813700e+06                    ;
 // uniforms
 uniform float u_time; // Time in seconds since the program started.
+uniform vec2 u_fov; // Field of view in radians
 uniform vec2 u_resolution; // Viewport resolution
 uniform vec2 u_ses; // Earch scale factor and sun scale factor
 uniform vec2 u_srd; // Sun radius and distance in meters
@@ -21,7 +22,6 @@ uniform vec3 u_sundir; // Sun direction in world space.
 uniform vec3 u_ex; // Earth front vector in camera space.
 uniform vec3 u_ey; // Earth right vector in camera space.
 uniform vec3 u_ez; // Earth up vector in camera space.
-uniform highp sampler2DArray u_dftx; // The default texture
 uniform highp sampler2DArray u_tx; // The texture array
 uniform vec3 u_txyz[BD_MAXLEN]; // the bounding boxes of the texture
 uniform float u_ntx; // the number of tiles
@@ -122,6 +122,7 @@ float hud(vec2 p) {
     return add(rhom, add(inner, outer));
 }
 vec4 p2rdc(vec2 p) { // screen 1m from camera / origin, scale 1m per unit
+    p *= tan(u_fov * 0.5);
     float ang = atan(p.y, p.x);
     float len = length(p);
     vec3 pix = vec3(cos(ang) * len, 1.0, sin(ang) * len);
@@ -176,11 +177,6 @@ vec2 xy2xyi(int z, vec2 xy, out vec2 fracs) {
     fracs = fract(xy);
     return floor(xy);
 }
-vec2 ll2dxy(vec2 p) {
-    float x = p.x / PI + 1.0; // 0 to 2
-    float y = p.y / PI + 0.5; // 0 to 1
-    return vec2(x, y);
-}
 vec3 p2xyz(vec2 p) { // returns the sample vector for 3d texture, otherwise v3 of -1
     vec2 xy = ll2xy(p);
     vec2 fracs;
@@ -190,11 +186,7 @@ vec3 p2xyz(vec2 p) { // returns the sample vector for 3d texture, otherwise v3 o
         floors = xy2xyi(z, xy, fracs);
         if (floors == u_txyz[i].xy) return vec3(fracs, i); // found the tile
     }
-    // TODO: Y-Scaling
-    xy.x *= 4.0;
-    xy.y *= 4.0;
-    floors = xy2xyi(0, xy, fracs);
-    return vec3(fracs, -(floors.x + floors.y * 2.0));
+    return vec3(-1.0);
 }
 vec3 tmap(vec3 pe, float dl, float dist) {
     float lon = atan(pe.y, pe.x); // range is -pi to pi
@@ -211,7 +203,7 @@ vec3 tmap(vec3 pe, float dl, float dist) {
     vec3 dnc = mixc(dpc, npc, blurr, dl);
     vec3 inten = mixc(u3 * 1.1, u3 * 0.9, blurr, dl);
     vec3 xyz = p2xyz(vec2(lon, lat));
-    vec3 txt = xyz.z < 0.0 ? texture(u_dftx, vec3(xyz.xy, -xyz.z)).rgb : texture(u_tx, xyz).rgb;
+    vec3 txt = xyz.z >= 0.0 ? texture(u_tx, xyz).rgb : dnc;
     return mix(txt, dnc, 0.25) * inten;
 }
 vec3 o2e(vec3 p) {
