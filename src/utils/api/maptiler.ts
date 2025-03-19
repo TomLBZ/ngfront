@@ -1,4 +1,5 @@
 import { Earth } from "../geo/earth";
+import { ObserverOnEarth } from "../geo/observer";
 
 export class MapTile {
     constructor(public url: string, public xyz: [number, number, number]) {}
@@ -63,7 +64,7 @@ export class MapTiler {
             }
         }
     }
-    public autoTiles(lng: number, lat: number, alt: number, skirts: number = 1, bgdz: number = 3): MapTile[] {
+    public autoCenterTiles(lng: number, lat: number, alt: number, skirts: number = 1, bgdz: number = 3): MapTile[] {
         const z: number = this.alt2z(alt, Earth.getRadius(lat));
         const tiles: MapTile[] = [];
         const [uex, uey] = this.lnglat2UnscaledExactXY(lng, lat);
@@ -77,5 +78,23 @@ export class MapTiler {
             else this.singleSkirt(bgz, uex, uey, skz - bgz > 1, tiles); // push the surrounding tiles at the guard zoom
         }
         return tiles; // count = 1 + 8 * skirts + 1
+    }
+    public autoRayTiles(o: ObserverOnEarth, skirts: number = 1, bgdz: number = 3): MapTile[] {
+        // TODO: implement this:
+        // 1. Find the view pyramid's intersection with the earth surface
+        //    - Use the observer's FoV and the observer's looking direction to find the view pyramid
+        //    - Find the intersection of the view pyramid with the earth surface
+        // 2. Find the 4 corners of the view pyramid's intersection with the earth surface
+        //    - Represent in lng, lat
+        //    - Points are bounded by the distant horizon
+        //    - If some edges of the view pyramid is above the horizon, the cooresponding points are on the horizon
+        //    - If the entire view pyramid is above the horizon, the intersection is empty
+        // 3. Find the tiles that cover the view pyramid's intersection region with the earth surface
+        //    - From the furthest to the cloest, find the tiles that cover the region one by one
+        //    - Use the distances for each z-level to segment the view pyramid's intersection region into strips
+        //    - Find the tiles that cover each strip, given the known z-level (therefore tile size)
+        //    - Push the tiles into the array
+        // 4. Return the array of tiles
+        return []; // dummy return
     }
 }
