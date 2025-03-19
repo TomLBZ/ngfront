@@ -41,4 +41,20 @@ export class Dates {
         date.setMinutes(_mm);
         return date;
     }
+    static DateToJulianDay(date: Date): number {
+        let Y = date.getUTCFullYear();
+        let M = date.getUTCMonth() + 1; // change 0-based to 1-based
+        let D = date.getUTCDate() 
+            + date.getUTCHours() / 24 
+            + date.getUTCMinutes() / 1440 
+            + date.getUTCSeconds() / 86400
+            + date.getUTCMilliseconds() / 86400000;
+        if (M < 3) { // for Jan and Feb, treat as months 13 and 14 of the previous year
+            Y -= 1;
+            M += 12;
+        }
+        const A = Math.floor(Y / 100);
+        const B = 2 - A + Math.floor(A / 4);
+        return Math.floor(365.25 * (Y + 4716)) + Math.floor(30.6001 * (M + 1)) + D + B - 1524.5;
+    }
 }
