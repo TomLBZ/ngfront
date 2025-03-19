@@ -90,14 +90,14 @@ export class TestPage implements OnInit, OnDestroy {
         const lkat = observer.lookingAtLngLatAlt(aggr, false); // looking at lng, lat, alt
         const off = observer.offset(sideR); // offset from the observer
         // const mts = this.mapTiler.autoTiles(this.lng, this.lat, this.alt); // get the urls
-        const mts = this.mapTiler.autoTiles(lkat.x, lkat.y, this.alt); // get the urls
+        const mts = this.mapTiler.autoCenterTiles(lkat.x, lkat.y, this.alt); // get the urls
         // const mts = this.mapTiler.autoTiles(off.x, off.y, Math.max(off.z, this.alt)); // get the urls
         const textures = mts.map((t, i) => new UniformTexture(t.url, i)); // create textures
         const xyzs = mts.map((t) => new UniformVec3(t.xyz));
         const new_uniforms = {
             u_fov: new UniformVec2([Math.PI / 3, Math.PI / 3]), // field of view of 60 degrees
             u_ses: new UniformVec2([1e-6, 1e-9]), // scale factors for earth and sun
-            u_srd: new UniformVec2([SUNR, Earth.DS_AU * AU]), // sun radius and distance to the sun in meters
+            u_srd: new UniformVec2([SUNR, Earth.sunEclipticCoords.DS_AU * AU]), // sun radius and distance to the sun in meters
             u_epos: new UniformVec3(observer.E2O_p(new Vec3()).ToArray()), // earth position in observer frame
             u_sundir: new UniformVec3(observer.E2O_v(sunVec).ToArray()), // sun direction in observer frame
             u_ex: new UniformVec3(observer.eX.ToArray()), // earth's front in observer frame
