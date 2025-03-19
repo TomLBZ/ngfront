@@ -1,5 +1,4 @@
 import { Mat3 } from "../mat/mat3";
-import { Vec2 } from "../vec/vec2";
 import { Vec3 } from "../vec/vec3";
 import { Earth } from "./earth";
 
