@@ -2,7 +2,7 @@ import { Vec3 } from "../vec/vec3";
 import { Mat } from "./mat";
 
 export class Mat3 extends Mat {
-    constructor(arr: Array<number>) {
+    constructor(arr: Array<number> = [0, 0, 0, 0, 0, 0, 0, 0, 0]) {
         super(3, 3);
         this._data = arr;
     }
