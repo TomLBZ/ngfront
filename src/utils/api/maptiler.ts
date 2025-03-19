@@ -1,3 +1,4 @@
+import { Camera } from "../geo/camera";
 import { Earth } from "../geo/earth";
 import { ObserverOnEarth } from "../geo/observer";
 
@@ -79,7 +80,7 @@ export class MapTiler {
         }
         return tiles; // count = 1 + 8 * skirts + 1
     }
-    public autoRayTiles(o: ObserverOnEarth, skirts: number = 1, bgdz: number = 3): MapTile[] {
+    public autoRayTiles(cam: Camera): MapTile[] {
         // TODO: implement this:
         // 1. Find the view pyramid's intersection with the earth surface
         //    - Use the observer's FoV and the observer's looking direction to find the view pyramid
