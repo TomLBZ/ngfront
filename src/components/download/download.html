@@ -1,0 +1,19 @@
+<div class="p_full">
+    <div class="flexc p_fullw">
+        @if (title) {
+            <label class="ft_smlr bold oblq txt_nowrap centtext">
+                {{ title }}
+            </label>
+        }
+        @if (files.length > 0) {
+            <dropselect class="pad5btm"
+                [items]="files"
+                [indexMode]="true"
+                [hoverMode]="true"
+                [multiSelect]="multiple"
+                (selectionChanged)="onSelectionChanged($event)"
+            ></dropselect>
+        }
+        <button class="pad5 mar5" (click)="download()">Download</button>
+    </div>
+</div>
