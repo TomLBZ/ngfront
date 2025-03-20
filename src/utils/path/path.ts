@@ -14,6 +14,18 @@ export class Path {
     public color: Color;
     public id: number;
     public style: number = PathStyle.Solid;
+    public get dashArray(): Array<number> {
+        switch (this.style) {
+            case PathStyle.Dashed:
+                return [3, 3];
+            case PathStyle.Dotted:
+                return [1, 1];
+            case PathStyle.DashDot:
+                return [3, 1, 1, 1];
+            default:
+                return [1, 0];
+        }
+    }
     public weight: number = 1;
     public closed: boolean = false;
     private _points = new Array<IPoint>();
