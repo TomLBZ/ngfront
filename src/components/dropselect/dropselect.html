@@ -4,12 +4,12 @@
         [style.flex-direction]="titleAbove ? 'column' : 'row'"
     >
         @if (title) {
-            <label class="ft_smlr bold oblq txt_nowrap centtext"
+            <span class="ft_smlr bold oblq txt_nowrap centtext"
                 [class.pad2btm]="titleAbove"
                 [class.pad2rht]="!titleAbove"
             >
                 {{ title }}
-            </label>
+        </span>
         }
         <div class="pos_rel"
             (mouseenter)="onMouseEnter()"
@@ -20,6 +20,7 @@
                     type="text"
                     [value]="searchTerm"
                     [placeholder]="placeholder"
+                    [name]="searchTerm.length > 0 ? 'searchterm' : 'placeholder'"
                     (input)="onSearchChanged($event)"
                     (focus)="onSearchFocus()"
                     (blur)="onSearchBlur()"

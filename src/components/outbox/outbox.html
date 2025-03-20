@@ -6,6 +6,9 @@
         <textarea 
             class="flex grow bd_r5 bd_sng noresize zeromin ff_mono console"
             [disabled]="true" 
+            [title]="text.length > 0 ? text[0] : 'emptytitle'"
+            [name]="text.length > 0 ? text[0] : 'emptyname'"
+            [placeholder]="text"
         >{{text}}</textarea>
         @if (clearable) {
             <button class="pad5" (click)="clear()">Clear Output</button>
