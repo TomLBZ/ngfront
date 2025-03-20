@@ -8,13 +8,8 @@
             [mapStyles]="['topo-v2', 'satellite']"
             [mapStyle]="'satellite'"
         ></mapview>   
-        <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_ltint bold ft_huge centcont justcent">
+        <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_tint bold ft_huge centcont justcent">
             Manual Flight in Next Phase
-            <!-- <webglshaderhost class="px_h200 px_w300 db_sng bd_r5 bdc_tint"
-                [vertexShaderPath]="'/shaders/hud.vert'"
-                [fragmentShaderPath]="'/shaders/hud.frag'"
-                [uniforms]="uniforms"
-            ></webglshaderhost> -->
         </div>
     </div>
     <div class="flexc px_maxw300">
@@ -33,7 +28,6 @@
                 @for (idx of visibleTelemetryIndices; track $index) {
                     <obj-editor
                         [objToEdit]="telemetries[idx]"
-                        [includeFilter]="telemetryFilter"
                         [readOnly]="true"
                         [defaultExpanded]="true"
                         [objName]="`ID = ${telemetries[idx].id}`"

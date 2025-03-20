@@ -6,7 +6,6 @@ import { MapViewComponent } from '../../../components/mapview/mapview';
 import { OutboxComponent } from '../../../components/outbox/outbox';
 import { WebGLShaderHostComponent } from '../../../components/webglshaderhost/webglshaderhost';
 import { env } from '../../app.config';
-import { UniformDict } from '../../../utils/uniform/u';
 import { RTOS } from '../../../utils/rtos/rtos';
 import { MissedDeadlinePolicy } from '../../../utils/rtos/rtostypes';
 import { AppService } from '../../app.service';
@@ -16,9 +15,8 @@ import { APICallback, APIResponse } from '../../../utils/api/api';
 import { TelemetryAPIResponse, TelemetryInstance } from '../../../utils/telemetry/telemetry';
 import { Marker } from '../../../utils/marker/marker';
 import { ObjEditorComponent } from '../../../components/obj_editor/obj_editor';
-import { Path } from '../../../utils/path/path';
+import { Path, PathStyle } from '../../../utils/path/path';
 import { Point } from '../../../utils/point/point';
-import { UniformVec3 } from '../../../utils/uniform/u';
 import { Cache } from '../../../utils/cache/cache';
 interface Waypoint {
     alt: number;
@@ -65,23 +63,10 @@ export class MonitorPage implements OnInit, OnDestroy {
     status: Status = { bridge: false, simulator: false, algo: false, mstatus: "None", siglost: false, mdone: false };
     telemetries: Array<TelemetryInstance> = [];
     visibleTelemetryIndices: Array<number> = [];
-    telemetryFilter = (field: string) => {
-        if (field.includes("home")) return false;
-        if (["battery", "groundspeed", "name", "id"].includes(field)) return false;
-        return true;
-    }
     missions: Array<Mission> = [];
     selectedMission?: Mission = undefined;
     nameRepr: Function = (o: any) => o.name;
     idRepr: Function = (o: any) => `ID: ${o.id}`;
-    uniforms: UniformDict = {
-        u_time: 0,
-        u_campos  : new UniformVec3([0, 0, 0]),
-        u_camdir  : new UniformVec3([0, 0, 1]),
-        u_camright: new UniformVec3([1, 0, 0]),
-        u_camdown : new UniformVec3([0, -1, 0]),
-        u_sundir  : new UniformVec3([1, 1, 1]),
-    }
     private websocket?: WebSocket;
     private pointsCache: Cache<Array<Point>> = new Cache<Array<Point>>();
     private colorsCache: Cache<Color> = new Cache<Color>();
@@ -112,7 +97,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         let str = "===== System Health =====\n";
         str += `Backend: ${s.bridge ? "Online" : "Offline"}\n`;
         str += `Simulator: ${s.simulator ? "Running" : "Stopped"}\n`;
-        str += `Algorithm: ${s.algo ? "Running" : "Stopped"}\n`;
+        str += `Algorithm: ${"UNIMPLEMENTED"}\n`;
         str += `Mission: ${s.mstatus}`;
         this.outbox.clear(str);
     }
@@ -140,8 +125,8 @@ export class MonitorPage implements OnInit, OnDestroy {
         const current = this.svc.getAPIData("mission/current");
         this.selectedMission = this.isValidMission(current) ? current : undefined;
         if (this.selectedMission !== undefined) {
-            const leadPoints: Array<Point> = [];
             this.wpGrp.clearMarkers();
+            const leadPoints: Array<Point> = [];
             this.selectedMission.lead_path.forEach((wp: Waypoint, idx: number) => {
                 const m = new Marker(wp.lat, wp.lon, idx);
                 m.alt = wp.alt;
@@ -149,8 +134,9 @@ export class MonitorPage implements OnInit, OnDestroy {
                 leadPoints.push(new Point(wp.lon, wp.lat));
             });
             const leadPath = new Path(-1); // avoid collision with actual path
-            leadPath.color = Color.Red;
+            leadPath.color = Color.Orange;
             leadPath.weight = 2;
+            leadPath.style = PathStyle.Dashed;
             leadPath.setPoints(leadPoints);
             this.paths = [leadPath];
             if (this.websocket === undefined) {
@@ -189,13 +175,12 @@ export class MonitorPage implements OnInit, OnDestroy {
             const c = this.colorsCache.get(t.id);
             path.color = c;
             path.weight = 1;
-            path.setPoints(this.pointsCache.get(t.id));
+            path.setPoints(points);
             this.paths.push(path);
         });
         if (this.selectedMission !== undefined) {
             this.planeMgrp.setColor(this.selectedMission.lead_id, Color.Red);
         }
-        
     }
     constructor(private svc: AppService) {
         this._rtos.addTask(() => this.fetchStates(), {
