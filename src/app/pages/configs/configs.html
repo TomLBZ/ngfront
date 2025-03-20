@@ -5,28 +5,24 @@
         <div class="flex grow">
             <div class="flexc p_halfw bdc_tint bd_r5 bd_sng">
                 <div class="txt_hdg p_fullw pad5">Default (LisaM)</div>
-                <div class="flexc grow p_fullw bdc_tint bd_tdsh bd_bdsh pad10">
+                <div class="flexc grow p_fullw bdc_tint bd_tdsh pad10">
                     <dropselect class="pad10btm"
-                        [items]="djsbvers"
-                        [title]="'JSB Config Version'"
-                        [indexMode]="true"
+                        [items]="fileDict[D_JSB]"
+                        [title]="nameDict[D_JSB]"
                         [hoverMode]="true"
-                        [multiSelect]="false"
-                        [fixDropdown]="false"
+                        [representation]="repr"
                         (selectionChanged)="onSelectionChanged($event, D_JSB)"
                     ></dropselect>
                     <button class="pad5 mar5" (click)="onDownload(D_JSB)">Download</button>
                     <button class="pad5 mar5" (click)="onUpload(D_JSB)">Upload</button>
                     <button class="pad5 mar5" (click)="onApply(D_JSB)">Apply</button>
                 </div>
-                <div class="flexc grow p_fullw pad10">
+                <div class="flexc grow p_fullw bdc_tint bd_tdsh pad10">
                     <dropselect class="pad10btm"
-                        [items]="djsbvers"
-                        [title]="'Paparazzi Config Version'"
-                        [indexMode]="true"
+                        [items]="fileDict[D_PAP]"
+                        [title]="nameDict[D_PAP]"
                         [hoverMode]="true"
-                        [multiSelect]="false"
-                        [fixDropdown]="false"
+                        [representation]="repr"
                         (selectionChanged)="onSelectionChanged($event, D_PAP)"
                     ></dropselect>
                     <button class="pad5 mar5" (click)="onDownload(D_PAP)">Download</button>
@@ -38,12 +34,10 @@
                 <div class="txt_hdg p_fullw bdc_tint pad5">Custom Type</div>
                 <div class="flexc grow p_fullw bdc_tint bd_tdsh bd_bdsh pad10">
                     <dropselect class="pad10btm"
-                        [items]="cjsbvers"
-                        [title]="'JSB Config Version'"
-                        [indexMode]="true"
+                        [items]="fileDict[C_JSB]"
+                        [title]="nameDict[C_JSB]"
                         [hoverMode]="true"
-                        [multiSelect]="false"
-                        [fixDropdown]="false"
+                        [representation]="repr"
                         (selectionChanged)="onSelectionChanged($event, C_JSB)"
                     ></dropselect>
                     <button class="pad5 mar5" (click)="onDownload(C_JSB)">Download</button>
@@ -52,12 +46,10 @@
                 </div>
                 <div class="flexc grow p_fullw pad10">
                     <dropselect class="pad10btm"
-                        [items]="cjsbvers"
-                        [title]="'Paparazzi Config Version'"
-                        [indexMode]="true"
+                        [items]="fileDict[C_PAP]"
+                        [title]="nameDict[C_PAP]"
                         [hoverMode]="true"
-                        [multiSelect]="false"
-                        [fixDropdown]="false"
+                        [representation]="repr"
                         (selectionChanged)="onSelectionChanged($event, C_PAP)"
                     ></dropselect>
                     <button class="pad5 mar5" (click)="onDownload(C_PAP)">Download</button>
@@ -73,12 +65,10 @@
             <div class="txt_hdg bd_bdsh p_fullw bdc_tint pad5">Flocking</div>
             <div class="flexc grow p_fullw bdc_tint bd_tdsh bd_bdsh pad10">
                 <dropselect class="pad10btm"
-                    [items]="fvers"
-                    [title]="'Flocking Algorithm Version'"
-                    [indexMode]="true"
+                    [items]="fileDict[F]"
+                    [title]="nameDict[F]"
                     [hoverMode]="true"
-                    [multiSelect]="false"
-                    [fixDropdown]="false"
+                    [representation]="repr"
                     (selectionChanged)="onSelectionChanged($event, F)"
                 ></dropselect>
                 <button class="pad5 mar5" (click)="onDownload(F)">Download</button>

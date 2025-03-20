@@ -1,9 +1,34 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { RTOS } from "../../../utils/rtos/rtos";
-import { Flag } from "../../../utils/flag/flag";
 import { AppService } from "../../app.service";
-import { MissedDeadlinePolicy, RTOSIntervalOptions } from "../../../utils/rtos/rtostypes";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
+
+interface RawFileConfig {
+    id: number;
+    name: string;
+    description: string;
+    type: {
+        file_type: string;
+        airframe_type: number | null;
+    }
+}
+
+interface DownloadConfig {
+    id: number;
+    type: {
+        file_type: string;
+        airframe_type: number | null;
+    }
+}
+
+interface FileConfig {
+    id: number;
+    name: string;
+    kind: number;
+}
+
+interface Dict<T> {
+    [key: number]: T;
+}
 
 @Component({
     selector: 'page-configs',
@@ -16,71 +41,71 @@ export class ConfigsPage implements OnInit, OnDestroy {
     readonly D_PAP = 2;
     readonly C_PAP = 3;
     readonly F = 4;
-    private _rtos: RTOS = new RTOS({
-        cycleIntervalMs: 100,
-        continueAfterInterrupt: true,
-        timeSlicePerCycle: true,
-        useAnimationFrame: false,
-    });
-    private _flags: Flag = new Flag([
-        "djsbver",
-        "cjsbver",
-        "dpapver",
-        "cpapver",
-        "fver"
-    ]);
-    private _apiIntervalOptions: RTOSIntervalOptions = {
-        priority: 1,
-        intervalMs: 1000,
-        missedPolicy: MissedDeadlinePolicy.RUN_ONCE,
-    };
-    djsbvers: Array<string> = [];
-    cjsbvers: Array<string> = [];
-    dpapvers: Array<string> = [];
-    cpapvers: Array<string> = [];
-    fvers: Array<string> = [];
-    private d2sarr(d: any): Array<string> {
-        let arr: Array<string> = [];
-        for (let k in d) {
-            arr.push(k + ": " + d[k]);
+    nameDict: Dict<string> = {};
+    fileDict: Dict<Array<FileConfig>> = {};
+    selectedDict: Dict<FileConfig> = {};
+    private clearLists() {
+        for (let i = 0; i < 5; i++) {
+            this.fileDict[i] = [];
         }
-        return arr;
-    }
-    private callApi(apiName: string, flagName: string, arr: Array<string>) {
-        if (this._flags.get(flagName)) return; // already called
-        this.svc.call(apiName, (d: any) => {
-            arr = this.d2sarr(d);
-            this._flags.set(flagName);
-        });
-    }
-    private refreshLists() {
     }
     constructor(private svc: AppService) {
-        this._rtos.addTask(()=>this.callApi("djsbver", "djsbver", this.djsbvers), this._apiIntervalOptions);
-        this._rtos.addTask(()=>this.callApi("cjsbver", "cjsbver", this.cjsbvers), this._apiIntervalOptions);
-        this._rtos.addTask(()=>this.callApi("dpapver", "dpapver", this.dpapvers), this._apiIntervalOptions);
-        this._rtos.addTask(()=>this.callApi("cpapver", "cpapver", this.cpapvers), this._apiIntervalOptions);
-        this._rtos.addTask(()=>this.callApi("fver", "fver", this.fvers), this._apiIntervalOptions);
-        this._rtos.addInterrupt(() => this._flags.all, () => {
-            this.refreshLists();
-            this._flags.all = false;
-        });
+        this.clearLists();
+        this.nameDict[this.D_JSB] = "JSB Config List";
+        this.nameDict[this.C_JSB] = "JSB Config List";
+        this.nameDict[this.D_PAP] = "Paparazzi Config List";
+        this.nameDict[this.C_PAP] = "Paparazzi Config List";
+        this.nameDict[this.F] = "Flocking Algorithm List";
+    }
+    private _timeoutInterval?: any;
+    repr: Function = (cfg: FileConfig) => `${cfg.name} (${cfg.id})`;
+    private ParseFileConfig(f: RawFileConfig): FileConfig {
+        let kind = this.F;
+        switch (f.type.file_type) {
+            case "jsb":
+                kind = f.type.airframe_type === 0 ? this.D_JSB : this.C_JSB;
+                break;
+            case "pprz":
+                kind = f.type.airframe_type === 0 ? this.D_PAP : this.C_PAP;
+                break;
+        }
+        return {
+            id: f.id,
+            name: f.name,
+            kind: kind
+        } as FileConfig;
+    }
+    private ConfigToDownload(cfg: FileConfig): DownloadConfig {
+        const aftype: number | null = cfg.kind === this.F ? null : (cfg.kind === this.D_JSB || cfg.kind === this.D_PAP ? 0 : 1);
+        const typestr = cfg.kind === this.F ? "flocking_algo" : cfg.kind === this.D_JSB || cfg.kind === this.C_JSB ? "jsb" : "pprz";
+        return {
+            id: cfg.id,
+            type: {
+                file_type: typestr,
+                airframe_type: aftype
+            }
+        } as DownloadConfig;
     }
     onUpload(type: number) {
     }
     onDownload(type: number) {
+        this.svc.callAPI("files/download", console.log, JSON.stringify(this.ConfigToDownload(this.selectedDict[type])), console.error);
     }
     onApply(type: number) {
     }
-    onSelectionChanged(event: any, type: number) {
+    onSelectionChanged(fc: FileConfig, type: number) {
+        this.selectedDict[type] = fc;
     }
     ngOnInit(): void {
-        this._rtos.start();
-        console.log("RTOS started");
+        this._timeoutInterval = setInterval(() => {
+            this.svc.callAPI("files/all", (d: any) => {
+                const cfglist: Array<FileConfig> = d.simulation_files_config.map((f: RawFileConfig) => this.ParseFileConfig(f));
+                this.clearLists();
+                cfglist.forEach((cfg: any) => this.fileDict[cfg.kind].push(cfg));
+            });
+        }, 1000);
     }
     ngOnDestroy(): void {
-        this._rtos.stop();
-        console.log("RTOS stopped");
-        console.log(this._rtos.stats);
+        if (this._timeoutInterval) clearInterval(this._timeoutInterval);
     }
 }
