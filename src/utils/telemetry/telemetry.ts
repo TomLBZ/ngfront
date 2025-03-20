@@ -1,67 +1,54 @@
-export interface TelemetryAPIResponse {
-    battery: number;
-    home_pos: {
-        lat: number;
-        lon: number;
-        alt: number;
-    };
-    curr_pos: {
-        lat: number;
-        lon: number;
-        alt: number;
-        hdg: number;
-        speed: number;
-        course: number;
-        climb: number;
-    };
-    airspeed: number;
-    groundspeed: number;
+export interface TelemetryResponseInstance {
+    roll: number;
+    pitch: number;
+    yaw: number;
+    lat: number;
+    lon: number;
+    alt: number;
+    hdg: number;
+    agl: number;
+    speed: number;
+    course: number;
+    climb: number;
     throttle: number;
-    attitude: {
-        roll: number;
-        pitch: number;
-        yaw: number;
-    };
 }
-export class Telemetry {
+export interface TelemetryAPIResponse {
+    [key: number]: TelemetryResponseInstance;
+}
+export class TelemetryInstance {
     id: number = 0;
-    name: string = "";
-    battery: number = 0;
-    homeLat: number = 0;
-    homeLon: number = 0;
-    homeAlt: number = 0;
-    currLat: number = 0;
-    currLon: number = 0;
-    currAlt: number = 0;
-    currHdg: number = 0;
-    currSpeed: number = 0;
-    currCourse: number = 0;
-    currClimb: number = 0;
-    airspeed: number = 0;
-    groundspeed: number = 0;
-    throttle: number = 0;
     roll: number = 0;
     pitch: number = 0;
     yaw: number = 0;
-    constructor(data: TelemetryAPIResponse, id: number, name: string) {
+    lat: number = 0;
+    lon: number = 0;
+    alt: number = 0;
+    hdg: number = 0;
+    agl: number = 0;
+    speed: number = 0;
+    course: number = 0;
+    climb: number = 0;
+    throttle: number = 0;
+    constructor(data: TelemetryResponseInstance, id: number) {
         this.id = id;
-        this.name = name;
-        this.battery = data.battery;
-        this.homeLat = data.home_pos.lat;
-        this.homeLon = data.home_pos.lon;
-        this.homeAlt = data.home_pos.alt;
-        this.currLat = data.curr_pos.lat;
-        this.currLon = data.curr_pos.lon;
-        this.currAlt = data.curr_pos.alt;
-        this.currHdg = data.curr_pos.hdg;
-        this.currSpeed = data.curr_pos.speed;
-        this.currCourse = data.curr_pos.course;
-        this.currClimb = data.curr_pos.climb;
-        this.airspeed = data.airspeed;
-        this.groundspeed = data.groundspeed;
+        this.roll = data.roll;
+        this.pitch = data.pitch;
+        this.yaw = data.yaw;
+        this.lat = data.lat;
+        this.lon = data.lon;
+        this.alt = data.alt;
+        this.hdg = data.hdg;
+        this.agl = data.agl;
+        this.speed = data.speed;
+        this.course = data.course;
+        this.climb = data.climb;
         this.throttle = data.throttle;
-        this.roll = data.attitude.roll;
-        this.pitch = data.attitude.pitch;
-        this.yaw = data.attitude.yaw;
+    }
+    public static fromAPIResponse(data: TelemetryAPIResponse): Array<TelemetryInstance> {
+        const instances: Array<TelemetryInstance> = [];
+        for (const key in data) {
+            instances.push(new TelemetryInstance(data[key], parseInt(key)));
+        }
+        return instances;
     }
 }
