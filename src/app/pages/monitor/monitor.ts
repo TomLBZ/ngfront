@@ -58,13 +58,13 @@ interface Status {
 })
 export class MonitorPage implements OnInit, OnDestroy {
     planeMgrp: MarkerGroup = new MarkerGroup(Icon.Poly(16, Icon.polyPlaneVecs, Color.Blue));
-    wpGrp: MarkerGroup = new MarkerGroup(Icon.Circle(16, Color.Purple));
+    wpGrp: MarkerGroup = new MarkerGroup(Icon.Circle(16, Color.Magenta));
     paths: Array<Path> = [];
     apiKey: string = env.mapKey;
-    settings: Settings = { fg_enable: true, trace_count: 50, lead_id: 0 };
-    runningAirIds: Array<number> = [];
+    settings: Settings = { fgEnable: true, traces: 50, lead_id: 0 };
+    status: Status = { bridge: false, simulator: false, algo: false, mstatus: "None", siglost: false, mdone: false };
     telemetries: Array<TelemetryInstance> = [];
-    editableTelemetryIndices: Array<number> = [];
+    visibleTelemetryIndices: Array<number> = [];
     telemetryFilter = (field: string) => {
         if (field.includes("home")) return false;
         if (["battery", "groundspeed", "name", "id"].includes(field)) return false;
@@ -74,11 +74,6 @@ export class MonitorPage implements OnInit, OnDestroy {
     selectedMission?: Mission = undefined;
     nameRepr: Function = (o: any) => o.name;
     idRepr: Function = (o: any) => `ID: ${o.id}`;
-    isSimulatorRunning: boolean = false;
-    isLaunchEnabled: boolean = false;
-    isSigLostEnabled: boolean = false;
-    launchText: string = "Launch Mission";
-    sigLossText: string = "Block Signal";
     uniforms: UniformDict = {
         u_time: 0,
         u_campos  : new UniformVec3([0, 0, 0]),
@@ -112,36 +107,30 @@ export class MonitorPage implements OnInit, OnDestroy {
         this.svc.apiFlags.set("algo/health"); // dummy
         this.svc.apiDataCache.set(this.svc.apiFlags.indexOf("algo/health"), { success: false, msg: "Not Implemented", data: {} }); // dummy
     }
-    private onStates() {
+    private _displayStatus(s: Status): void {
         if (!this.outbox) return;
-        this.outbox.clear("===== System Health =====\n");
-        const bridge = this.svc.getAPIData("br/health");
-        this.outbox.append(`Backend: ${bridge.success ? "Online" : "Offline"}`);
-        const simulator = this.svc.getAPIData("sim/health");
-        this.outbox.append(`Simulator: ${simulator.success ? "Running" : "Stopped"}`);
-        this.isSimulatorRunning = simulator.success;
-        const algo = this.svc.getAPIData("algo/health");
-        this.outbox.append(`Algorithm: ${algo.success ? "Running" : "Stopped"}`);
-        const mission = this.svc.getAPIData("mission/health");
-        const mstatus = mission.mission_status === "STOPPED" ? "SIGLOST" : mission.mission_status;
-        this.outbox.append(`Mission: ${mstatus ? mstatus : "None"}`);
-        if (!simulator.success) { // simulator not running
-            this.isSigLostEnabled = false;
-            this.isLaunchEnabled = true; // can launch the simulator with a mission
-            this.launchText = "Launch Mission";
-            this.sigLossText = "Block Signal";
-            if (this.websocket !== undefined) {
-                this.websocket.close();
-                this.websocket = undefined;
-                this.selectedMission = undefined;
-                this.wpGrp.clearMarkers();
-                this.paths = [];
-            }
-        } else { // simulator running
-            this.launchText = this.isLaunchEnabled ? "Restart Mission" : "Launch Mission";
-            this.isLaunchEnabled = ["COMPLETED", "ERROR"].includes(mstatus); // mission has failed or completed
-            this.sigLossText = mstatus === "SIGLOST" ? "Resume Signal" : "Block Signal";
-            this.isSigLostEnabled = ["STARTED", "SIGLOST"].includes(mstatus); // mission has started or signal lost
+        let str = "===== System Health =====\n";
+        str += `Backend: ${s.bridge ? "Online" : "Offline"}\n`;
+        str += `Simulator: ${s.simulator ? "Running" : "Stopped"}\n`;
+        str += `Algorithm: ${s.algo ? "Running" : "Stopped"}\n`;
+        str += `Mission: ${s.mstatus}`;
+        this.outbox.clear(str);
+    }
+    private onStates() {
+        const ms = this.svc.getAPIData("mission/health").mission_status;
+        this.status.bridge = this.svc.getAPIData("br/health").success;
+        this.status.simulator = this.svc.getAPIData("sim/health").success;
+        this.status.algo = this.svc.getAPIData("algo/health").success;
+        this.status.mstatus = ms === undefined ? "NONE" : ms === "STOPPED" ? "SIGLOST" : ms;
+        this.status.mdone = this.status.simulator && ["COMPLETED", "ERROR"].includes(ms);
+        this.status.siglost = this.status.simulator && ["SIGLOST", "STARTED"].includes(ms);
+        this._displayStatus(this.status);
+        if (!this.status.simulator && this.websocket !== undefined) { // simulator not running but websocket is open
+            this.websocket.close();
+            this.websocket = undefined;
+            this.selectedMission = undefined;
+            this.wpGrp.clearMarkers();
+            this.paths = [];
         }
         this.svc.unsetFlags(this.stateApis);
     }
@@ -173,7 +162,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         this.svc.unsetFlags(this.listApis);
     }
     private onSocketClosed() {
-        this.editableTelemetryIndices = [];
+        this.visibleTelemetryIndices = [];
         this.telemetries = [];
         this.planeMgrp.clearMarkers();
         this.pointsCache.clear();
@@ -219,7 +208,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             deadlineMs: 30,
         });
         this._rtos.addInterrupt(() => this.svc.testFlags(this.stateApis), () => this.onStates());
-        this._rtos.addInterrupt(() => this.isFetchingListApis.value, () => this.listApis.forEach((api: string) => this.svc.callAPIWithCache(api)));
+        this._rtos.addInterrupt(() => this.isFetchingListApis.value, () => this.listApis.forEach((api: string) => this.svc.callAPIWithCache(api, undefined, this.void)));
         this._rtos.addInterrupt(() => this.svc.testFlags(this.listApis), () => this.onListData());
     }
     
