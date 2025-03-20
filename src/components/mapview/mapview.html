@@ -55,7 +55,7 @@
                         [properties]="{
                             id: m.id,
                             hdg: m.hdg,
-                            label: $index + 1,
+                            label: m.id,
                             emphColorStr: mg.colorStrByIdx($index)
                         }"
                     ></mgl-feature>
@@ -85,7 +85,7 @@
                     'icon-ignore-placement': true,
                     'text-field': ['case', mg.showLabel, ['concat', mg.labelPrefix, ['get', 'label']], ''],
                     'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                    'text-size': 10 * mg.iconScale,
+                    'text-size': 11 * mg.iconScale,
                     'text-allow-overlap': true,
                 }"
                 [paint]="{
