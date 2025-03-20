@@ -22,7 +22,7 @@ export class MarkerGroup { // a marker layer
     public setColor(mId: number, color: Color) {
         this._colors.set(mId, color);
         const mIdx = this.markers.findIndex((m) => m.id === mId);
-        this.updateMarker(this.markers[mIdx], true); // triggers rehash because color changed
+        if (mIdx >= 0) this.updateMarker(this.markers[mIdx], true); // triggers rehash because color changed
     }
     public getColor(mId: number): Color {
         if (this._colors.has(mId)) {
