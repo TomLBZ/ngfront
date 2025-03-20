@@ -39,8 +39,8 @@
             <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5">
                 <div class="flexc px_h50">
                     @if (status.simulator && selectedMission !== undefined) {
-                        <label class="ft_norm bold oblq txt_nowrap centtext">Current Mission:</label>
-                        <label class="ft_smlr oblq txt_nowrap centtext">{{selectedMission.name}}</label>
+                        <span class="ft_norm bold oblq txt_nowrap centtext">Current Mission:</span>
+                        <span class="ft_smlr oblq txt_nowrap centtext">{{selectedMission.name}}</span>
                     } @else {
                         <dropselect class="pad5btm"
                             [items]="missions"
@@ -61,10 +61,11 @@
                     (applied)="onSettingsChanged($event)"
                 ></obj-editor>
                 <div class="flex p_fullw justarnd pad5h">
-                    <button class="p_halfw mar5rht pad5v" [disabled]="status.simulator && !status.mdone" (click)="onLaunch()">{{status.mdone ? "Restart" : "Launch"}}</button>
-                    <button class="p_halfw mar5rht pad5v" (click)="onStop()">Stop</button>
+                    <button class="p_halfw mar5rht pad5v" [disabled]="(status.simulator && !status.mdone) || selectedMission === undefined" (click)="onLaunch()">{{status.simulator && status.mdone ? "Restart" : "Launch"}}</button>
+                    <button class="p_halfw mar5rht pad5v" [disabled]="!status.simulator" (click)="onStop()">Stop</button>
                 </div>
-                <button class="pad5 mar5" [disabled]="!status.siglost" (click)="onSigLoss()">{{status.siglost && status.mstatus === "SIGLOST" ? "Resume Link" : "Block Link"}}</button>
+                @let isSigLost = status.simulator && status.mrun && status.mstatus === "SIGLOST";
+                <button class="pad5 mar5" [disabled]="!status.simulator || !status.mrun" (click)="onSigLoss(isSigLost)">{{isSigLost ? "Resume Link" : "Block Link"}}</button>
             </div>
         } @else {
             <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5 c_dtint bold ft_huge centcont justcent">
