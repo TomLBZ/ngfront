@@ -4,7 +4,6 @@ import { Icon } from '../../../utils/icon/icon';
 import { Color } from '../../../utils/color/color';
 import { MapViewComponent } from '../../../components/mapview/mapview';
 import { OutboxComponent } from '../../../components/outbox/outbox';
-import { WebGLShaderHostComponent } from '../../../components/webglshaderhost/webglshaderhost';
 import { env } from '../../app.config';
 import { RTOS } from '../../../utils/rtos/rtos';
 import { MissedDeadlinePolicy } from '../../../utils/rtos/rtostypes';
@@ -42,7 +41,7 @@ interface Status {
     simulator: boolean;
     algo: boolean;
     mstatus: string;
-    siglost: boolean;
+    mrun: boolean;
     mdone: boolean;
 }
 
@@ -60,7 +59,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     paths: Array<Path> = [];
     apiKey: string = env.mapKey;
     settings: Settings = { fgEnable: true, traces: 50, lead_id: 0 };
-    status: Status = { bridge: false, simulator: false, algo: false, mstatus: "None", siglost: false, mdone: false };
+    status: Status = { bridge: false, simulator: false, algo: false, mstatus: "None", mrun: false, mdone: false };
     telemetries: Array<TelemetryInstance> = [];
     visibleTelemetryIndices: Array<number> = [];
     missions: Array<Mission> = [];
@@ -70,11 +69,10 @@ export class MonitorPage implements OnInit, OnDestroy {
     private websocket?: WebSocket;
     private pointsCache: Cache<Array<Point>> = new Cache<Array<Point>>();
     private colorsCache: Cache<Color> = new Cache<Color>();
-    @ViewChild(WebGLShaderHostComponent) shaderHost?: WebGLShaderHostComponent;
     @ViewChild(OutboxComponent) outbox?: OutboxComponent;
     private stateApis = ["br/health", "sim/health", "mission/health"];//, "algo/health"
-    private listApis = ["mission/all", "mission/current"];
-    private isFetchingListApis: OnceValue<boolean> = new OnceValue(false);
+    private missionApis = ["mission/all", "mission/current"];
+    private isMissionInvalidated: OnceValue<boolean> = new OnceValue(false);
     private _rtos: RTOS = new RTOS({
         cycleIntervalMs: 100,
         continueAfterInterrupt: true,
@@ -83,6 +81,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     });
     private popup: APICallback = (d: APIResponse) => alert(d.msg);
     private void: APICallback = () => {};
+    private invalidate: APICallback = () => this.isMissionInvalidated.reset();
     private isValidMission(m: any): boolean {
         return m.hasOwnProperty("id") && m.hasOwnProperty("name") && m.hasOwnProperty("description") && m.hasOwnProperty("lead_id") && m.hasOwnProperty("lead_path") && m.hasOwnProperty("follower_ids");
     }
@@ -101,14 +100,15 @@ export class MonitorPage implements OnInit, OnDestroy {
         str += `Mission: ${s.mstatus}`;
         this.outbox.clear(str);
     }
-    private onStates() {
-        const ms = this.svc.getAPIData("mission/health").mission_status;
+    private onStatesUpdated() {
+        const rawms = this.svc.getAPIData("mission/health").mission_status;
+        const ms = rawms === undefined ? "NONE" : rawms === "STOPPED" ? "SIGLOST" : rawms;
         this.status.bridge = this.svc.getAPIData("br/health").success;
         this.status.simulator = this.svc.getAPIData("sim/health").success;
         this.status.algo = this.svc.getAPIData("algo/health").success;
-        this.status.mstatus = ms === undefined ? "NONE" : ms === "STOPPED" ? "SIGLOST" : ms;
-        this.status.mdone = this.status.simulator && ["COMPLETED", "ERROR"].includes(ms);
-        this.status.siglost = this.status.simulator && ["SIGLOST", "STARTED"].includes(ms);
+        this.status.mstatus = ms;
+        this.status.mdone = ["COMPLETED", "ERROR"].includes(ms); // mission done
+        this.status.mrun = ["STARTED", "SIGLOST"].includes(ms);
         this._displayStatus(this.status);
         if (!this.status.simulator && this.websocket !== undefined) { // simulator not running but websocket is open
             this.websocket.close();
@@ -119,33 +119,42 @@ export class MonitorPage implements OnInit, OnDestroy {
         }
         this.svc.unsetFlags(this.stateApis);
     }
-    private onListData() {
+    private updateMissions() {
+        this.missionApis.forEach((api: string) => this.svc.callAPIWithCache(api, undefined, this.void))
+    }
+    private onRunningMissionChanged(m: Mission) {
+        if (m === undefined || !this.isValidMission(m)) return; // invalid
+        if (m === this.selectedMission) return; // unchanged
+        if (this.websocket !== undefined) { // close old websocket
+            this.websocket.close();
+            this.websocket = undefined;
+        }
+        this.wpGrp.clearMarkers(); // clear old waypoints
+        const leadPoints: Array<Point> = [];
+        m.lead_path.forEach((wp: Waypoint, idx: number) => {
+            const m = new Marker(wp.lat, wp.lon, idx);
+            m.alt = wp.alt;
+            this.wpGrp.updateMarker(m);
+            leadPoints.push(new Point(wp.lon, wp.lat));
+        });
+        const leadPath = new Path(-1); // avoid collision with actual path
+        leadPath.color = Color.Orange;
+        leadPath.weight = 2;
+        leadPath.style = PathStyle.Dashed;
+        leadPath.setPoints(leadPoints);
+        this.paths = [leadPath]; // set the lead path to visualise
+        this.selectedMission = m;
+        this.settings.lead_id = m.lead_id; // set lead id
+        this.websocket = new WebSocket(env.wsUrl); // open new websocket to get telemetry
+        this.websocket.onmessage = (e: MessageEvent) => this.onTelemetry(e);
+        this.websocket.onclose = () => this.onSocketClosed();
+    }
+    private onMissionsUpdated() {
         const missions = this.svc.getAPIData("mission/all");
         if (missions?.missions_config) this.missions = missions.missions_config;
-        const current = this.svc.getAPIData("mission/current");
-        this.selectedMission = this.isValidMission(current) ? current : undefined;
-        if (this.selectedMission !== undefined) {
-            this.wpGrp.clearMarkers();
-            const leadPoints: Array<Point> = [];
-            this.selectedMission.lead_path.forEach((wp: Waypoint, idx: number) => {
-                const m = new Marker(wp.lat, wp.lon, idx);
-                m.alt = wp.alt;
-                this.wpGrp.updateMarker(m);
-                leadPoints.push(new Point(wp.lon, wp.lat));
-            });
-            const leadPath = new Path(-1); // avoid collision with actual path
-            leadPath.color = Color.Orange;
-            leadPath.weight = 2;
-            leadPath.style = PathStyle.Dashed;
-            leadPath.setPoints(leadPoints);
-            this.paths = [leadPath];
-            if (this.websocket === undefined) {
-                this.websocket = new WebSocket(env.wsUrl);
-                this.websocket.onmessage = (e: MessageEvent) => this.onTelemetry(e);
-                this.websocket.onclose = () => this.onSocketClosed();
-            }
-        }
-        this.svc.unsetFlags(this.listApis);
+        const current: Mission = this.svc.getAPIData("mission/current");
+        this.onRunningMissionChanged(current);
+        this.svc.unsetFlags(this.missionApis);
     }
     private onSocketClosed() {
         this.visibleTelemetryIndices = [];
@@ -168,38 +177,33 @@ export class MonitorPage implements OnInit, OnDestroy {
             const path = new Path(t.id);
             const points = this.pointsCache.get(t.id);
             points.push(new Point(t.lon, t.lat));
-            if (points.length > 50) points.shift(); // keep only last 50 points
+            if (points.length > this.settings.traces) points.shift(); // keep only last N points
             if (!this.colorsCache.has(t.id)) {
                 this.colorsCache.set(t.id, Color.Random());
             }
-            const c = this.colorsCache.get(t.id);
-            path.color = c;
+            path.color = this.colorsCache.get(t.id);
             path.weight = 1;
             path.setPoints(points);
             this.paths.push(path);
         });
-        if (this.selectedMission !== undefined) {
-            this.planeMgrp.setColor(this.selectedMission.lead_id, Color.Red);
+        if (this.selectedMission !== undefined && this.colorsCache.has(this.selectedMission.lead_id)) {
+            this.planeMgrp.setColor(this.selectedMission.lead_id, Color.Red); // set lead plane Border
         }
     }
     constructor(private svc: AppService) {
         this._rtos.addTask(() => this.fetchStates(), {
             priority: 1, // low priority
-            intervalMs: 1000,
+            intervalMs: 1000, // fetches states per one second
             missedPolicy: MissedDeadlinePolicy.RUN_ONCE,
         });
-        this._rtos.addTask(() => this.shaderHost?.drawFrame(), { // normal task
-            priority: 2,
-            deadlineMs: 30,
-        });
-        this._rtos.addInterrupt(() => this.svc.testFlags(this.stateApis), () => this.onStates());
-        this._rtos.addInterrupt(() => this.isFetchingListApis.value, () => this.listApis.forEach((api: string) => this.svc.callAPIWithCache(api, undefined, this.void)));
-        this._rtos.addInterrupt(() => this.svc.testFlags(this.listApis), () => this.onListData());
+        this._rtos.addInterrupt(() => this.svc.testFlags(this.stateApis), () => this.onStatesUpdated());
+        this._rtos.addInterrupt(() => this.isMissionInvalidated.value, () => this.updateMissions());
+        this._rtos.addInterrupt(() => this.svc.testFlags(this.missionApis), () => this.onMissionsUpdated());
     }
     
     ngOnInit(): void {
         this._rtos.start();
-        this.isFetchingListApis.reset(true);
+        this.isMissionInvalidated.reset(true);
     }
     ngOnDestroy(): void {
         this._rtos.stop();
@@ -212,46 +216,42 @@ export class MonitorPage implements OnInit, OnDestroy {
     onPlaneSelected(indices: Array<number>) {
         this.visibleTelemetryIndices = indices;
     }
-    onMissionSelected(event: Mission) {
-        this.selectedMission = event;
+    onMissionSelected(m: Mission) {
+        this.selectedMission = m;
     }
     onSettingsChanged(newSettings: Settings) {
-        if (newSettings.traces !== this.settings.traces) {
-            this.settings.traces = Math.max(1, newSettings.traces);
-        }
+        if (newSettings.traces < 1) newSettings.traces = 1;
+        if (this.selectedMission !== undefined) {
+            const all_ids = [this.selectedMission.lead_id, ...this.selectedMission.follower_ids];
+            if (!all_ids.includes(newSettings.lead_id)) { // invalid lead id
+                newSettings.lead_id = this.selectedMission.lead_id;
+            }
+        } else if (newSettings.lead_id < 0) newSettings.lead_id = 0;
         if (newSettings.fgEnable !== this.settings.fgEnable) {
-            this.svc.callAPI("sim/fgenable", (d: APIResponse) => {
-                if (d.success) this.settings.fgEnable = newSettings.fgEnable;
-                else alert(d.msg);
-            }, { fg_enable: newSettings.fgEnable }, this.popup);
+            this.svc.callAPI("sim/fgenable", this.void, { fg_enable: newSettings.fgEnable }, this.popup);
         }
         if (newSettings.lead_id !== this.settings.lead_id) {
-            this.svc.callAPI("mission/changelead", (d: APIResponse) => {
-                if (d.success) this.settings.lead_id = newSettings.lead_id;
-                else alert(d.msg);
-            },  newSettings.lead_id, this.popup);
+            this.svc.callAPI("mission/changelead", (d) => {
+                if (d.success) this.invalidate(d);
+                else this.popup(d);
+            }, newSettings.lead_id, (d) => {
+                this.popup(d);
+                newSettings.lead_id = this.settings.lead_id; // revert
+            });
         }
+        this.settings = newSettings;
     }
     onLaunch() {
-        if (this.selectedMission === undefined) {
-            alert("Please select a mission first.");
-            return;
-        }
-        const popupAndReset = (d: APIResponse) => {
-            alert(d.msg);
-            this.isFetchingListApis.reset();
-        }
-        this.svc.callAPI("mission/start", popupAndReset, this.selectedMission.id);
-        this.isFetchingListApis.reset();
+        this.svc.callAPI("mission/start", this.invalidate, this.selectedMission!.id, this.popup);
     }
-    onSigLoss() {
-        if (this.status.siglost && this.status.mstatus === "SIGLOST" ) {
-            this.svc.callAPI("mission/start", (_) => alert("Signal resumed"), this.selectedMission?.id);
+    onSigLoss(isSiglost: boolean) {
+        if (isSiglost) {
+            this.svc.callAPI("mission/start", (_) => alert("Signal resumed"), this.selectedMission!.id);
         } else {
             this.svc.callAPI("mission/stop", (_) => alert("Signal blocked"));
         }
     }
     onStop() {
-        this.svc.callAPI("sim/stop", this.popup);
+        this.svc.callAPI("sim/stop", this.invalidate);
     }
 }
