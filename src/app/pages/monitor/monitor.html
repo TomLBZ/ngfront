@@ -2,7 +2,7 @@
     <div class="flexc p_4pentaw">
             <!-- [projection]="'globe'" -->
         <mapview class="p_4pentah bd_r5 bd_dbl bdc_tint"
-            [markerGroups]="[planeMgrp]"
+            [markerGroups]="[wpGrp, planeMgrp]"
             [paths]="paths"
             [apiKey]="apiKey"
             [mapStyles]="['topo-v2', 'satellite']"
@@ -25,7 +25,7 @@
                 [indexMode]="true"
                 [hoverMode]="true"
                 [multiSelect]="true"
-                [representation]="nameRepr"
+                [representation]="idRepr"
                 [fixDropdown]="false"
                 (selectionChanged)="onPlaneSelected($event)"
             ></dropselect>
@@ -36,27 +36,31 @@
                         [includeFilter]="telemetryFilter"
                         [readOnly]="true"
                         [defaultExpanded]="true"
-                        [objName]="telemetries[idx].name"
+                        [objName]="telemetries[idx].id.toString()"
                     ></obj-editor>
                 }
             </div>
         </div>
         <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5">
-            <dropselect class="pad5btm"
-                [items]="missions"
-                [title]="'Select Mission'"
-                [representation]="nameRepr"
-                [hoverMode]="true"
-                [multiSelect]="false"
-                [fixDropdown]="false"
-                (selectionChanged)="onMissionSelected($event)"
-            ></dropselect>
+            <div class="flexc px_h50">
+                @if (isSimulatorRunning && selectedMission !== undefined) {
+                    <label class="ft_norm bold oblq txt_nowrap centtext">Current Mission:</label>
+                    <label class="ft_smlr oblq txt_nowrap centtext">{{selectedMission.name}}</label>
+                } @else {
+                    <dropselect class="pad5btm"
+                        [items]="missions"
+                        [title]="'Select Mission'"
+                        [representation]="nameRepr"
+                        [hoverMode]="true"
+                        (selectionChanged)="onMissionSelected($event)"
+                    ></dropselect>
+                }
+            </div>
             <value-editor class="pad10lft pad10rht"
                 [itemName]="'Enable FlightGear'"
-                [itemToEdit]="fgEnabled"
-                (itemChanged)="onFgToggle($event)"
+                [itemToEdit]="settings"
+                (itemChanged)="onSettingsChanged($event)"
             ></value-editor>
-            <button class="pad5 mar5" (click)="onRefreshData()">Refresh Data</button>
             <button class="pad5 mar5" [disabled]="!isLaunchEnabled" (click)="onLaunch()">{{launchText}}</button>
             <button class="pad5 mar5" [disabled]="!isSigLostEnabled" (click)="onSigLoss()">{{sigLossText}}</button>
             <button class="pad5 mar5" (click)="onStop()">Stop</button>

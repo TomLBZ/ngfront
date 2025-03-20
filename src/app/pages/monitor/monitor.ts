@@ -14,12 +14,32 @@ import { DropSelectComponent } from '../../../components/dropselect/dropselect';
 import { Change, ValueEditorComponent } from "../../../components/obj_editor/value_editor/value_editor";
 import { OnceValue } from '../../../utils/once/once';
 import { APICallback, APIResponse } from '../../../utils/api/api';
-import { Telemetry, TelemetryAPIResponse } from '../../../utils/telemetry/telemetry';
+import { TelemetryAPIResponse, TelemetryInstance } from '../../../utils/telemetry/telemetry';
 import { Marker } from '../../../utils/marker/marker';
 import { ObjEditorComponent } from '../../../components/obj_editor/obj_editor';
 import { Path } from '../../../utils/path/path';
 import { Point } from '../../../utils/point/point';
 import { UniformVec3 } from '../../../utils/uniform/u';
+import { Cache } from '../../../utils/cache/cache';
+interface Waypoint {
+    alt: number;
+    lat: number;
+    lon: number;
+    toa: number;
+}
+interface Mission {
+    id: number;
+    name: string;
+    description: string;
+    lead_id: number;
+    lead_path: Array<Waypoint>;
+    follower_ids: Array<number>;
+}
+interface Settings {
+    fg_enable: boolean;
+    trace_count: number;
+    lead_id: number;
+}
 
 @Component({
     selector: 'page-monitor',
@@ -30,21 +50,24 @@ import { UniformVec3 } from '../../../utils/uniform/u';
     templateUrl: 'monitor.html'
 })
 export class MonitorPage implements OnInit, OnDestroy {
-    planeMgrp: MarkerGroup = new MarkerGroup(Icon.Poly(16, Icon.polyPlaneVecs, Color.Blue, Color.Blue));
+    planeMgrp: MarkerGroup = new MarkerGroup(Icon.Poly(16, Icon.polyPlaneVecs, Color.Blue));
+    wpGrp: MarkerGroup = new MarkerGroup(Icon.Circle(16, Color.Purple));
     paths: Array<Path> = [];
     apiKey: string = env.mapKey;
-    fgEnabled: boolean = true;
+    settings: Settings = { fg_enable: true, trace_count: 50, lead_id: 0 };
     runningAirIds: Array<number> = [];
-    telemetries: Array<Telemetry> = [];
+    telemetries: Array<TelemetryInstance> = [];
     editableTelemetryIndices: Array<number> = [];
     telemetryFilter = (field: string) => {
         if (field.includes("home")) return false;
         if (["battery", "groundspeed", "name", "id"].includes(field)) return false;
         return true;
     }
-    missions: any = [];
-    selectedMission: any = null;
+    missions: Array<Mission> = [];
+    selectedMission?: Mission = undefined;
     nameRepr: Function = (o: any) => o.name;
+    idRepr: Function = (o: any) => `ID: ${o.id}`;
+    isSimulatorRunning: boolean = false;
     isLaunchEnabled: boolean = false;
     isSigLostEnabled: boolean = false;
     launchText: string = "Launch Mission";
@@ -57,9 +80,12 @@ export class MonitorPage implements OnInit, OnDestroy {
         u_camdown : new UniformVec3([0, -1, 0]),
         u_sundir  : new UniformVec3([1, 1, 1]),
     }
+    private websocket?: WebSocket;
+    private pointsCache: Cache<Array<Point>> = new Cache<Array<Point>>();
+    private colorsCache: Cache<Color> = new Cache<Color>();
     @ViewChild(WebGLShaderHostComponent) shaderHost?: WebGLShaderHostComponent;
     @ViewChild(OutboxComponent) outbox?: OutboxComponent;
-    private stateApis = ["br/health", "sim/health", "mission/health", "aircraft/running"];//, "algo/health"
+    private stateApis = ["br/health", "sim/health", "mission/health"];//, "algo/health"
     private listApis = ["mission/all", "mission/current"];
     private isFetchingListApis: OnceValue<boolean> = new OnceValue(false);
     private _rtos: RTOS = new RTOS({
@@ -70,8 +96,11 @@ export class MonitorPage implements OnInit, OnDestroy {
     });
     private popup: APICallback = (d: APIResponse) => alert(d.msg);
     private void: APICallback = () => {};
+    private isValidMission(m: any): boolean {
+        return m.hasOwnProperty("id") && m.hasOwnProperty("name") && m.hasOwnProperty("description") && m.hasOwnProperty("lead_id") && m.hasOwnProperty("lead_path") && m.hasOwnProperty("follower_ids");
+    }
     private fetchStates() { // runs every second
-        this.stateApis.forEach((api: string) => this.svc.callAPIWithCache(api));
+        this.stateApis.forEach((api: string) => this.svc.callAPIWithCache(api, undefined, this.void));
         this.svc.apiFlags.addName("algo/health"); // dummy, remove when implemented
         this.svc.apiFlags.set("algo/health"); // dummy
         this.svc.apiDataCache.set(this.svc.apiFlags.indexOf("algo/health"), { success: false, msg: "Not Implemented", data: {} }); // dummy
@@ -80,79 +109,102 @@ export class MonitorPage implements OnInit, OnDestroy {
         if (!this.outbox) return;
         this.outbox.clear("===== System Health =====\n");
         const bridge = this.svc.getAPIData("br/health");
-        this.outbox.append(`Bridge: ${bridge.success ? "Online" : "Offline"}`);
+        this.outbox.append(`Backend: ${bridge.success ? "Online" : "Offline"}`);
         const simulator = this.svc.getAPIData("sim/health");
         this.outbox.append(`Simulator: ${simulator.success ? "Running" : "Stopped"}`);
+        this.isSimulatorRunning = simulator.success;
         const algo = this.svc.getAPIData("algo/health");
         this.outbox.append(`Algorithm: ${algo.success ? "Running" : "Stopped"}`);
         const mission = this.svc.getAPIData("mission/health");
         const mstatus = mission.mission_status === "STOPPED" ? "SIGLOST" : mission.mission_status;
         this.outbox.append(`Mission: ${mstatus ? mstatus : "None"}`);
-        this.isSigLostEnabled = ["STARTED", "SIGLOST"].includes(mstatus); // mission must be running to enable sig loss
-        this.sigLossText = mstatus === "SIGLOST" ? "Resume Signal" : "Block Signal";
-        this.isLaunchEnabled = ["COMPLETED", "ERROR"].includes(mstatus);
-        this.launchText = this.isLaunchEnabled ? "Restart Mission" : "-";
-        const running = this.svc.getAPIData("aircraft/running");
-        if (running) this.runningAirIds = running.running_instances;
+        if (!simulator.success) { // simulator not running
+            this.isSigLostEnabled = false;
+            this.isLaunchEnabled = true; // can launch the simulator with a mission
+            this.launchText = "Launch Mission";
+            this.sigLossText = "Block Signal";
+            if (this.websocket !== undefined) {
+                this.websocket.close();
+                this.websocket = undefined;
+                this.selectedMission = undefined;
+                this.wpGrp.clearMarkers();
+                this.paths = [];
+            }
+        } else { // simulator running
+            this.launchText = this.isLaunchEnabled ? "Restart Mission" : "Launch Mission";
+            this.isLaunchEnabled = ["COMPLETED", "ERROR"].includes(mstatus); // mission has failed or completed
+            this.sigLossText = mstatus === "SIGLOST" ? "Resume Signal" : "Block Signal";
+            this.isSigLostEnabled = ["STARTED", "SIGLOST"].includes(mstatus); // mission has started or signal lost
+        }
         this.svc.unsetFlags(this.stateApis);
     }
     private onListData() {
         const missions = this.svc.getAPIData("mission/all");
         if (missions?.missions_config) this.missions = missions.missions_config;
         const current = this.svc.getAPIData("mission/current");
-        if (current) this.selectedMission = current;
-        console.log(current);
+        this.selectedMission = this.isValidMission(current) ? current : undefined;
+        if (this.selectedMission !== undefined) {
+            const leadPoints: Array<Point> = [];
+            this.wpGrp.clearMarkers();
+            this.selectedMission.lead_path.forEach((wp: Waypoint, idx: number) => {
+                const m = new Marker(wp.lat, wp.lon, idx);
+                m.alt = wp.alt;
+                this.wpGrp.updateMarker(m);
+                leadPoints.push(new Point(wp.lon, wp.lat));
+            });
+            const leadPath = new Path(-1); // avoid collision with actual path
+            leadPath.color = Color.Red;
+            leadPath.weight = 2;
+            leadPath.setPoints(leadPoints);
+            this.paths = [leadPath];
+            if (this.websocket === undefined) {
+                this.websocket = new WebSocket(env.wsUrl);
+                this.websocket.onmessage = (e: MessageEvent) => this.onTelemetry(e);
+                this.websocket.onclose = () => this.onSocketClosed();
+            }
+        }
         this.svc.unsetFlags(this.listApis);
     }
-    private telemetryTrigger(): boolean {
-        const fnames = this.svc.searchFlags("aircraft/get_telemetry");
-        if (fnames.length <= 0) return false;
-        return this.svc.testFlags(fnames);
-    }
-    private onTelemetry() {
-        const fnames = this.svc.searchFlags("aircraft/get_telemetry");
+    private onSocketClosed() {
+        this.editableTelemetryIndices = [];
         this.telemetries = [];
-        fnames.forEach((fname: string) => {
-            const tres = this.svc.getAPIData(fname) as TelemetryAPIResponse;
-            if (tres === undefined) return;
-            const id = parseInt(fname.replace("aircraft/get_telemetry", ""));
-            const t = new Telemetry(tres, id, `Plane ${id}`);
-            this.telemetries.push(t);
-        });
         this.planeMgrp.clearMarkers();
-        this.telemetries.forEach((t: Telemetry) => {
-            const m = new Marker(t.currLat, t.currLon, t.id, t.name);
-            m.alt = t.currAlt;
-            m.hdg = t.currHdg;
+        this.pointsCache.clear();
+    }
+    private onTelemetry(e: MessageEvent) {
+        this.telemetries = TelemetryInstance.fromAPIResponse(JSON.parse(e.data) as TelemetryAPIResponse);
+        this.planeMgrp.clearMarkers();
+        this.paths = [this.paths[0]]; // keep the lead path only
+        this.telemetries.forEach((t: TelemetryInstance) => {
+            const m = new Marker(t.lat, t.lon, t.id);
+            m.alt = t.alt;
+            m.hdg = t.hdg;
             this.planeMgrp.updateMarker(m);
-        });
-        if (this.selectedMission) {
-            const lead_id = this.selectedMission.lead_id;
-            this.planeMgrp.setColor(lead_id, Color.Red);
-            const lead_path_data = this.selectedMission.lead_path; // array of {alt lat lon toa}
-            const localPaths = [...this.paths];
-            this.paths = [];
-            let pathIdx = localPaths.findIndex((p: Path) => p.id === lead_id);
-            if (pathIdx >= 0) {
-                localPaths[pathIdx].clear();
-            } else {
-                localPaths.push(new Path(lead_id));
-                pathIdx = localPaths.length - 1;
+            if (!this.pointsCache.has(t.id)) {
+                this.pointsCache.set(t.id, []);
             }
-            localPaths[pathIdx].addPoints(lead_path_data.map((d: {alt: number, lat: number, lon: number}) => new Point(d.lat, d.lon)));
-            this.paths = [...localPaths];
+            const path = new Path(t.id);
+            const points = this.pointsCache.get(t.id);
+            points.push(new Point(t.lon, t.lat));
+            if (points.length > 50) points.shift(); // keep only last 50 points
+            if (!this.colorsCache.has(t.id)) {
+                this.colorsCache.set(t.id, Color.Random());
+            }
+            const c = this.colorsCache.get(t.id);
+            path.color = c;
+            path.weight = 1;
+            path.setPoints(this.pointsCache.get(t.id));
+            this.paths.push(path);
+        });
+        if (this.selectedMission !== undefined) {
+            this.planeMgrp.setColor(this.selectedMission.lead_id, Color.Red);
         }
-        this.svc.unsetFlags(fnames);
+        
     }
     constructor(private svc: AppService) {
         this._rtos.addTask(() => this.fetchStates(), {
             priority: 1, // low priority
             intervalMs: 1000,
-            missedPolicy: MissedDeadlinePolicy.RUN_ONCE,
-        });
-        this._rtos.addTask(() => this.runningAirIds?.forEach((id: number) => this.svc.callAPIWithCache(`aircraft/get_telemetry`, id)), {
-            priority: 2, // higher priority than fetchStates
-            intervalMs: 100,
             missedPolicy: MissedDeadlinePolicy.RUN_ONCE,
         });
         this._rtos.addTask(() => this.shaderHost?.drawFrame(), { // normal task
@@ -162,7 +214,6 @@ export class MonitorPage implements OnInit, OnDestroy {
         this._rtos.addInterrupt(() => this.svc.testFlags(this.stateApis), () => this.onStates());
         this._rtos.addInterrupt(() => this.isFetchingListApis.value, () => this.listApis.forEach((api: string) => this.svc.callAPIWithCache(api)));
         this._rtos.addInterrupt(() => this.svc.testFlags(this.listApis), () => this.onListData());
-        this._rtos.addInterrupt(() => this.telemetryTrigger(), () => this.onTelemetry(), 2); // higher priority
     }
     
     ngOnInit(): void {
@@ -173,38 +224,43 @@ export class MonitorPage implements OnInit, OnDestroy {
         this._rtos.stop();
         console.log("RTOS stopped");
         console.log(this._rtos.stats);
+        if (this.websocket !== undefined) {
+            this.websocket.close();
+        }
     }
     onPlaneSelected(indices: Array<number>) {
         this.editableTelemetryIndices = indices;
     }
-    onMissionSelected(event: any) {
+    onMissionSelected(event: Mission) {
         this.selectedMission = event;
-        console.log(this.selectedMission);
     }
-    onFgToggle(change: Change) {
-        this.fgEnabled = change.newValue;
-        this.svc.callAPI("sim/fgenable", this.popup, { fg_enable: this.fgEnabled });
-    }
-    onRefreshData() {
-        this.isFetchingListApis.reset();
+    onSettingsChanged(change: Change) {
+        console.log(change);
+        this.settings.fg_enable = change.newValue;
+        this.svc.callAPI("sim/fgenable", this.popup, { fg_enable: this.settings.fg_enable });
     }
     onLaunch() {
-        if (!this.selectedMission) {
+        if (this.selectedMission === undefined) {
             alert("Please select a mission first.");
             return;
         }
-        if (this.launchText.includes("Launch")) {
-            this.svc.callAPI("mission/start", this.popup, this.selectedMission.id);
-        } else {
-            this.svc.callAPI("mission/start", this.popup, this.selectedMission.id);
+        const popupAndReset = (d: APIResponse) => {
+            alert(d.msg);
+            this.isFetchingListApis.reset();
         }
+        if (this.launchText.includes("Launch")) {
+            this.svc.callAPI("mission/start", popupAndReset, this.selectedMission.id);
+        } else {
+            this.svc.callAPI("mission/start", popupAndReset, this.selectedMission.id);
+        }
+        this.isFetchingListApis.reset();
     }
     onSigLoss() {
         const isRunning = this.sigLossText.includes("Block");
         if (isRunning) {
-            this.svc.callAPI("mission/stop", this.popup);
+            this.svc.callAPI("mission/stop", (_) => alert("Signal blocked"));
         } else {
-            this.svc.callAPI("mission/start", this.popup, this.selectedMission.id);
+            this.svc.callAPI("mission/start", (_) => alert("Signal resumed"), this.selectedMission?.id);
         }
     }
     onStop() {
