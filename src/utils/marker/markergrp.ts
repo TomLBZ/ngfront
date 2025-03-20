@@ -52,6 +52,7 @@ export class MarkerGroup { // a marker layer
     }
     public clearMarkers(): void {
         this.markers = [];
+        this._colors.clear();
     }
     public updateMarker(m: Marker, rehash: boolean = false): void {
         const idx = this.markers.findIndex((marker) => marker.id === m.id);
