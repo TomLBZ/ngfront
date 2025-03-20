@@ -36,7 +36,7 @@ export class AppService {
     
     callAPI(op: string, next: APIDataCallback, data: any = {}, error: APIErrorCallback = console.error): void {
         this.uniPost(op, data).subscribe({
-            next: (d: any) => this.validAPIResponse(d) ? next(d.data ? d.data : d) : error(d),
+            next: (d: any) => this.validAPIResponse(d) ? next(d.data && d.success ? d.data : d) : error(d),
             error
         });
     }
