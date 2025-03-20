@@ -1,10 +1,14 @@
 <div class="p_full">
     <Output class="flexc p_full">
-        <span class="txt_hdg">{{title}}</span>
+        @if (title.length > 0) {
+            <div class="txt_hdg">{{title}}</div>
+        }
         <textarea 
-            class="flex grow bd_r5 bd_sng noresize px_minh100 ff_mono console"
+            class="flex grow bd_r5 bd_sng noresize zeromin ff_mono console"
             [disabled]="true" 
         >{{text}}</textarea>
-        <button class="pad5" (click)="clear()">Clear Output</button>
+        @if (clearable) {
+            <button class="pad5" (click)="clear()">Clear Output</button>
+        }
     </Output>    
 </div>

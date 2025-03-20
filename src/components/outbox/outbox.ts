@@ -8,6 +8,7 @@ import { Input, Component } from '@angular/core';
 export class OutboxComponent {
     @Input() text: string = '';
     @Input() title: string = 'Outbox';
+    @Input() clearable: boolean = true;
 
     clear(txt: string = "") {
         this.text = txt;
