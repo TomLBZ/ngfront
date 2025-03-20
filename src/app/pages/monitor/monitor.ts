@@ -36,9 +36,17 @@ interface Mission {
     follower_ids: Array<number>;
 }
 interface Settings {
-    fg_enable: boolean;
-    trace_count: number;
+    fgEnable: boolean;
+    traces: number;
     lead_id: number;
+}
+interface Status {
+    bridge: boolean;
+    simulator: boolean;
+    algo: boolean;
+    mstatus: string;
+    siglost: boolean;
+    mdone: boolean;
 }
 
 @Component({
