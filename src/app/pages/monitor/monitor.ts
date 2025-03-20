@@ -11,7 +11,6 @@ import { RTOS } from '../../../utils/rtos/rtos';
 import { MissedDeadlinePolicy } from '../../../utils/rtos/rtostypes';
 import { AppService } from '../../app.service';
 import { DropSelectComponent } from '../../../components/dropselect/dropselect';
-import { Change, ValueEditorComponent } from "../../../components/obj_editor/value_editor/value_editor";
 import { OnceValue } from '../../../utils/once/once';
 import { APICallback, APIResponse } from '../../../utils/api/api';
 import { TelemetryAPIResponse, TelemetryInstance } from '../../../utils/telemetry/telemetry';
@@ -53,7 +52,7 @@ interface Status {
     selector: 'page-monitor',
     imports: [
         MapViewComponent, OutboxComponent, 
-        DropSelectComponent, ValueEditorComponent, ObjEditorComponent
+        DropSelectComponent, ObjEditorComponent
     ],
     templateUrl: 'monitor.html'
 })

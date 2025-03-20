@@ -41,30 +41,43 @@
                 }
             </div>
         </div>
-        <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5">
-            <div class="flexc px_h50">
-                @if (isSimulatorRunning && selectedMission !== undefined) {
-                    <label class="ft_norm bold oblq txt_nowrap centtext">Current Mission:</label>
-                    <label class="ft_smlr oblq txt_nowrap centtext">{{selectedMission.name}}</label>
-                } @else {
-                    <dropselect class="pad5btm"
-                        [items]="missions"
-                        [title]="'Select Mission'"
-                        [representation]="nameRepr"
-                        [hoverMode]="true"
-                        (selectionChanged)="onMissionSelected($event)"
-                    ></dropselect>
-                }
+        @if (status.bridge) {
+            <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5">
+                <div class="flexc px_h50">
+                    @if (status.simulator && selectedMission !== undefined) {
+                        <label class="ft_norm bold oblq txt_nowrap centtext">Current Mission:</label>
+                        <label class="ft_smlr oblq txt_nowrap centtext">{{selectedMission.name}}</label>
+                    } @else {
+                        <dropselect class="pad5btm"
+                            [items]="missions"
+                            [title]="'Select Mission'"
+                            [representation]="nameRepr"
+                            [hoverMode]="true"
+                            (selectionChanged)="onMissionSelected($event)"
+                        ></dropselect>
+                    }
+                </div>
+                <obj-editor class="zeromin px_maxh90 pad10lft pad10rht"
+                    [objToEdit]="settings"
+                    [readOnly]="selectedMission === undefined"
+                    [defaultExpanded]="true"
+                    [objName]="'Launch Settings'"
+                    [autoApply]="true"
+                    [textEnabled]="false"
+                    (applied)="onSettingsChanged($event)"
+                ></obj-editor>
+                <div class="flex p_fullw justarnd pad5h">
+                    <button class="p_halfw mar5rht pad5v" [disabled]="status.simulator && !status.mdone" (click)="onLaunch()">{{status.mdone ? "Restart" : "Launch"}}</button>
+                    <button class="p_halfw mar5rht pad5v" (click)="onStop()">Stop</button>
+                </div>
+                <button class="pad5 mar5" [disabled]="!status.siglost" (click)="onSigLoss()">{{status.siglost && status.mstatus === "SIGLOST" ? "Resume Link" : "Block Link"}}</button>
             </div>
-            <value-editor class="pad10lft pad10rht"
-                [itemName]="'Enable FlightGear'"
-                [itemToEdit]="settings"
-                (itemChanged)="onSettingsChanged($event)"
-            ></value-editor>
-            <button class="pad5 mar5" [disabled]="!isLaunchEnabled" (click)="onLaunch()">{{launchText}}</button>
-            <button class="pad5 mar5" [disabled]="!isSigLostEnabled" (click)="onSigLoss()">{{sigLossText}}</button>
-            <button class="pad5 mar5" (click)="onStop()">Stop</button>
-        </div>
-        <outbox class="px_h200 bd_r5 bd_dbl bdc_tint"></outbox>
+        } @else {
+            <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5 c_dtint bold ft_huge centcont justcent">
+                <span>[Unavailable]</span>
+                <span>Backend Offline</span>
+            </div>
+        }
+        <outbox class="px_h90 bd_r5 bd_dbl bdc_tint" [clearable]="false" title=""></outbox>
     </div>    
 </div>
