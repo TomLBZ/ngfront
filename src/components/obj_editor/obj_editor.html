@@ -1,10 +1,11 @@
-<div class="p_full">
-    <div class="flexc centcont justends bd_r5 p_full"
+<div class="p_full zeromin">
+    <div class="flexc centcont justends bd_r5 p_full zeromin"
         [class.bd_dsh]="showBorder"
     >
         @if (objToEdit) {
-            <div class="flex p_fullw"
-                [style.height]="readOnly ? '100%' : 'calc(100% - 30px)'"
+            @let btmStripShown = !readOnly && (textEnabled || !autoApply);
+            <div class="flex p_full zeromin"
+                [style.height]="btmStripShown ? 'calc(100% - 30px)' : '100%'"
             >
                 @let textBoxShown = textMode && !readOnly;
                 <div class="p_fullh"
@@ -30,16 +31,18 @@
                     ></textarea>
                 }
             </div>
-            @if (!readOnly) {
+            @if (btmStripShown) {
                 <div class="flex centcont justarnd pad5 p_fullw px_h30 bgc_lgrey">
-                    <Label class="noselect cs_ptr ft_smal flex centcont">
-                        <input
-                            type="checkbox"
-                            [checked]="textMode"
-                            (change)="toggleText()"
-                        >
-                        Json
-                    </Label>
+                    @if (textEnabled) {
+                        <Label class="noselect cs_ptr ft_smal flex centcont">
+                            <input
+                                type="checkbox"
+                                [checked]="textMode"
+                                (change)="toggleText()"
+                            >
+                            Json
+                        </Label>
+                    }
                     @if (!autoApply) {
                         <button class="px_minw50 pad5" (click)="reset()">Reset</button>
                         <button class="px_minw50 pad5" (click)="apply()">Apply</button>

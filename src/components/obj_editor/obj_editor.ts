@@ -25,7 +25,8 @@ export class cloneable {
   templateUrl: './obj_editor.html'
 })
 export class ObjEditorComponent {
-    @Input() textMode: boolean = true;
+    @Input() textEnabled: boolean = true;
+    @Input() textMode: boolean = false;
     @Input() objName: string = 'Object';
     @Input() readOnly: boolean = false;
     @Input() defaultExpanded: boolean = false;
