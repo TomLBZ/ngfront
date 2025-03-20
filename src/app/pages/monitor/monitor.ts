@@ -225,15 +225,27 @@ export class MonitorPage implements OnInit, OnDestroy {
         }
     }
     onPlaneSelected(indices: Array<number>) {
-        this.editableTelemetryIndices = indices;
+        this.visibleTelemetryIndices = indices;
     }
     onMissionSelected(event: Mission) {
         this.selectedMission = event;
     }
-    onSettingsChanged(change: Change) {
-        console.log(change);
-        this.settings.fg_enable = change.newValue;
-        this.svc.callAPI("sim/fgenable", this.popup, { fg_enable: this.settings.fg_enable });
+    onSettingsChanged(newSettings: Settings) {
+        if (newSettings.traces !== this.settings.traces) {
+            this.settings.traces = Math.max(1, newSettings.traces);
+        }
+        if (newSettings.fgEnable !== this.settings.fgEnable) {
+            this.svc.callAPI("sim/fgenable", (d: APIResponse) => {
+                if (d.success) this.settings.fgEnable = newSettings.fgEnable;
+                else alert(d.msg);
+            }, { fg_enable: newSettings.fgEnable }, this.popup);
+        }
+        if (newSettings.lead_id !== this.settings.lead_id) {
+            this.svc.callAPI("mission/changelead", (d: APIResponse) => {
+                if (d.success) this.settings.lead_id = newSettings.lead_id;
+                else alert(d.msg);
+            },  newSettings.lead_id, this.popup);
+        }
     }
     onLaunch() {
         if (this.selectedMission === undefined) {
@@ -244,19 +256,14 @@ export class MonitorPage implements OnInit, OnDestroy {
             alert(d.msg);
             this.isFetchingListApis.reset();
         }
-        if (this.launchText.includes("Launch")) {
-            this.svc.callAPI("mission/start", popupAndReset, this.selectedMission.id);
-        } else {
-            this.svc.callAPI("mission/start", popupAndReset, this.selectedMission.id);
-        }
+        this.svc.callAPI("mission/start", popupAndReset, this.selectedMission.id);
         this.isFetchingListApis.reset();
     }
     onSigLoss() {
-        const isRunning = this.sigLossText.includes("Block");
-        if (isRunning) {
-            this.svc.callAPI("mission/stop", (_) => alert("Signal blocked"));
-        } else {
+        if (this.status.siglost && this.status.mstatus === "SIGLOST" ) {
             this.svc.callAPI("mission/start", (_) => alert("Signal resumed"), this.selectedMission?.id);
+        } else {
+            this.svc.callAPI("mission/stop", (_) => alert("Signal blocked"));
         }
     }
     onStop() {
