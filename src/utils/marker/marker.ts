@@ -2,7 +2,7 @@ import { Hash } from "../hash/hash";
 import { IPoint } from "../point/point";
 
 export class Marker implements IPoint { // a single marker
-    private static _instCount: number = 0;
+    private static _maxId: number = 0;
     public id: number;
     public hdg: number = 0; // hdg 0~360, lng -180~180, lat -90~90
     public alt: number = 0; // alt in the thousands, flags in the tens, id in the units
@@ -31,7 +31,12 @@ export class Marker implements IPoint { // a single marker
         return Math.sqrt((this.lng - point.x) ** 2 + (this.lat - point.y) ** 2);
     }
     constructor(public lat: number, public lng: number, id?: number, name?: string) {
-        this.id = id === undefined ? Marker._instCount++ : id;
+        if (id === undefined) {
+            this.id = Marker._maxId++; // assign and increment
+        } else {
+            this.id = id; // assign given id
+            if (id >= Marker._maxId) Marker._maxId = id + 1; // skip over given id if necessary
+        }
         this._name = name === undefined ? "" : name;
     }
     public clone(rehash: boolean = false): Marker {
