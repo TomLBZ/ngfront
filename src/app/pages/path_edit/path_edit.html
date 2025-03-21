@@ -2,7 +2,7 @@
     <div class="flexc grow">
         <mapview class="flex grow bd_dbl bdc_tint bd_r5"
             [markerGroups]="markerGroups"
-            [paths]="currentMission.paths"
+            [paths]="paths"
             [apiKey]="apiKey"
             [mapStyles]="['topo-v2', 'satellite', 'bright-v2']"
             [mapStyle]="'topo-v2'"
@@ -14,6 +14,24 @@
         ></mapview>    
         <div class="flex px_h300">
             <div class="flexc p_halfw bd_dbl bdc_tint bd_r5 pad10h">
+                <dropselect #ms class="pad5btm"
+                    [items]="missions"
+                    [title]="'Select Mission'"
+                    [representation]="nameRepr"
+                    [hoverMode]="true"
+                    [indexMode]="true"
+                    (selectionChanged)="onMissionSelected($event)"
+                ></dropselect>
+                <span class="ft_norm bold oblq txt_nowrap centtext">Current Mission:</span>
+                <span class="ft_smlr oblq txt_nowrap centtext">{{selectedMission.name}}</span>
+                <div class="flex p_fullw justarnd pad5v">
+                    <button class="p_halfw mar5rht pad5v" [disabled]="selectedMissionIndex < 0" (click)="onMissionDeleted()">Delete Mission</button>
+                    <button class="p_halfw mar5lft pad5v" [disabled]="selectedMissionIndex < 0" (click)="onMissionNew()">New Mission</button>
+                </div>
+                <span class="pad5top ft_smlr centtext">Edit Mission on the right, then click the button below.</span>
+                <button class="pad5 mar5" (click)="onMissionApply()">Create / Update Mission</button>
+            </div>
+            <div class="p_halfw bd_dbl bdc_tint bd_r5">
                 <obj-editor class="flex bdc_tint bd_r5 bd_sng"
                     [objToEdit]="leader"
                     [objName]="'Leader Plane:'"
@@ -21,23 +39,21 @@
                 ></obj-editor>
                 <dropselect #ds class="flex pad5btm"
                     [items]="nonleaders"
-                    [title]="'Mission ' + (currentMission.lead_id < 0 ? 'Leader' : 'Followers')"
+                    [title]="'Mission ' + (selectedMission.lead_id < 0 ? 'Leader' : 'Followers')"
                     [hoverMode]="true"
-                    [multiSelect]="currentMission.lead_id >= 0"
+                    [multiSelect]="selectedMission.lead_id >= 0"
                     [representation]="planeRepr"
                     (selectionChanged)="onPlaneSelected($event)"
                 ></dropselect>
                 <obj-editor class="flex grow bdc_tint bd_r5 bd_sng"
-                    [objToEdit]="currentMission"
+                    [objToEdit]="selectedMission"
                     [objName]="'Mission Parameters'"
-                    [textMode]="false"
+                    [textEnabled]="false"
+                    [autoApply]="true"
                     [includeFilter]="mFieldsFilter"
                     [defaultExpanded]="true"
                     (updated)="onMissionUpdate($event)"
                 ></obj-editor>
-            </div>
-            <div class="p_halfw bd_dbl bdc_tint bd_r5">
-
             </div>
         </div>
     </div>
