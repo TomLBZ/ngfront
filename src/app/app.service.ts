@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { env } from './app.config';
-import { APIDataCallback, APIErrorCallback } from '../utils/api/api';
+import { APICallback, APIAnyCallback, APIResponse } from '../utils/api/api';
 import { Cache } from '../utils/cache/cache';
 import { Flag } from '../utils/flag/flag';
 
@@ -11,7 +11,7 @@ import { Flag } from '../utils/flag/flag';
 })
 export class AppService {
     private apiUrl = env.apiUrl;
-    apiDataCache: Cache<any> = new Cache<any>();
+    apiDataCache: Cache<APIResponse> = new Cache<APIResponse>();
     apiFlags: Flag = new Flag([]);
     constructor(private http: HttpClient) {}
 
@@ -23,7 +23,7 @@ export class AppService {
         return this.http.get(`${this.apiUrl}`);
     }
 
-    call(op: string, next: APIDataCallback, data: any = {}, error: APIErrorCallback = console.error): void {
+    call(op: string, next: APIAnyCallback, data: any = {}, error: APIAnyCallback = console.error): void {
         this.uniPost(op, data).subscribe({
             next,
             error
@@ -34,27 +34,27 @@ export class AppService {
         return d.hasOwnProperty("success") && d.hasOwnProperty("msg") && d.hasOwnProperty("data");
     }
     
-    callAPI(op: string, next: APIDataCallback, data: any = {}, error: APIErrorCallback = console.error): void {
+    callAPI(op: string, next: APICallback, data: any = {}, error: APIAnyCallback = console.error): void {
         this.uniPost(op, data).subscribe({
-            next: (d: any) => this.validAPIResponse(d) ? next(d.data && d.success ? d.data : d) : error(d),
+            next: (d: any) => this.validAPIResponse(d) ? next(d) : error(d),
             error
         });
     }
 
-    callAPIWithCache(op: string, data: any = undefined, error: APIErrorCallback = console.error): void {
+    callAPIWithCache(op: string, data: any = undefined, error: APIAnyCallback = console.error): void {
         const dataStr = data !== undefined ? JSON.stringify(data) : "";
         const fname = op + dataStr; // name to be used for flags
         if (this.apiFlags.indexOf(fname) < 0) { // not in flags
             this.apiFlags.addName(fname);
         }
         if (this.apiFlags.get(fname)) return; // already called
-        this.callAPI(op, (d: any) => {
+        this.callAPI(op, (d: APIResponse) => {
             this.apiDataCache.set(this.apiFlags.indexOf(fname), d);
             this.apiFlags.set(fname);
         }, data, error);
     }
 
-    getAPIData(op: string) {
+    getAPIData(op: string): APIResponse {
         return this.apiDataCache.get(this.apiFlags.indexOf(op));
     }
 
