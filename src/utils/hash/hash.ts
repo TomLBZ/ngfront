@@ -9,20 +9,15 @@ export class Hash {
 
     public static mode: HashMode = HashMode.PrimeHash;
 
-    public static smallNotation(n: number) {
-        if (n === 0) return 0;
-        if (n < 0) n = -1 / n;
-        const lg = Math.log10(n);
-        const lgn = (isNaN(lg) || !isFinite(lg)) ? Math.random() : lg;
-        const exponent = Math.floor(lgn) + 1;
-        const mantissa = n / Math.pow(10, exponent); // mantissa < 1
-        return exponent + mantissa; // a decimal number with the exponent as the integer part
+    public static nToFrac(n: number) {
+        const mapped = n >= 0 ? (n + 2) / (n + 1) : 1 / (-n + 1); // map positive numbers to (1, 2), 0 to 1, negative numbers to (0, 1)
+        return mapped / 2; // negative -> (0, 0.5), 0 -> 0.5, positive -> (0.5, 1)
     }
 
     private static primeHash(features: number[]): number {
         const len = features.length;
         const primes = Prime.getN(len);
-        const hash = features.reduce((acc, val, idx) => acc * Math.pow(primes[idx], Hash.smallNotation(val)), 1);
+        const hash = features.reduce((acc, val, idx) => acc * Math.pow(primes[idx], Hash.nToFrac(val)), 1);
         return hash;
     }
 
