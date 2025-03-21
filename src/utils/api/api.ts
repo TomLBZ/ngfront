@@ -5,5 +5,4 @@ export interface APIResponse {
 }
 
 export type APICallback = (d: APIResponse) => void;
-export type APIErrorCallback = (e: any) => void;
-export type APIDataCallback = (d: any) => void;
+export type APIAnyCallback = (a: any) => void;
