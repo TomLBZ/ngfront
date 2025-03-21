@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { env } from './app.config';
-import { APICallback, APIAnyCallback, APIResponse } from '../utils/api/api';
+import { APICallback, APIAnyCallback, APIResponse } from './app.interface';
 import { Cache } from '../utils/cache/cache';
 import { Flag } from '../utils/flag/flag';
 
