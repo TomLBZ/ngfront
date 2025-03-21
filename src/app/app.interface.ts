@@ -20,6 +20,18 @@ export interface Mission {
     lead_path: Array<Waypoint>;
     follower_ids: Array<number>;
 }
+export interface StartPos {
+    lat: number;
+    lon: number;
+    alt: number;
+    hdg: number;
+}
+export interface Aircraft {
+    id: number;
+    aircraft_type: number;
+    name: string;
+    start_pos: StartPos;
+}
 export interface Telemetry {
     id: number;
     roll: number;
