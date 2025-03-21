@@ -2,7 +2,7 @@
     <div class="flexc p_4pentaw">
             <!-- [projection]="'globe'" -->
         <mapview class="p_4pentah bd_r5 bd_dbl bdc_tint"
-            [markerGroups]="[wpGrp, planeMgrp]"
+            [markerGroups]="markerGroups"
             [paths]="paths"
             [apiKey]="apiKey"
             [mapStyles]="['topo-v2', 'satellite']"
@@ -51,19 +51,28 @@
                         ></dropselect>
                     }
                 </div>
-                <obj-editor class="zeromin px_maxh90 pad10lft pad10rht"
-                    [objToEdit]="settings"
+                <obj-editor class="zeromin px_maxh90 pad10h"
+                    [objToEdit]="launchSettings"
                     [readOnly]="selectedMission === undefined"
                     [defaultExpanded]="true"
                     [objName]="'Launch Settings'"
                     [autoApply]="true"
                     [textEnabled]="false"
-                    (applied)="onSettingsChanged($event)"
+                    (applied)="onLaunchSettingsChanged($event)"
                 ></obj-editor>
                 <div class="flex p_fullw justarnd pad5h">
                     <button class="p_halfw mar5rht pad5v" [disabled]="(status.simulator && !status.mdone) || selectedMission === undefined" (click)="onLaunch()">{{status.simulator && status.mdone ? "Restart" : "Launch"}}</button>
-                    <button class="p_halfw mar5rht pad5v" [disabled]="!status.simulator" (click)="onStop()">Stop</button>
+                    <button class="p_halfw mar5lft pad5v" [disabled]="!status.simulator" (click)="onStop()">Stop</button>
                 </div>
+                <obj-editor class="zeromin px_maxh90 pad10h pad10top"
+                    [objToEdit]="runtimeSettings"
+                    [readOnly]="!status.simulator || !status.mrun"
+                    [defaultExpanded]="true"
+                    [objName]="'Runtime Settings'"
+                    [autoApply]="true"
+                    [textEnabled]="false"
+                    (applied)="onRuntimeSettingsChanged($event)"
+                ></obj-editor>
                 @let isSigLost = status.simulator && status.mrun && status.mstatus === "SIGLOST";
                 <button class="pad5 mar5" [disabled]="!status.simulator || !status.mrun" (click)="onSigLoss(isSigLost)">{{isSigLost ? "Resume Link" : "Block Link"}}</button>
             </div>
