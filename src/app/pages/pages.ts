@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { RouterModule, RouterOutlet } from '@angular/router';
 
 @Component({
@@ -8,6 +8,9 @@ import { RouterModule, RouterOutlet } from '@angular/router';
     templateUrl: './pages.html'
 })
 export class PagesComponent implements OnInit {
+    @Input() title = 'frontend';
+    @Input() showLogin = false;
+    @Input() showHelp = false;
     tabs = [
         // {label: 'Playground', path: 'playground'},
         // {label: 'Object Editing', path: 'object-editing'},
@@ -30,7 +33,7 @@ export class PagesComponent implements OnInit {
         const path = window.location.pathname;
         this.selectedTabPath = path.split('/').pop() as any;
     }
-    showHelp() {
+    onHelp() {
         alert(this.helpStrMultiline);
     }
     logOut() {

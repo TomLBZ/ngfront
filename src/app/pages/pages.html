@@ -2,12 +2,12 @@
     <header class="flex justends centcont bgc_tint sh5_tint pad10 px_h40">
         <div class="flex centcont justcent">
             <img src="assets/boxcross.svg" alt="logo" class="px_h30 px_w30">
-            <span class="ft_larg bold pad10lft">Template</span>
+            <span class="ft_larg bold pad10lft">{{title}}</span>
         </div>
         <div class="flex centcont justcent">
-            <button class="px_minw50 pad5" (click)="showHelp()">Help</button>
+            <button class="px_minw50 pad5" [hidden]="!showHelp" (click)="onHelp()">Help</button>
             <div class="px_minw10"></div>
-            <button class="px_minw50 pad5" (click)="logOut()">Logout</button>
+            <button class="px_minw50 pad5" [hidden]="!showLogin" (click)="logOut()">Logout</button>
         </div>
     </header>
       
