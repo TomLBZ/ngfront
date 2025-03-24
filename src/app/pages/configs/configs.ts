@@ -1,24 +1,7 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { AppService } from "../../app.service";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
-
-interface RawFileConfig {
-    id: number;
-    name: string;
-    description: string;
-    type: {
-        file_type: string;
-        airframe_type: number | null;
-    }
-}
-
-interface DownloadConfig {
-    id: number;
-    type: {
-        file_type: string;
-        airframe_type: number | null;
-    }
-}
+import { RawFileConfig, DownloadConfig } from "../../app.interface";
 
 interface FileConfig {
     id: number;
