@@ -49,8 +49,10 @@ export class AppService {
         }
         if (this.apiFlags.get(fname)) return; // already called
         this.callAPI(op, (d: APIResponse) => {
-            this.apiDataCache.set(this.apiFlags.indexOf(fname), d);
-            this.apiFlags.set(fname);
+            if (d.success) {
+                this.apiDataCache.set(this.apiFlags.indexOf(fname), d);
+                this.apiFlags.set(fname);
+            } else error(d);
         }, data, error);
     }
 
