@@ -50,3 +50,19 @@ export interface Telemetry {
 export interface Telemetries {
     [key: number]: Telemetry;
 }
+export interface RawFileConfig {
+    id: number;
+    name: string;
+    description: string;
+    type: {
+        file_type: string;
+        airframe_type: number | null;
+    }
+}
+export interface DownloadConfig {
+    id: number;
+    type: {
+        file_type: string;
+        airframe_type: number | null;
+    }
+}
