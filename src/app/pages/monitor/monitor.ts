@@ -99,6 +99,8 @@ export class MonitorPage implements OnInit, OnDestroy {
         this._mpath.clear(); // clear lead path
     }
     private onTelemetry(e: MessageEvent) {
+        if (!this._health.sim) return; // skip when simulator is offline
+        if (this._health.mstatus === "EXITED") return; // skip when mission is not running
         const telemetries: Telemetries = e.data !== null && e.data !== undefined ? JSON.parse(e.data) as Telemetries : {} as Telemetries;
         this.telemetries = [];
         Object.entries(telemetries).forEach(([k, v]: [string, Telemetry]) => {
@@ -119,7 +121,9 @@ export class MonitorPage implements OnInit, OnDestroy {
             }
             const path = new Path(t.id);
             const points = this._planePtsCache.get(t.id);
-            points.push(new Point(t.lon, t.lat));
+            const last = points.length > 0 ? points[points.length - 1] : undefined;
+            const newp = new Point(t.lon, t.lat);
+            if (last === undefined || !last.equals(newp)) points.push(newp); // add new point if it's different from the last
             if (points.length > this.runtimeSettings.traces) points.splice(0, points.length - this.runtimeSettings.traces); // remove oldest points
             if (!this._colorsCache.has(t.id)) {
                 this._colorsCache.set(t.id, Color.Random());
@@ -208,7 +212,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             leadPoints.push(new Point(wp.lon, wp.lat));
         });
         this._mpath.setPoints(leadPoints); // set lead path
-        this.runtimeSettings.lead_id = m.lead_id; // set lead id
+        this.runtimeSettings = { traces: 50, lead_id: m.lead_id }; // reset runtime settings
     }
     onLaunchSettingsChanged(newSettings: LaunchSettings) {
         if (newSettings.fgEnable !== this.launchSettings.fgEnable) {
