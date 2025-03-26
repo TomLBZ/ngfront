@@ -5,6 +5,7 @@ export interface IPoint {
     y: number;
     hash: number;
     distanceTo(point: IPoint): number;
+    equals(point: IPoint): boolean;
 }
 
 export class Point implements IPoint {
@@ -19,5 +20,8 @@ export class Point implements IPoint {
     }
     public get hash(): number {
         return Hash.hash([this.x, this.y]);
+    }
+    public equals(point: Point): boolean {
+        return this.x === point.x && this.y === point.y;
     }
 }

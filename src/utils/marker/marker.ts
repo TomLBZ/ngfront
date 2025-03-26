@@ -30,6 +30,9 @@ export class Marker implements IPoint { // a single marker
     distanceTo(point: IPoint): number {
         return Math.sqrt((this.lng - point.x) ** 2 + (this.lat - point.y) ** 2);
     }
+    equals(point: Marker): boolean {
+        return this.hash === point.hash;
+    }
     constructor(public lat: number, public lng: number, id?: number, name?: string) {
         if (id === undefined) {
             this.id = Marker._maxId++; // assign and increment
