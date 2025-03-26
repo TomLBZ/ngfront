@@ -1,11 +1,13 @@
+export type APICallback = (d: APIResponse) => void;
+export type APIAnyCallback = (a: any) => void;
+export type UniResponseType = 'json' | 'blob'; // | 'text' | 'arraybuffer' are not supported yet
+export type FormDataEntry = { name: string, value: FormDataEntryValue };
+
 export interface APIResponse {
     "success": boolean;
     "msg": string;
     "data": any;
 }
-export type APICallback = (d: APIResponse) => void;
-export type APIAnyCallback = (a: any) => void;
-
 export interface Waypoint {
     alt: number;
     lat: number;
@@ -61,8 +63,10 @@ export interface RawFileConfig {
 }
 export interface DownloadConfig {
     id: number;
-    type: {
-        file_type: string;
-        airframe_type: number | null;
-    }
+    file_type: string;
+    airframe_type: number;
+}
+export interface UploadConfig {
+    file_type: string;
+    airframe_type: number;
 }
