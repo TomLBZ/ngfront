@@ -2,79 +2,55 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { env } from './app.config';
-import { APICallback, APIAnyCallback, APIResponse } from './app.interface';
-import { Cache } from '../utils/cache/cache';
-import { Flag } from '../utils/flag/flag';
+import { APICallback, APIAnyCallback, UniResponseType, FormDataEntry } from './app.interface';
+import { StructValidator } from '../utils/api/validate';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppService {
     private apiUrl = env.apiUrl;
-    apiDataCache: Cache<APIResponse> = new Cache<APIResponse>();
-    apiFlags: Flag = new Flag([]);
     constructor(private http: HttpClient) {}
 
-    uniPost(op: string, payload: any): Observable<any> {
-        return this.http.post(`${this.apiUrl}/uniPost`, { op: op, data: payload });
+    uniPost(op: string, payload: any, responseType: UniResponseType, ...formData: FormDataEntry[]): Observable<any> {
+        const options: any = {};
+        if (responseType === 'blob') { // blob
+            options['responseType'] = responseType;
+            options['observe'] = 'response';
+        }
+        if (formData.length > 0) { // multipart/form-data
+            const formDataObj = new FormData();
+            const formObj: any = {}; // {key: value}
+            const fileObj: any = {}; // {filename: File}
+            for (const fd of formData) {
+                if (fd.value instanceof File) fileObj[fd.value.name] = fd.value;
+                else formObj[fd.name] = fd.value;
+            }
+            const fileCount = Object.keys(fileObj).length;
+            if (fileCount > 1) {
+                for (const k in fileObj) {
+                    formDataObj.append('files', fileObj[k], k); // append multiple files as 'files'
+                }
+            } else if (fileCount > 0) {
+                const k = Object.keys(fileObj)[0];
+                formDataObj.append('file', fileObj[k], k); // append single file as 'file'
+            }
+            formDataObj.append('op', op);
+            formDataObj.append('data', JSON.stringify(payload));
+            return this.http.post(`${this.apiUrl}/uniPostMultipart`, formDataObj, options);
+        } else { // application/json
+            return this.http.post(`${this.apiUrl}/uniPostJson`, {op: op, data: payload}, options);
+        }
     }
 
     rootGet(): Observable<any> {
         return this.http.get(`${this.apiUrl}`);
     }
-
-    call(op: string, next: APIAnyCallback, data: any = {}, error: APIAnyCallback = console.error): void {
-        this.uniPost(op, data).subscribe({
-            next,
-            error
-        });
-    }
-
-    private validAPIResponse(d: any): boolean {
-        return d.hasOwnProperty("success") && d.hasOwnProperty("msg") && d.hasOwnProperty("data");
-    }
     
-    callAPI(op: string, next: APICallback, data: any = {}, error: APIAnyCallback = console.error): void {
-        this.uniPost(op, data).subscribe({
-            next: (d: any) => this.validAPIResponse(d) ? next(d) : error(d),
+    callJsonAPI(op: string, next: APICallback, data: any = {}, error: APIAnyCallback = console.error): void {
+        this.uniPost(op, data, 'json').subscribe({
+            next: (d: any) => StructValidator.hasFields(d, ['success', 'msg', 'data']) ? next(d) : error(d),
             error
         });
-    }
-
-    callAPIWithCache(op: string, data: any = undefined, error: APIAnyCallback = console.error): void {
-        const dataStr = data !== undefined ? JSON.stringify(data) : "";
-        const fname = op + dataStr; // name to be used for flags
-        if (this.apiFlags.indexOf(fname) < 0) { // not in flags
-            this.apiFlags.addName(fname);
-        }
-        if (this.apiFlags.get(fname)) return; // already called
-        this.callAPI(op, (d: APIResponse) => {
-            if (d.success) {
-                this.apiDataCache.set(this.apiFlags.indexOf(fname), d);
-                this.apiFlags.set(fname);
-            } else error(d);
-        }, data, error);
-    }
-
-    getAPIData(op: string): APIResponse {
-        return this.apiDataCache.get(this.apiFlags.indexOf(op));
-    }
-
-    unsetFlags(ops: Array<string>) {
-        for (const op of ops) {
-            this.apiFlags.clear(op);
-        }
-    }
-
-    testFlags(ops: Array<string>) {
-        let b = true;
-        for (const op of ops) {
-            b = b && this.apiFlags.get(op);
-        }
-        return b;
-    }
-
-    searchFlags(searchStr: string): Array<string> {
-        return this.apiFlags.searchNames(searchStr);
     }
 }
