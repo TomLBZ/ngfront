@@ -109,7 +109,6 @@ export class MonitorPage implements OnInit, OnDestroy {
             this.telemetries.push(v);
         });
         if (this.telemetries.length === 0) return;
-        this._planeMgrp.clearMarkers(); // clear all plane markers
         this._ppaths.splice(0, this._ppaths.length); // clear old plane paths
         this.telemetries.forEach((t: Telemetry) => {
             const m = new Marker(t.lat, t.lon, t.id);
