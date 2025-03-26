@@ -35,12 +35,12 @@
                 }
             </div>
         </div>
-        @if (status.bridge) {
+        @if (online) {
             <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5">
                 <div class="flexc px_h50">
-                    @if (status.simulator && selectedMission !== undefined) {
+                    @if (stoppable) {
                         <span class="ft_norm bold oblq txt_nowrap centtext">Current Mission:</span>
-                        <span class="ft_smlr oblq txt_nowrap centtext">{{selectedMission.name}}</span>
+                        <span class="ft_smlr oblq txt_nowrap centtext">{{selectedMission?.name}}</span>
                     } @else {
                         <dropselect class="pad5btm"
                             [items]="missions"
@@ -61,20 +61,20 @@
                     (applied)="onLaunchSettingsChanged($event)"
                 ></obj-editor>
                 <div class="flex p_fullw justarnd pad5h">
-                    <button class="p_halfw mar5rht pad5v" [disabled]="(status.simulator && !status.mdone) || selectedMission === undefined" (click)="onLaunch()">{{status.simulator && status.mdone ? "Restart" : "Launch"}}</button>
-                    <button class="p_halfw mar5lft pad5v" [disabled]="!status.simulator" (click)="onStop()">Stop</button>
+                    <button class="p_halfw mar5rht pad5v" [disabled]="!launchable" (click)="onLaunch()">{{restartable ? "Restart" : "Launch"}}</button>
+                    <button class="p_halfw mar5lft pad5v" [disabled]="!stoppable" (click)="onStop()">Stop</button>
                 </div>
-                <obj-editor class="zeromin px_maxh90 pad10h pad10top"
+                <obj-editor class="zeromin px_maxh90 pad10h pad10top errhost"
+                    [class.err]="!allPlaneIds.includes(runtimeSettings.lead_id)"
                     [objToEdit]="runtimeSettings"
-                    [readOnly]="!status.simulator || !status.mrun"
+                    [readOnly]="!running"
                     [defaultExpanded]="true"
                     [objName]="'Runtime Settings'"
                     [autoApply]="true"
                     [textEnabled]="false"
                     (applied)="onRuntimeSettingsChanged($event)"
                 ></obj-editor>
-                @let isSigLost = status.simulator && status.mrun && status.mstatus === "SIGLOST";
-                <button class="pad5 mar5" [disabled]="!status.simulator || !status.mrun" (click)="onSigLoss(isSigLost)">{{isSigLost ? "Resume Link" : "Block Link"}}</button>
+                <button class="pad5 mar5" [disabled]="!(pausable || resumable)" (click)="onSigLoss(resumable)">{{resumable ? "Resume Link" : "Block Link"}}</button>
             </div>
         } @else {
             <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5 c_dtint bold ft_huge centcont justcent">
@@ -82,6 +82,6 @@
                 <span>Backend Offline</span>
             </div>
         }
-        <outbox class="px_h90 bd_r5 bd_dbl bdc_tint" [clearable]="false" title=""></outbox>
+        <outbox class="px_h90 bd_r5 bd_dbl bdc_tint" [clearable]="false" title="" [text]="healthStr"></outbox>
     </div>    
 </div>
