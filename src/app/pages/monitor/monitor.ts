@@ -38,7 +38,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     private readonly _wpGrp: MarkerGroup = new MarkerGroup(Icon.Circle(16, Color.Magenta));
     private readonly _mpath: Path = new Path(-1);
     private readonly _ppaths: Array<Path> = [];
-    private readonly _pathPtsCache: Cache<Array<Point>> = new Cache<Array<Point>>();
+    private readonly _planePtsCache: Cache<Array<Point>> = new Cache<Array<Point>>();
     private readonly _colorsCache: Cache<Color> = new Cache<Color>();
     private readonly _rtos: RTOS = new RTOS({
         cycleIntervalMs: 100,
@@ -87,12 +87,16 @@ export class MonitorPage implements OnInit, OnDestroy {
     private isValidTelemetry(t: Telemetry): boolean {
         return StructValidator.hasNonEmptyFields(t, ["roll", "pitch", "yaw", "lat", "lon", "alt", "hdg", "agl", "speed", "course", "climb", "throttle"]);
     }
-    private onSocketClosed() {
+    private resetMissionStatus() {
         this.visibleTelemetryIndices = []; // clear visible indices
         this.telemetries = []; // clear telemetries
         this._planeMgrp.clearMarkers(); // clear all plane markers
-        this._pathPtsCache.clear(); // clear all cached path points
-        this._ppaths.splice(0, this._ppaths.length); // clear one plane paths
+        this._planePtsCache.clear(); // clear all cached path points
+        this._ppaths.splice(0, this._ppaths.length); // clear all plane paths
+        this.runtimeSettings = { traces: 50, lead_id: 0 }; // reset runtime settings
+        this.selectedMission = undefined; // reset selected mission
+        this._wpGrp.clearMarkers(); // clear all waypoints
+        this._mpath.clear(); // clear lead path
     }
     private onTelemetry(e: MessageEvent) {
         const telemetries: Telemetries = e.data !== null && e.data !== undefined ? JSON.parse(e.data) as Telemetries : {} as Telemetries;
@@ -110,11 +114,11 @@ export class MonitorPage implements OnInit, OnDestroy {
             m.alt = t.alt;
             m.hdg = t.hdg;
             this._planeMgrp.updateMarker(m);
-            if (!this._pathPtsCache.has(t.id)) {
-                this._pathPtsCache.set(t.id, []);
+            if (!this._planePtsCache.has(t.id)) {
+                this._planePtsCache.set(t.id, []);
             }
             const path = new Path(t.id);
-            const points = this._pathPtsCache.get(t.id);
+            const points = this._planePtsCache.get(t.id);
             points.push(new Point(t.lon, t.lat));
             if (points.length > this.runtimeSettings.traces) points.splice(0, points.length - this.runtimeSettings.traces); // remove oldest points
             if (!this._colorsCache.has(t.id)) {
@@ -128,6 +132,18 @@ export class MonitorPage implements OnInit, OnDestroy {
         if (this.selectedMission !== undefined && this._colorsCache.has(this.selectedMission.lead_id)) {
             this._planeMgrp.setColor(this.selectedMission.lead_id, Color.Red); // set lead plane Border
         }
+    }
+    private stopTelemetry() {
+        if (this.websocket !== undefined) {
+            this.websocket.close();
+            this.websocket = undefined;
+        }
+    }
+    private startTelemetry() {
+        this.stopTelemetry(); // close old websocket
+        this.websocket = new WebSocket(env.wsUrl); // open new websocket to get telemetry
+        this.websocket.onmessage = (e: MessageEvent) => this.onTelemetry(e);
+        this.websocket.onclose = () => this.resetMissionStatus();
     }
     private apiLoop() { // replace rtos
         this._svc.callJsonAPI("health", (d: APIResponse) => {
@@ -155,18 +171,6 @@ export class MonitorPage implements OnInit, OnDestroy {
             }, undefined, this.void);
         }, undefined, this.void);
     }
-    private stopTelemetry() {
-        if (this.websocket !== undefined) {
-            this.websocket.close();
-            this.websocket = undefined;
-        }
-    }
-    private startTelemetry() {
-        this.stopTelemetry(); // close old websocket
-        this.websocket = new WebSocket(env.wsUrl); // open new websocket to get telemetry
-        this.websocket.onmessage = (e: MessageEvent) => this.onTelemetry(e);
-        this.websocket.onclose = () => this.onSocketClosed();
-    }
     constructor(svc: AppService) {
         this._svc = svc;
         this._mpath = new Path(-1);
@@ -184,7 +188,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     }
     ngOnDestroy(): void {
         this._rtos.stop();
-        if (this.websocket !== undefined) { this.websocket.close(); }
+        this.stopTelemetry();
         console.log("RTOS stopped");
         console.log(this._rtos.stats);
     }
@@ -240,7 +244,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     onStop() {
         this._svc.callJsonAPI("sim/stop", (d: APIResponse) => {
             if (!d.success) alert(d.msg);
-            else this.stopTelemetry();
+            else this.stopTelemetry(); // stop telemetry
         }, undefined, alert);
     }
 }
