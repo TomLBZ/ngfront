@@ -106,11 +106,12 @@ export class ConfigsPage implements OnInit, OnDestroy {
     }
     ngOnInit(): void {
         this._timeoutInterval = setInterval(() => {
-            this._svc.callAPI("files/all", (d: APIResponse) => {
+            this._svc.callAPI("files/all", (d: any) => {
                 if (!StructValidator.hasFields(d, ['success', 'data'])) return; // invalid response
-                if (d.success) {
+                const dd: APIResponse = d as APIResponse;
+                if (dd.success) {
                     this.clearFileDict();
-                    (d.data.simulation_files_config as Array<ConfigFile>).forEach((cfg: ConfigFile) => this.fileDict[this.typeToNumber(cfg.type)].push(cfg));
+                    (dd.data.simulation_files_config as Array<ConfigFile>).forEach((cfg: ConfigFile) => this.fileDict[this.typeToNumber(cfg.type)].push(cfg));
                     for (const key in this.fileDict) {
                         const k: number = parseInt(key);
                         const type: ConfigFileType = this.numberToType(k);
