@@ -1,0 +1,11 @@
+export type Keyable = string | number | symbol;
+export type Dict<K extends Keyable, T> = { [P in K]: T; };
+export type DictN<T> = Dict<number, T>;
+export type DictS<T> = Dict<string, T>;
+export type NullLike = null | undefined;
+export type Optional<T> = T | NullLike;
+export type Concrete<T> = T extends NullLike ? never : T;
+export type Func1<I, O> = (i: I) => O;
+export type FuncN<I, O> = (...i: I[]) => O;
+export type Func<I, O> = Func1<I, O> | FuncN<I, O>;
+export type Callback = Func<any, void>;
