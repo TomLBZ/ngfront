@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { env } from './app.config';
-import { APICallback, APIAnyCallback, UniResponseType, FormDataEntry } from './app.interface';
-import { StructValidator } from '../utils/api/validate';
+import { UniResponseType, FormDataEntry } from './app.interface';
+import { Callback } from '../utils/type/types';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ export class AppService {
     private apiUrl = env.apiUrl;
     constructor(private http: HttpClient) {}
 
-    uniPost(op: string, payload: any, responseType: UniResponseType, ...formData: FormDataEntry[]): Observable<any> {
+    private uniPost(op: string, payload: any, responseType: UniResponseType, ...formData: FormDataEntry[]): Observable<any> {
         const options: any = {};
         if (responseType === 'blob') { // blob
             options['responseType'] = responseType;
@@ -42,15 +42,8 @@ export class AppService {
             return this.http.post(`${this.apiUrl}/uniPostJson`, {op: op, data: payload}, options);
         }
     }
-
-    rootGet(): Observable<any> {
-        return this.http.get(`${this.apiUrl}`);
-    }
     
-    callJsonAPI(op: string, next: APICallback, data: any = {}, error: APIAnyCallback = console.error): void {
-        this.uniPost(op, data, 'json').subscribe({
-            next: (d: any) => StructValidator.hasFields(d, ['success', 'msg', 'data']) ? next(d) : error(d),
-            error
-        });
+    callAPI(op: string, next: Callback, data: any = {}, error: Callback = console.error, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
+        this.uniPost(op, data, resType, ...formData).subscribe({ next, error });
     }
 }
