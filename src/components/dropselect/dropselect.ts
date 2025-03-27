@@ -6,11 +6,17 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
     templateUrl: './dropselect.html'
 })
 export class DropSelectComponent {
-    @Input() items: any[] = [];
-    private _defaultItem: any = null;
-    get defaultItem() {
-        return this._defaultItem;
+    private _items: any[] = [];
+    get items() { return this._items; }
+    @Input() set items(items: any[]) {
+        if (this._items !== items) {
+            this.selectedIndices = this.selectedIndices.filter((i: number) => i < items.length);
+            this.reset(this.selectedIndices);
+        }
+        this._items = items;
     }
+    private _defaultItem: any = null;
+    get defaultItem() { return this._defaultItem; }
     @Input() set defaultItem(item: any) {
         this._defaultItem = item;
         if (item) {
