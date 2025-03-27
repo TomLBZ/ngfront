@@ -10,8 +10,8 @@ import { Icon } from "../../../utils/icon/icon";
 import { Color } from "../../../utils/color/color";
 import { Path } from "../../../utils/path/path";
 import { AppService } from "../../app.service";
-import { APIAnyCallback, APIResponse } from "../../app.interface";
-import { Mission, Aircraft } from "../../app.interface";
+import { APIResponse, Mission, Aircraft } from "../../app.interface";
+import { Callback } from "../../../utils/type/types";
 
 @Component({
     selector: "page-path-edit",
@@ -27,7 +27,7 @@ export class PathEditPage implements OnInit, OnDestroy {
     private readonly flColor: Color = Color.Green;
     private readonly ldColor: Color = Color.Red;
     private readonly svc: AppService;
-    private readonly void: APIAnyCallback = () => {};
+    private readonly void: Callback = () => {};
     private mGrpFieldsFilter(key: string, mgIdx: number): boolean {
         const generalExcluded = ["icon", "id", "iconScale", "selectable", "selectedBorder", "showLabel", "popupFields"];
         if (generalExcluded.includes(key)) return false;
@@ -98,10 +98,10 @@ export class PathEditPage implements OnInit, OnDestroy {
     constructor(svc: AppService) {
         this.svc = svc;
         this._timer = setInterval(() => {
-            this.svc.callJsonAPI("mission/all", (d: APIResponse) => {
+            this.svc.callAPI("mission/all", (d: APIResponse) => {
                 if (d.success) this.missions = d.data.missions_config;
             }, undefined, this.void);
-            this.svc.callJsonAPI("aircraft/all", (d: APIResponse) => {
+            this.svc.callAPI("aircraft/all", (d: APIResponse) => {
                 if (d.success) this.aircrafts = d.data.instances_config;
             }, undefined, this.void);
             this.onInstancesUpdated();
