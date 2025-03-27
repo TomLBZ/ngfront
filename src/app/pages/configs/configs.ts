@@ -4,6 +4,7 @@ import { DropSelectComponent } from "../../../components/dropselect/dropselect";
 import { RawFileConfig, DownloadConfig, APIResponse, UploadConfig } from "../../app.interface";
 import { HttpResponse } from "@angular/common/http";
 import { FormDataEntry } from "../../app.interface";
+import { StructValidator } from "../../../utils/api/validate";
 
 interface FileConfig {
     id: number;
@@ -21,29 +22,27 @@ interface Dict<T> {
     templateUrl: 'configs.html'
 })
 export class ConfigsPage implements OnInit, OnDestroy {
-    readonly D_JSB = 0;
-    readonly C_JSB = 1;
-    readonly D_PAP = 2;
-    readonly C_PAP = 3;
-    readonly F = 4;
-    nameDict: Dict<string> = {};
-    fileDict: Dict<Array<FileConfig>> = {};
-    selectedDict: Dict<FileConfig> = {};
-    private clearLists() {
-        for (let i = 0; i < 5; i++) {
-            this.fileDict[i] = [];
-        }
-    }
-    constructor(private svc: AppService) {
-        this.clearLists();
-        this.nameDict[this.D_JSB] = "JSB Config List";
-        this.nameDict[this.C_JSB] = "JSB Config List";
-        this.nameDict[this.D_PAP] = "Paparazzi Config List";
-        this.nameDict[this.C_PAP] = "Paparazzi Config List";
-        this.nameDict[this.F] = "Flocking Algorithm List";
-    }
+    private readonly svc: AppService;
     private _timeoutInterval?: any;
-    repr: Function = (cfg: FileConfig) => `${cfg.name} (${cfg.id})`;
+    public readonly repr: Function = (cfg: FileConfig) => `${cfg.name} (${cfg.id})`;
+    public readonly D_JSB = 0;
+    public readonly C_JSB = 1;
+    public readonly D_PAP = 2;
+    public readonly C_PAP = 3;
+    public readonly F = 4;
+    public readonly nameDict: Dict<string> = {
+        0: "JSB Config List",
+        1: "JSB Config List",
+        2: "Paparazzi Config List",
+        3: "Paparazzi Config List",
+        4: "Flocking Algorithm List"
+    };
+    public readonly fileDict: Dict<Array<FileConfig>> = {0: [], 1: [], 2: [], 3: [], 4: []};
+    public readonly selectedDict: Dict<FileConfig> = {};
+    constructor(svc: AppService) { this.svc = svc; }
+    private clearFileDict() {
+        for (const key in this.fileDict) this.fileDict[key].length = 0;
+    }
     private ParseFileConfig(f: RawFileConfig): FileConfig {
         let kind = this.F;
         switch (f.type.file_type) {
@@ -61,7 +60,7 @@ export class ConfigsPage implements OnInit, OnDestroy {
         } as FileConfig;
     }
     private typeToUploadConfig(type: number): UploadConfig {
-        const aftype: number | null = type === this.F ? null : (type === this.D_JSB || type === this.D_PAP ? 0 : 1);
+        const aftype: number | null = type === this.F ? 0 : (type === this.D_JSB || type === this.D_PAP ? 0 : 1);
         const typestr = type === this.F ? "flocking_algo" : type === this.D_JSB || type === this.C_JSB ? "jsbsim" : "pprz";
         return {
             file_type: typestr,
@@ -79,20 +78,20 @@ export class ConfigsPage implements OnInit, OnDestroy {
     onUpload(type: number) {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.xml';
+        input.accept = type === this.F ? '' : '.xml';
         input.onchange = (e) => {
             const files = (e.target as HTMLInputElement).files;
             if (files === null || files.length === 0) return;
             const ucfg = this.typeToUploadConfig(type);
-            const formDataEntries: Array<FormDataEntry> = [
-                { name: 'file', value: files[0] },
-            ];
+            const ffieldName = files.length > 1 ? 'files' : 'file';
+            const formDataEntries: Array<FormDataEntry> = [];
+            for (let i = 0; i < files.length; i++) {
+                formDataEntries.push({ name: ffieldName, value: files[i] });
+            }
             const payload = { type: ucfg };
             this.svc.uniPost("files/upload", payload, 'json', ...formDataEntries).subscribe({
                 next: (d: APIResponse) => {
-                    if (d.success) {
-                        alert("Upload successful");
-                    } else alert(d.msg);
+                    alert(d.success ? "Upload successful" : d.msg);
                 }, error: console.error
             });
         };
@@ -103,17 +102,26 @@ export class ConfigsPage implements OnInit, OnDestroy {
         if (!this.selectedDict[type]) { alert("No file selected!"); return; }
         this.svc.uniPost("files/download", this.cfgToDownloadConfig(this.selectedDict[type]), 'blob').subscribe({
             next: (d: HttpResponse<Blob>) => {
-                if (!d.body) {
-                    alert("Download failed: Empty Data Response!");
-                    return;
-                }
-                const url = window.URL.createObjectURL(d.body);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = this.selectedDict[type].name;
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
+                if (d.body) {
+                    console.log(d.body);
+                    if (d.body.type === 'application/json') {
+                        d.body.text().then((t: string) => {
+                            const j = JSON.parse(t);
+                            console.log(j);
+                            if (StructValidator.hasFields(j, ['success', 'msg', "data"])) alert(j.msg);
+                            else alert("Download failed: Invalid JSON Response!");
+                        });
+                    } else if (d.body.type === 'application/octet-stream') {
+                        console.log(d.body);
+                        const url = window.URL.createObjectURL(d.body);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = this.selectedDict[type].name;
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        a.remove();
+                    } else alert("Download failed: Invalid Blob Type!");
+                } else alert("Download failed: Empty Data Response!");
             }, error: console.error
         });
     }
@@ -128,8 +136,8 @@ export class ConfigsPage implements OnInit, OnDestroy {
             this.svc.callJsonAPI("files/all", (d: APIResponse) => {
                 if (d.success) {
                     const cfglist: Array<FileConfig> = d.data.simulation_files_config.map((f: RawFileConfig) => this.ParseFileConfig(f));
-                    this.clearLists();
-                    cfglist.forEach((cfg: any) => this.fileDict[cfg.kind].push(cfg));
+                    this.clearFileDict();
+                    cfglist.forEach((cfg: FileConfig) => this.fileDict[cfg.kind].push(cfg));
                 }
             });
         }, 1000);
