@@ -15,22 +15,21 @@
     <div class="flexc px_maxw300">
         <div class="flexc grow bd_r5 bd_dbl bdc_tint pad5 zeromin">
             <dropselect class="pad5btm"
-                [items]="telemetries"
+                [items]="telemetryNames"
                 [title]="'Select Planes to show Telemetry'"
                 [indexMode]="true"
                 [hoverMode]="true"
                 [multiSelect]="true"
-                [representation]="idRepr"
                 [fixDropdown]="false"
                 (selectionChanged)="onPlaneSelected($event)"
             ></dropselect>
             <div class="zeromin flexc v_3pentah">
-                @for (idx of visibleTelemetryIndices; track $index) {
+                @for (t of visibleTelemetries; track t.id) {
                     <obj-editor
-                        [objToEdit]="telemetries[idx]"
+                        [objToEdit]="t"
                         [readOnly]="true"
                         [defaultExpanded]="true"
-                        [objName]="`ID = ${telemetries[idx].id}`"
+                        [objName]="`ID = ${t.id}`"
                     ></obj-editor>
                 }
             </div>

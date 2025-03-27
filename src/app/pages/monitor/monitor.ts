@@ -9,14 +9,15 @@ import { RTOS } from '../../../utils/rtos/rtos';
 import { MissedDeadlinePolicy } from '../../../utils/rtos/rtostypes';
 import { AppService } from '../../app.service';
 import { DropSelectComponent } from '../../../components/dropselect/dropselect';
-import { APICallback, APIResponse } from '../../app.interface';
+import { APIResponse } from '../../app.interface';
 import { Marker } from '../../../utils/marker/marker';
 import { ObjEditorComponent } from '../../../components/obj_editor/obj_editor';
 import { Path, PathStyle } from '../../../utils/path/path';
 import { Point } from '../../../utils/point/point';
 import { Cache } from '../../../utils/cache/cache';
-import { Waypoint, Mission, Telemetries, Telemetry } from '../../app.interface';
+import { Waypoint, Mission, Telemetry } from '../../app.interface';
 import { StructValidator } from '../../../utils/api/validate';
+import { Callback, DictN } from '../../../utils/type/types';
 interface LaunchSettings {
     fgEnable: boolean;
 }
@@ -52,8 +53,10 @@ export class MonitorPage implements OnInit, OnDestroy {
         sim: false,
         algo: false
     }
+    private readonly _telemetries: Array<Telemetry> = [];
+    private readonly _visibleTelemetryIndices: Array<number> = [];
     private websocket?: WebSocket;
-    private void: APICallback = () => {};
+    private void: Callback = () => {};
     public get healthStr(): string {
         const header = "===== System Health =====\n";
         const br = `Bridge: ${this._health.br ? "Online" : "Offline"}\n`;
@@ -73,14 +76,14 @@ export class MonitorPage implements OnInit, OnDestroy {
     public get paths(): Array<Path> { return [this._mpath, ...this._ppaths]; }
     public get apiKey(): string { return env.mapKey; }
     public get allPlaneIds(): Array<number> { return this.selectedMission !== undefined ? [this.selectedMission.lead_id, ...this.selectedMission.follower_ids] : [0]; }
-    readonly idRepr: Function = (o: any) => `ID: ${o.id}`;
-    readonly nameRepr: Function = (o: any) => o.name;
-    launchSettings: LaunchSettings = { fgEnable: false };
-    runtimeSettings: RuntimeSettings = { traces: 50, lead_id: 0 };
-    telemetries: Array<Telemetry> = [];
-    visibleTelemetryIndices: Array<number> = [];
-    missions: Array<Mission> = [];
-    selectedMission?: Mission = undefined;
+    public get telemetryNames(): Array<string> { return this._telemetries.map((t: Telemetry) => `ID: ${t.id}`); }
+    public get visibleTelemetries(): Array<Telemetry> { return this._visibleTelemetryIndices.map((i: number) => this._telemetries[i]); }
+    public readonly idRepr: Function = (o: any) => `ID: ${o.id}`;
+    public readonly nameRepr: Function = (o: any) => o.name;
+    public missions: Array<Mission> = [];
+    public launchSettings: LaunchSettings = { fgEnable: false };
+    public runtimeSettings: RuntimeSettings = { traces: 50, lead_id: 0 };
+    public selectedMission?: Mission = undefined;
     private isValidMission(m: any): boolean {
         return StructValidator.hasNonEmptyFields(m, ["id", "name", "description", "lead_id", "lead_path", "follower_ids"]);
     }
@@ -88,8 +91,8 @@ export class MonitorPage implements OnInit, OnDestroy {
         return StructValidator.hasNonEmptyFields(t, ["roll", "pitch", "yaw", "lat", "lon", "alt", "hdg", "agl", "speed", "course", "climb", "throttle"]);
     }
     private resetMissionStatus() {
-        this.visibleTelemetryIndices = []; // clear visible indices
-        this.telemetries = []; // clear telemetries
+        this._visibleTelemetryIndices.length = 0; // clear all visible telemetries
+        this._telemetries.length = 0; // clear all telemetries
         this._planeMgrp.clearMarkers(); // clear all plane markers
         this._planePtsCache.clear(); // clear all cached path points
         this._ppaths.splice(0, this._ppaths.length); // clear all plane paths
@@ -101,16 +104,16 @@ export class MonitorPage implements OnInit, OnDestroy {
     private onTelemetry(e: MessageEvent) {
         if (!this._health.sim) return; // skip when simulator is offline
         if (this._health.mstatus === "EXITED") return; // skip when mission is not running
-        const telemetries: Telemetries = e.data !== null && e.data !== undefined ? JSON.parse(e.data) as Telemetries : {} as Telemetries;
-        this.telemetries = [];
+        const telemetries: DictN<Telemetry> = (e.data !== null && e.data !== undefined ? JSON.parse(e.data) : {}) as DictN<Telemetry>;
+        this._telemetries.length = 0; // clear old telemetries
         Object.entries(telemetries).forEach(([k, v]: [string, Telemetry]) => {
             if (!this.isValidTelemetry(v)) return; // invalid telemetry
             v.id = parseInt(k);
-            this.telemetries.push(v);
+            this._telemetries.push(v);
         });
-        if (this.telemetries.length === 0) return;
+        if (this._telemetries.length === 0) return;
         this._ppaths.splice(0, this._ppaths.length); // clear old plane paths
-        this.telemetries.forEach((t: Telemetry) => {
+        this._telemetries.forEach((t: Telemetry) => {
             const m = new Marker(t.lat, t.lon, t.id);
             m.alt = t.alt;
             m.hdg = t.hdg;
@@ -149,19 +152,28 @@ export class MonitorPage implements OnInit, OnDestroy {
         this.websocket.onclose = () => this.resetMissionStatus();
     }
     private apiLoop() { // replace rtos
-        this._svc.callJsonAPI("health", (d: APIResponse) => {
-            this._health.br = d.success; // update bridge status
-            this._health.mstatus = d.data.mission_status ?? "EXITED";
-            this._health.sim = d.data.simulation_status ?? false;
-            this._health.algo = d.data.algorithm_status ?? false;
+        this._svc.callAPI("health", (d: any) => {
+            if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
+            const dd: APIResponse = d as APIResponse;
+            this._health.br = dd.success; // update bridge status
+            this._health.mstatus = dd.data.mission_status ?? "EXITED";
+            this._health.sim = dd.data.simulation_status ?? false;
+            this._health.algo = dd.data.algorithm_status ?? false;
             if (!this._health.br) { return; } // skip the rest when bridge is offline
-            this._svc.callJsonAPI("mission/all", (d: APIResponse) => {
-                if (!d.data.hasOwnProperty("missions_config")) return; // invalid data
-                this.missions = d.data.missions_config;
+            this._svc.callAPI("mission/all", (d: any) => {
+                if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
+                const dd = d as APIResponse;
+                if (!dd.success) return; // skip when failed
+                if (!dd.data || !dd.data.hasOwnProperty("missions_config")) return; // invalid data
+                this.missions.length = 0; // clear old missions
+                this.missions.push(...(dd.data.missions_config as Array<Mission>));
             }, undefined, this.void);
-            this._svc.callJsonAPI("mission/current", (d: APIResponse) => {
-                if (!this.isValidMission(d.data)) return; // invalid mission
-                const m = d.data as Mission;
+            this._svc.callAPI("mission/current", (d: any) => {
+                if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
+                const dd = d as APIResponse;
+                if (!dd.success) return; // skip when failed
+                if (!this.isValidMission(dd.data)) return; // invalid mission
+                const m = dd.data as Mission;
                 if (this.selectedMission === undefined) this.onMissionSelected(m); // select mission if not selected
                 else if (m.id !== this.selectedMission.id) {
                     alert("Mission changed unexpectedly, please refresh the page.");
@@ -196,7 +208,8 @@ export class MonitorPage implements OnInit, OnDestroy {
         console.log(this._rtos.stats);
     }
     onPlaneSelected(indices: Array<number>) {
-        this.visibleTelemetryIndices = indices;
+        this._visibleTelemetryIndices.length = 0; // clear all visible telemetries
+        this._visibleTelemetryIndices.push(...indices);
     }
     onMissionSelected(m: Mission) {
         if (m === this.selectedMission) return; // unchanged
@@ -218,7 +231,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (newSettings.fgEnable) {
                 alert("Enabling FlightGear makes launching a mission takes very long, please be patient. We recommend disabling this option.");
             }
-            this._svc.callJsonAPI("sim/fgenable", this.void, { fg_enable: newSettings.fgEnable }, alert);
+            this._svc.callAPI("sim/fgenable", this.void, { fg_enable: newSettings.fgEnable }, alert);
         }
         this.launchSettings = newSettings;
     }
@@ -226,9 +239,10 @@ export class MonitorPage implements OnInit, OnDestroy {
         if (newSettings.traces < 1) newSettings.traces = 1; // minimum traces is one
         if (newSettings.lead_id !== this.runtimeSettings.lead_id) { // lead id changed
             const backup_settings = this.runtimeSettings;
-            this._svc.callJsonAPI("mission/changelead", (d) => {
+            this._svc.callAPI("mission/changelead", (d: any) => {
                 if (!d.success) this.runtimeSettings = backup_settings;
-            }, newSettings.lead_id, (d) => {
+                else this._planeMgrp.setColor(backup_settings.lead_id, Color.Transparent); // reset old lead plane Border
+            }, newSettings.lead_id, (d: APIResponse) => {
                 alert(d);
                 this.runtimeSettings = backup_settings;
             });
@@ -236,18 +250,20 @@ export class MonitorPage implements OnInit, OnDestroy {
         this.runtimeSettings = newSettings;
     }
     onLaunch() {
-        this._svc.callJsonAPI("mission/start", (d: APIResponse) => {
-            if (!d.success) alert(d.msg);
+        this._svc.callAPI("mission/start", (d: any) => {
+            if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
+            else if (!(d as APIResponse).success) alert(d.msg);
         }, this.selectedMission!.id, alert);
     }
     onSigLoss(resumable: boolean) {
-        if (resumable) this._svc.callJsonAPI("mission/start", (_) => alert("Signal resumed"), this.selectedMission!.id, alert);
-        else this._svc.callJsonAPI("mission/stop", (_) => alert("Signal blocked"), undefined, alert);
+        if (resumable) this._svc.callAPI("mission/start", () => alert("Signal resumed"), this.selectedMission!.id, alert);
+        else this._svc.callAPI("mission/stop", () => alert("Signal blocked"), undefined, alert);
     }
     onStop() {
-        this._svc.callJsonAPI("sim/stop", (d: APIResponse) => {
-            if (!d.success) alert(d.msg);
-            else this.stopTelemetry(); // stop telemetry
+        this._svc.callAPI("sim/stop", (d: any) => {
+            if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
+            else if (!(d as APIResponse).success) alert(d.msg); // not successful
+            else this.stopTelemetry(); // stop telemetry when stopped successfully
         }, undefined, alert);
     }
 }
