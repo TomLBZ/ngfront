@@ -47,9 +47,6 @@ export interface Telemetry {
     climb: number;
     throttle: number;
 }
-export interface Telemetries {
-    [key: number]: Telemetry;
-}
 export interface ConfigFileType {
     id?: number;
     file_type: string;
