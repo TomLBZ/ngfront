@@ -1,5 +1,3 @@
-export type APICallback = (d: APIResponse) => void;
-export type APIAnyCallback = (a: any) => void;
 export type UniResponseType = 'json' | 'blob'; // | 'text' | 'arraybuffer' are not supported yet
 export type FormDataEntry = { name: string, value: FormDataEntryValue };
 
@@ -52,21 +50,14 @@ export interface Telemetry {
 export interface Telemetries {
     [key: number]: Telemetry;
 }
-export interface RawFileConfig {
+export interface ConfigFileType {
+    id?: number;
+    file_type: string;
+    airframe_type: number;
+}
+export interface ConfigFile {
     id: number;
     name: string;
     description: string;
-    type: {
-        file_type: string;
-        airframe_type: number | null;
-    }
-}
-export interface DownloadConfig {
-    id: number;
-    file_type: string;
-    airframe_type: number;
-}
-export interface UploadConfig {
-    file_type: string;
-    airframe_type: number;
+    type: ConfigFileType;
 }
