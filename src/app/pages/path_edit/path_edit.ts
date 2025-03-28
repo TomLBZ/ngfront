@@ -12,6 +12,7 @@ import { Path } from "../../../utils/path/path";
 import { AppService } from "../../app.service";
 import { APIResponse, Mission, Aircraft } from "../../app.interface";
 import { Callback } from "../../../utils/type/types";
+import { StructValidator } from "../../../utils/api/validate";
 
 @Component({
     selector: "page-path-edit",
@@ -20,37 +21,35 @@ import { Callback } from "../../../utils/type/types";
     templateUrl: "./path_edit.html"
 })
 export class PathEditPage implements OnInit, OnDestroy {
-    private readonly iconSize: number = 16;
-    private readonly iconScale: number = 1.2;
-    private readonly wpColor: Color = Color.Purple.lighten(0.5);
-    private readonly plColor: Color = Color.blend(Color.Blue, Color.Cyan, 0.5);
-    private readonly flColor: Color = Color.Green;
-    private readonly ldColor: Color = Color.Red;
-    private readonly svc: AppService;
+    private readonly _svc: AppService;
+    private readonly _iconSize: number = 16;
+    private readonly _iconScale: number = 1.2;
+    private readonly _wpColor: Color = Color.Purple.lighten(0.5);
+    private readonly _plColor: Color = Color.blend(Color.Blue, Color.Cyan, 0.5);
+    private readonly _flColor: Color = Color.Green;
+    private readonly _ldColor: Color = Color.Red;
+    private readonly _wpGroup: MarkerGroup = new MarkerGroup(Icon.Circle(this._iconSize, this._wpColor), true, false, this._iconScale);
+    private readonly _plGroup: MarkerGroup = new MarkerGroup(Icon.Poly(this._iconSize, Icon.polyPlaneVecs, this._plColor), false, false, this._iconScale);
     private readonly void: Callback = () => {};
-    private mGrpFieldsFilter(key: string, mgIdx: number): boolean {
-        const generalExcluded = ["icon", "id", "iconScale", "selectable", "selectedBorder", "showLabel", "popupFields"];
-        if (generalExcluded.includes(key)) return false;
-        const privateExcludedStr = "_";
-        if (key.includes(privateExcludedStr)) return false;
-        if (mgIdx === 0) return key !== "hdg";
-        if (mgIdx === 1) return key !== "alt";
-        return true;
-    }
-    readonly wpFieldsFilter = (key: string) => { return this.mGrpFieldsFilter(key, 0); }
-    readonly plFieldsFilter = (key: string) => { return this.mGrpFieldsFilter(key, 1); }
-    readonly mFieldsFilter = (key: string) => { return ["id", "name", "description"].includes(key); }
-    readonly markerGroups: Array<MarkerGroup> = [
-        new MarkerGroup(Icon.Circle(this.iconSize, this.wpColor), true), // wps
-        new MarkerGroup(Icon.Poly(this.iconSize, Icon.polyPlaneVecs, this.plColor), true), // planes
-    ];
-    readonly apiKey = env.mapKey;
-    private _timer: any;
-    missions: Array<Mission> = [];
-    aircrafts: Array<Aircraft> = [];
-    nameRepr = (m: Mission) => m.name;
-    selectedMissionIndex: number = -1;
-    private readonly newMission: Mission = {
+    // private mGrpFieldsFilter(key: string, mgIdx: number): boolean {
+    //     const generalExcluded = ["icon", "id", "iconScale", "selectable", "selectedBorder", "showLabel", "popupFields"];
+    //     if (generalExcluded.includes(key)) return false;
+    //     const privateExcludedStr = "_";
+    //     if (key.includes(privateExcludedStr)) return false;
+    //     if (mgIdx === 0) return key !== "hdg";
+    //     if (mgIdx === 1) return key !== "alt";
+    //     return true;
+    // }
+    // readonly wpFieldsFilter = (key: string) => { return this.mGrpFieldsFilter(key, 0); }
+    // readonly plFieldsFilter = (key: string) => { return this.mGrpFieldsFilter(key, 1); }
+    public readonly apiKey = env.mapKey;
+    public readonly noFilter = (key: string) => true;
+    public readonly mIncludeFieldsFilter = (key: string) => { return key !== "lead_path"; }
+    public get markerGroups(): Array<MarkerGroup> { return [this._wpGroup, this._plGroup]; }
+    public get waypoints(): Array<Marker> { return this._wpGroup.markers; }
+    public get planes(): Array<Marker> { return this._plGroup.markers; }
+
+    private _newMission: Mission = {
         id: -1,
         name: "New Mission",
         description: "",
@@ -58,21 +57,45 @@ export class PathEditPage implements OnInit, OnDestroy {
         lead_path: [],
         follower_ids: []
     }
+    public missions: Array<Mission> = [this._newMission];
     public get selectedMission(): Mission {
-        if (this.selectedMissionIndex < 0) return this.newMission;
         return this.missions[this.selectedMissionIndex];
     }
+    private selectedMissionIndex: number = 0;
+    public get existingMission(): boolean { return this.selectedMissionIndex > 0; }
+    aircrafts: Array<Aircraft> = [];
+    nameRepr = (m: Mission) => m.name;
+    private isValidMission(m: any): boolean {
+        return StructValidator.hasNonEmptyFields(m, ["id", "name", "description", "lead_id", "lead_path", "follower_ids"]);
+    }
+    private apiLoop() {
+        this._svc.callAPI("mission/all", (d: any) => {
+            if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
+            const dd = d as APIResponse;
+            if (!dd.success) return; // skip when failed
+            if (!dd.data || !dd.data.hasOwnProperty("missions_config")) return; // invalid data
+            this.missions.length = 1; // clear non-default missions
+            this.missions.push(...(dd.data.missions_config as Array<Mission>));
+        }, undefined, this.void);
+    }
+    private _loopTimer: any;
+    constructor(svc: AppService) { this._svc = svc; }
+    ngOnInit(): void {
+        this.markerGroups[0].popupFields = ["lat", "lng", "alt"];
+        this.markerGroups[0].labelPrefix = "W";
+        this.markerGroups[1].popupFields = ["lat", "lng", "hdg"];
+        this.markerGroups[1].labelPrefix = "P";
+        this._loopTimer = setInterval(() => this.apiLoop(), 1000);
+    }
+    ngOnDestroy(): void {
+        if (this._loopTimer !== undefined) clearInterval(this._loopTimer);
+    }
+    
     onMissionSelected(idx: number) {
         this.selectedMissionIndex = idx;
         this.visualizeSelectedMission();
     }
     onMissionDeleted() {
-    }
-    @ViewChild('ms', { static: true }) ms!: DropSelectComponent;
-    onMissionNew() {
-        this.selectedMissionIndex = -1;
-        this.ms.reset();
-        this.visualizeSelectedMission();
     }
     onMissionApply() {
 
@@ -95,18 +118,6 @@ export class PathEditPage implements OnInit, OnDestroy {
     public get nonleaders(): Array<Marker> {
         return this.markerGroups[1].markers.filter((m) => m.id !== this.selectedMission.lead_id);
     }
-    constructor(svc: AppService) {
-        this.svc = svc;
-        this._timer = setInterval(() => {
-            this.svc.callAPI("mission/all", (d: APIResponse) => {
-                if (d.success) this.missions = d.data.missions_config;
-            }, undefined, this.void);
-            this.svc.callAPI("aircraft/all", (d: APIResponse) => {
-                if (d.success) this.aircrafts = d.data.instances_config;
-            }, undefined, this.void);
-            this.onInstancesUpdated();
-        } , 1000);
-    }
     onInstancesUpdated() {
         this.markerGroups[1].markers = this.aircrafts.map((a) => {
             const m = new Marker(a.start_pos.lat, a.start_pos.lon, a.id, a.name);
@@ -114,18 +125,6 @@ export class PathEditPage implements OnInit, OnDestroy {
             m.hdg = a.start_pos.hdg;
             return m;
         });
-    }
-    ngOnInit(): void {
-        for (const mg of this.markerGroups) {
-            mg.iconScale = this.iconScale;
-        }
-        this.markerGroups[0].popupFields = ["lat", "lng", "alt"];
-        this.markerGroups[0].labelPrefix = "W";
-        this.markerGroups[1].popupFields = ["lat", "lng", "hdg"];
-        this.markerGroups[1].labelPrefix = "P";
-    }
-    ngOnDestroy(): void {
-        if (this._timer !== undefined) clearInterval(this._timer);
     }
     onObjectClicked(me: MarkerEvent) {
         if (me.mgIdx === 1) { // planes
@@ -145,22 +144,14 @@ export class PathEditPage implements OnInit, OnDestroy {
                 } else if (me.secondaryButton) { // right click
                     this.updateFollower(currentId);
                 }
-                this.refreshDsFollowers();
                 this.refreshMarkers(undefined, me.mgIdx);
             }
         }
     }
-    private fIds2FIndices(ids: Array<number>): Array<number> {
-        return ids.map((id) => this.nonleaders.findIndex((m) => m.id === id)).filter((idx) => idx >= 0);
-    }
-    private refreshDsFollowers() {
-        const fIndices = this.fIds2FIndices(this.selectedMission.follower_ids);
-        this.ds.reset(fIndices);
-    }
     private leaderPrevColor: Color = Color.Transparent;
     private setLeader(mId: number) {
         this.leaderPrevColor = this.markerGroups[1].getColor(mId);
-        this.markerGroups[1].setColor(mId, this.ldColor);
+        this.markerGroups[1].setColor(mId, this._ldColor);
         this.selectedMission.lead_id = mId;
     }
     private unsetLeader() {
@@ -168,7 +159,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         this.selectedMission.lead_id = -1;
     }
     private addFollower(mId: number) {
-        this.markerGroups[1].setColor(mId, this.flColor);
+        this.markerGroups[1].setColor(mId, this._flColor);
         this.selectedMission.follower_ids.push(mId);
     }
     private removeFollower(mId: number) {
@@ -197,11 +188,9 @@ export class PathEditPage implements OnInit, OnDestroy {
             this.addFollower(mId);
         }
     }
-    @ViewChild('ds', { static: true }) ds!: DropSelectComponent;
     onPlaneSelected(markers: Array<Marker> | Marker) {
         if (markers instanceof Marker) { // single selection: leader plane
             this.setLeader(markers.id);
-            this.refreshDsFollowers(); // refresh followers
         } else { // multiple selection: follower planes
             this.resetFollowers(markers.map((m) => m.id));
         }
@@ -216,7 +205,6 @@ export class PathEditPage implements OnInit, OnDestroy {
             this.markerGroups[mgIdx].refresh();
         }
         if (mgIdx === 0) { // waypoints
-            // this.currentMission.setPath(this.markerGroups[0].markers, this.ldColor);
             this.wpEditor.objToEdit = this.markerGroups[mgIdx]; // refresh editor
         } else if (mgIdx === 1) { // planes
             this.plEditor.objToEdit = this.markerGroups[mgIdx]; // refresh editor
@@ -244,7 +232,6 @@ export class PathEditPage implements OnInit, OnDestroy {
                     this.removeFollower(mId);
                 }
                 this.markerGroups[me.mgIdx].removeMarker(me.mIdx);
-                this.refreshDsFollowers();
             }
             this.refreshMarkers(undefined, me.mgIdx);
         } else if (me.middleButton) {
