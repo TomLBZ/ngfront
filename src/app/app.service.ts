@@ -9,7 +9,7 @@ import { Callback } from '../utils/type/types';
   providedIn: 'root'
 })
 export class AppService {
-    private apiUrl = env.apiUrl;
+    private readonly apiUrl = env.apiUrl;
     constructor(private http: HttpClient) {}
 
     private uniPost(op: string, payload: any, responseType: UniResponseType, ...formData: FormDataEntry[]): Observable<any> {
