@@ -15,11 +15,12 @@
                     <field-editor
                         [objToEdit]="objToEdit"
                         [objName]="objName"
-                        [expanded]="true"
-                        [scrollChildren]="true"
-                        [includeFilter]="includeFilter"
                         [readOnly]="readOnly"
-                        [defaultExpanded]="defaultExpanded"
+                        [expanded]="expanded"
+                        [scrollChildren]="true"
+                        [includeFieldFilter]="includeFieldFilter"
+                        [readOnlyFieldFilter]="readOnlyFieldFilter"
+                        [expandFieldFilter]="expandFieldFilter"
                         (fieldChanged)="onFieldChange($event)"
                     ></field-editor>
                 </div>
