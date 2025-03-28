@@ -2,16 +2,10 @@
     <div class="flexc centcont bd_r5 p_fullh"
         [class.bd_dsh]="showBorder"
     >
-        @let isArray = isArrayType(objToEdit);
-        @let isObject = isObjectType(objToEdit);
         @if (isArray || isObject) {
             <div class="flex centcont justends p_fullw px_h20 bgc_lgrey">
-                <div class="bold mar5rht txt_nowrap ov_hid">
-                    {{ objName }}
-                </div>
-                <button (click)="toggleSelfExpand()">
-                    {{ expanded ? '▼' : '▷' }}
-                </button>
+                <div class="bold mar5rht txt_nowrap ov_hid">{{ objName }}</div>
+                <button (click)="toggleSelfExpand()">{{ expanded ? '▼' : '▷' }}</button>
             </div>
             <div class="pad10lft mar5btm bd_r5 bdc_tint p_fullw"
                 [class.ovy_scr]="scrollChildren"
@@ -19,42 +13,23 @@
                 [style.border-left-style]="'solid'"
             >
                 @if (expanded) {
-                    @if (isArray) {
-                        @for (item of objToEdit; track $index) {
-                            <div>
-                                <field-editor
-                                    [objToEdit]="objToEdit[$index]"
-                                    [objName]="'[' + $index + ']'"
-                                    [readOnly]="readOnly"
-                                    [expanded]="defaultExpanded"
-                                    [includeFilter]="includeFilter"
-                                    [defaultExpanded]="defaultExpanded"
-                                    (fieldChanged)="onArrayChanged($event)"
-                                ></field-editor>
-                            </div>
-                        }
-                    }
-                    @else if (isObject) {
-                        @for (key of getObjKeys(); track key) {
-                            <div>
-                                <field-editor
-                                    [objToEdit]="objToEdit[key]"
-                                    [objName]="key"
-                                    [readOnly]="readOnly"
-                                    [includeFilter]="includeFilter"
-                                    [expanded]="defaultExpanded"
-                                    [defaultExpanded]="defaultExpanded"
-                                    (fieldChanged)="onFieldChanged($event)"
-                                ></field-editor> 
-                            </div>
-                        }
+                    @for (key of keys; track key) {
+                        <div>
+                            <field-editor
+                                [objToEdit]="objToEdit[key]"
+                                [objName]="fieldName(key)"
+                                [fullObjName]="fieldFullName(key)"
+                                [readOnly]="fieldReadOnly(key)"
+                                [expanded]="fieldExpanded(key)"
+                                [includeFieldFilter]="includeFieldFilter"
+                                [readOnlyFieldFilter]="readOnlyFieldFilter"
+                                [expandFieldFilter]="expandFieldFilter"
+                                (fieldChanged)="onFieldChanged($event)"
+                            ></field-editor> 
+                        </div>
                     }
                 }
-                @else {
-                    <span>
-                        {{ isObjectType(objToEdit) ? '\<Object\>' : '\[Array\]' }}
-                    </span>
-                }
+                @else { <span>Collapsed {{typeStr}}</span> }
             </div>
         }
         @else {
