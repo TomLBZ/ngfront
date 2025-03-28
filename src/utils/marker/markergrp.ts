@@ -35,9 +35,10 @@ export class MarkerGroup { // a marker layer
         if (c === Color.Transparent) return "";
         return c.hex7;
     }
-    constructor(public icon: Icon, moveable: boolean = false, selectable: boolean = false) {
+    constructor(public icon: Icon, moveable: boolean = false, selectable: boolean = false, iconScale: number = 1) {
         this.moveable = moveable;
         this.selectable = selectable;
+        this.iconScale = iconScale;
     }
     public addMarker(lat: number, lng: number, id?: number): Marker {
         const m = new Marker(lat, lng, id);
