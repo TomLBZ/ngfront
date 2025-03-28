@@ -28,7 +28,6 @@
                     <obj-editor
                         [objToEdit]="t"
                         [readOnly]="true"
-                        [defaultExpanded]="true"
                         [objName]="`ID = ${t.id}`"
                     ></obj-editor>
                 }
@@ -53,7 +52,6 @@
                 <obj-editor class="zeromin px_maxh90 pad10h"
                     [objToEdit]="launchSettings"
                     [readOnly]="selectedMission === undefined"
-                    [defaultExpanded]="true"
                     [objName]="'Launch Settings'"
                     [autoApply]="true"
                     [textEnabled]="false"
@@ -67,7 +65,6 @@
                     [class.err]="!allPlaneIds.includes(runtimeSettings.lead_id)"
                     [objToEdit]="runtimeSettings"
                     [readOnly]="!running"
-                    [defaultExpanded]="true"
                     [objName]="'Runtime Settings'"
                     [autoApply]="true"
                     [textEnabled]="false"
