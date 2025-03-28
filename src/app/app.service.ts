@@ -4,12 +4,14 @@ import { Observable } from 'rxjs';
 import { env } from './app.config';
 import { UniResponseType, FormDataEntry } from './app.interface';
 import { Callback } from '../utils/type/types';
+import { KeyController } from '../utils/controller/keyctrl';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppService {
     private readonly apiUrl = env.apiUrl;
+    public readonly keyCtrl = new KeyController();
     constructor(private http: HttpClient) {}
 
     private uniPost(op: string, payload: any, responseType: UniResponseType, ...formData: FormDataEntry[]): Observable<any> {
