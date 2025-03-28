@@ -15,10 +15,8 @@
         <div class="flex px_h300">
             <div class="flexc p_halfw bd_dbl bdc_tint bd_r5 pad10h">
                 <dropselect class="pad5btm"
-                    [items]="missions"
-                    [defaultItem]="missions[0]"
+                    [items]="missionNames"
                     [title]="'Select Mission'"
-                    [representation]="nameRepr"
                     [hoverMode]="true"
                     [indexMode]="true"
                     (selectionChanged)="onMissionSelected($event)"
@@ -78,8 +76,7 @@
                     [textEnabled]="false"
                     [autoApply]="true"
                     [includeFieldFilter]="mIncludeFieldsFilter"
-                    [expandFieldFilter]="noFilter"
-                    (updated)="onMissionUpdate($event)"
+                    (applied)="onMissionApplied($event)"
                 ></obj-editor>
                 <button class="pad5 mar5" (click)="onMissionApply()">{{existingMission ? "Update" : "Create"}} Mission</button>
             </div>
@@ -87,23 +84,22 @@
     </div>
     <div class="px_w200 p_fullh">
         <div class="flexc p_halfh bd_dbl bdc_tint br_r5 pad5">
-            <obj-editor #wp class="flex grow"
-                [objToEdit]="waypoints"
+            <obj-editor class="flex grow"
+                [objToEdit]="selectedMission.lead_path"
                 [objName]="'Waypoints'"
                 [textEnabled]="false"
-                [expandFieldFilter]="noFilter"
                 [autoApply]="true"
-                (applied)="onApplyMG($event, 0)"
+                (applied)="onWaypointApplied($event)"
             ></obj-editor>
         </div>
         <div class="flexc p_halfh bd_dbl bdc_tint bd_r5 pad5">
-            <obj-editor #pl class="flexc grow"
+            <obj-editor class="flexc grow"
                 [objToEdit]="planes"
                 [objName]="'Planes'"
                 [textEnabled]="false"
-                [expandFieldFilter]="noFilter"
                 [autoApply]="true"
-                (applied)="onApplyMG($event, 1)"
+                [includeFieldFilter]="plIncludeFieldsFilter"
+                (applied)="onAircraftApplied($event)"
             ></obj-editor>
         </div>
     </div>
