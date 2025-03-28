@@ -43,7 +43,7 @@ export class AppService {
         }
     }
     
-    callAPI(op: string, next: Callback, data: any = {}, error: Callback = console.error, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
+    callAPI(op: string, next: Callback, data: any = {}, error: Callback = console.log, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
         this.uniPost(op, data, resType, ...formData).subscribe({ next, error });
     }
 }
