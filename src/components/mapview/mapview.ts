@@ -160,10 +160,17 @@ export class MapViewComponent {
             this.clickingButtons = -1; // if marker is moving, clicking is not registered
             event.preventDefault(); // prevent map events
             this.popupVisible = false; // hide popup
-            const diffLng = event.lngLat.lng - this.markerGroups[this.opMgIdx].markers[this.opMarkerIdx].lng;
-            const diffLat = event.lngLat.lat - this.markerGroups[this.opMgIdx].markers[this.opMarkerIdx].lat;
-            this.objectMoved.emit(new MarkerEvent(this.opMarkerIdx, this.opMgIdx, event, diffLng, diffLat));
-            this.setPopup(this.opMgIdx, this.opMarkerIdx);
+            const m = this.markerGroups[this.opMgIdx].markers[this.opMarkerIdx];
+            if (m !== undefined && m !== null) {
+                const diffLng = event.lngLat.lng - m.lng;
+                const diffLat = event.lngLat.lat - m.lat;
+                this.objectMoved.emit(new MarkerEvent(this.opMarkerIdx, this.opMgIdx, event, diffLng, diffLat));
+                this.setPopup(this.opMgIdx, this.opMarkerIdx);
+            } else { // marker has been removed, reset
+                this.opMgIdx = -1;
+                this.opMarkerIdx = -1;
+                this.clickingButtons = -1;
+            }
         }
         this.mapMouseMove.emit(new MapViewEvent(event));
     }
