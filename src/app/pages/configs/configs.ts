@@ -16,7 +16,7 @@ export class ConfigsPage implements OnInit, OnDestroy {
     private readonly _svc: AppService;
     private readonly _res2str: Callback = (d: any) => {
         if (!StructValidator.hasFields(d, ['success', 'msg'])) alert("Invalid Response!");
-        else alert(`${(d as APIResponse).success ? "Success" : "Failure"}: ${(d as APIResponse).msg}`);
+        else alert(`${(d as APIResponse).success ? "Success" : "Failure"}: ${(d as APIResponse).msg}\n${JSON.stringify((d as APIResponse).data)}`);
     }
     private _timeoutInterval?: any;
     public readonly repr: Function = (cfg: ConfigFile) => cfg.id < 0 ? "[Default]" : `${cfg.id}: ${cfg.name}`;
