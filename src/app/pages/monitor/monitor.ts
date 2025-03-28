@@ -231,7 +231,16 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (newSettings.fgEnable) {
                 alert("Enabling FlightGear makes launching a mission takes very long, please be patient. We recommend disabling this option.");
             }
-            this._svc.callAPI("sim/fgenable", this.void, { fg_enable: newSettings.fgEnable }, alert);
+            const oldLaunchSettings = this.launchSettings;
+            this._svc.callAPI("sim/fgenable", (d: any) => {
+                if (!d.success) {
+                    alert(`Set Failed: ${JSON.stringify(d)}`);
+                    this.launchSettings = oldLaunchSettings;
+                }
+            }, { fg_enable: newSettings.fgEnable }, (d: any) => {
+                alert(`Error: ${JSON.stringify(d)}`);
+                this.launchSettings = oldLaunchSettings;
+            });
         }
         this.launchSettings = newSettings;
     }
@@ -240,10 +249,13 @@ export class MonitorPage implements OnInit, OnDestroy {
         if (newSettings.lead_id !== this.runtimeSettings.lead_id) { // lead id changed
             const backup_settings = this.runtimeSettings;
             this._svc.callAPI("mission/changelead", (d: any) => {
-                if (!d.success) this.runtimeSettings = backup_settings;
+                if (!d.success) {
+                    alert(`Set Failed: ${JSON.stringify(d)}`);
+                    this.runtimeSettings = backup_settings;
+                }
                 else this._planeMgrp.setColor(backup_settings.lead_id, Color.Transparent); // reset old lead plane Border
-            }, newSettings.lead_id, (d: APIResponse) => {
-                alert(d);
+            }, newSettings.lead_id, (d: any) => {
+                alert(`Error: ${JSON.stringify(d)}`);
                 this.runtimeSettings = backup_settings;
             });
         }
