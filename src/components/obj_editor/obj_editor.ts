@@ -29,10 +29,12 @@ export class ObjEditorComponent {
     @Input() textMode: boolean = false;
     @Input() objName: string = 'Object';
     @Input() readOnly: boolean = false;
-    @Input() defaultExpanded: boolean = false;
+    @Input() expanded: boolean = true;
     @Input() showBorder: boolean = false;
     @Input() autoApply: boolean = false;
-    @Input() includeFilter: (key: string) => boolean = () => true;
+    @Input() includeFieldFilter: (key: string) => boolean = () => true; // default to include all fields
+    @Input() readOnlyFieldFilter: (key: string) => boolean = () => false; // default to editable all fields
+    @Input() expandFieldFilter: (key: string) => boolean = () => true; // default to expand all fields
     @Output() applied = new EventEmitter<any>();
     @Output() resetted = new EventEmitter<void>();
     private _objToEdit: any = {};
@@ -52,7 +54,7 @@ export class ObjEditorComponent {
 
     private getObjKeys(obj: any): string[] {
         const keys = Object.keys(obj);
-        const includedKeys = keys.filter(this.includeFilter);
+        const includedKeys = keys.filter(this.includeFieldFilter);
         return includedKeys;
     }
 
