@@ -28,12 +28,8 @@ export class PathEditPage implements OnInit, OnDestroy {
     private readonly _plColor: Color = Color.blend(Color.Blue, Color.Cyan, 0.5);
     private readonly _flColor: Color = Color.Green;
     private readonly _ldColor: Color = Color.Red;
-    private readonly _wpGroup: MarkerGroup = new MarkerGroup(Icon.Circle(this._iconSize, this._wpColor), true, false, this._iconScale);
-    private readonly _plGroup: MarkerGroup = new MarkerGroup(Icon.Poly(this._iconSize, Icon.polyPlaneVecs, this._plColor), false, false, this._iconScale);
-    private readonly _mPath: Path = new Path(-1);
     private readonly _newMission: Mission = { id: -1, name: "New Mission", description: "", lead_id: -1, lead_path: [], follower_ids: [] }
     private readonly _missions: Array<Mission> = [this._newMission];
-    private readonly _aircrafts: Array<Aircraft> = [];
     private readonly void: Callback = () => {};
     private get isCtrlPressed(): boolean { return this._svc.keyCtrl.getKeyState("Control"); }
     private get isAltPressed(): boolean { return this._svc.keyCtrl.getKeyState("Alt"); }
@@ -43,29 +39,29 @@ export class PathEditPage implements OnInit, OnDestroy {
     private _pendingAircraftUpdate: boolean = true;
     private startAlt: number = -1;
     private leaderPrevColor: Color = Color.Transparent;
+    public aircrafts: Array<Aircraft> = [];
     public readonly apiKey = env.mapKey;
+    public readonly missionNames: Array<string> = [];
+    public readonly wpGroup: MarkerGroup = new MarkerGroup(Icon.Circle(this._iconSize, this._wpColor), true, false, this._iconScale);
+    public readonly plGroup: MarkerGroup = new MarkerGroup(Icon.Poly(this._iconSize, Icon.polyPlaneVecs, this._plColor), false, false, this._iconScale);
+    public readonly mPath: Path = new Path(-1);
     public readonly mIncludeFieldsFilter = (key: string) => { return key !== "lead_path"; }
     public readonly mReadOnlyFieldsFilter = (key: string) => { return key.includes("_id"); }
     public readonly plIncludeFieldsFilter = (key: string) => { return !key.includes("start_pos.alt"); }
-    public get markerGroups(): Array<MarkerGroup> { return [this._wpGroup, this._plGroup]; }
-    public get waypoints(): Array<Waypoint> { return this.selectedMission.lead_path; }
-    public get planes(): Array<Aircraft> { return [...this._aircrafts]; }
-    public get paths(): Array<Path> { return [this._mPath]; }
-    public get missionNames(): Array<string> { return this._missions.map((m) => m.name); }
     public get selectedMission(): Mission { return this._missions[this._selectedMissionIdx]; }
     public get existingMission(): boolean { return this._selectedMissionIdx > 0; }
 
     constructor(svc: AppService) { 
         this._svc = svc; 
-        this._mPath.color = Color.Orange;
-        this._mPath.weight = 2;
-        this._mPath.style = PathStyle.Dashed;
+        this.mPath.color = Color.Orange;
+        this.mPath.weight = 2;
+        this.mPath.style = PathStyle.Dashed;
     }
     ngOnInit(): void {
-        this._wpGroup.popupFields = ["lat", "lng", "alt"];
-        this._plGroup.popupFields = ["lat", "lng", "hdg"];
-        this._wpGroup.labelPrefix = "W";
-        this._plGroup.labelPrefix = "P";
+        this.wpGroup.popupFields = ["lat", "lng", "alt"];
+        this.plGroup.popupFields = ["lat", "lng", "hdg"];
+        this.wpGroup.labelPrefix = "W";
+        this.plGroup.labelPrefix = "P";
         this._loopTimer = setInterval(() => this.apiLoop(), 1000);
     }
     ngOnDestroy(): void {
@@ -85,6 +81,8 @@ export class PathEditPage implements OnInit, OnDestroy {
                     const missions = (d as APIResponse).data.missions_config as Array<Mission>;
                     this._missions.length = 1; // clear all missions except the new mission
                     this._missions.push(...missions);
+                    this.missionNames.length = 0; // clear all mission names
+                    this.missionNames.push(...this._missions.map((m) => m.name));
                     this._pendingMissionUpdate = false;
                 }
             }, undefined, this.void);
@@ -92,9 +90,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         if (this._pendingAircraftUpdate) {
             this._svc.callAPI("aircraft/all", (d: any) => {
                 if (this.validateResponse(d, "instances_config")) {
-                    const instances = (d as APIResponse).data.instances_config as Array<Aircraft>;
-                    this._aircrafts.length = 0; // clear all aircrafts
-                    this._aircrafts.push(...instances);
+                    this.aircrafts = (d as APIResponse).data.instances_config as Array<Aircraft>;
                     this.generateMarkersFromAircrafts();
                     this._pendingAircraftUpdate = false;
                 }
@@ -103,21 +99,21 @@ export class PathEditPage implements OnInit, OnDestroy {
     }
     private setLeader(mId: number) {
         if (mId < 0) {
-            this._plGroup.setColor(this.selectedMission.lead_id, this.leaderPrevColor);
+            this.plGroup.setColor(this.selectedMission.lead_id, this.leaderPrevColor);
             this.selectedMission.lead_id = -1;
         } else {
-            this.leaderPrevColor = this._plGroup.getColor(mId);
-            this._plGroup.setColor(mId, this._ldColor);
+            this.leaderPrevColor = this.plGroup.getColor(mId);
+            this.plGroup.setColor(mId, this._ldColor);
             this.selectedMission.lead_id = mId;
         }
         this._missions[this._selectedMissionIdx] = { ...this.selectedMission }; // force update
     }
     private addFollower(mId: number) {
-        this._plGroup.setColor(mId, this._flColor);
+        this.plGroup.setColor(mId, this._flColor);
         this.selectedMission.follower_ids.push(mId);
     }
     private removeFollower(mId: number) {
-        this._plGroup.setColor(mId, Color.Transparent);
+        this.plGroup.setColor(mId, Color.Transparent);
         this.selectedMission.follower_ids.splice(this.selectedMission.follower_ids.indexOf(mId), 1);
     }
     private updateFollower(mId: number) {
@@ -142,13 +138,13 @@ export class PathEditPage implements OnInit, OnDestroy {
         return posRad * 180 / Math.PI;
     }
     private generateMarkersFromLeadPath() {
-        this._wpGroup.markers = this.selectedMission.lead_path.map((wp, idx) => {
+        this.wpGroup.markers = this.selectedMission.lead_path.map((wp, idx) => {
             const m = new Marker(wp.lat, wp.lon, idx); // id = idx, always consecutive
             m.alt = wp.alt;
             return m;
         });
         this.selectedMission.lead_path = [...this.selectedMission.lead_path]; // force update
-        this._mPath.setPoints(this._wpGroup.markers);
+        this.mPath.setPoints(this.wpGroup.markers);
     }
     private addWaypoint(lat: number, lon: number) {
         const wp = { lat: lat, lon: lon, alt: 0, toa: 0 } as Waypoint;
@@ -157,7 +153,7 @@ export class PathEditPage implements OnInit, OnDestroy {
     }
     private removeWaypoint(mIdx: number) {
         this.selectedMission.lead_path.splice(mIdx, 1);
-        this._wpGroup.markers.splice(mIdx, 1);
+        this.wpGroup.markers.splice(mIdx, 1);
         this.generateMarkersFromLeadPath();
     }
     private updateWaypoint(mIdx: number, m: Marker) {
@@ -168,26 +164,27 @@ export class PathEditPage implements OnInit, OnDestroy {
         this.generateMarkersFromLeadPath();
     }
     private generateMarkersFromAircrafts() {
-        this._plGroup.markers = this._aircrafts.map((a) => {
+        this.plGroup.markers = this.aircrafts.map((a) => {
             const m = new Marker(a.start_pos.lat, a.start_pos.lon, a.id, a.name); // id, must recreate
             m.alt = a.start_pos.alt;
             m.hdg = a.start_pos.hdg;
             return m;
         });
+        this.aircrafts = [...this.aircrafts].sort((a, b) => a.id - b.id); // force update and sort by id
     }
     private addAircraft(lat: number, lon: number) {
-        const ids = this._aircrafts.map((a) => a.id);
+        const ids = this.aircrafts.map((a) => a.id);
         const maxId = ids.length > 0 ? Math.max(...ids) : 0;
         const ac = { id: maxId + 1, aircraft_type: 0, name: "New Aircraft", start_pos: { lat: lat, lon: lon, alt: 0, hdg: 0 } } as Aircraft;
-        this._aircrafts.push(ac);
+        this.aircrafts.push(ac);
         this.generateMarkersFromAircrafts();
     }
     private removeAircraft(mIdx: number) {
-        this._aircrafts.splice(mIdx, 1);
+        this.aircrafts.splice(mIdx, 1);
         this.generateMarkersFromAircrafts();
     }
     private updateAircraft(mIdx: number, m: Marker) {
-        const ac = this._aircrafts[mIdx]; // some fields such as name are not updated
+        const ac = this.aircrafts[mIdx]; // some fields such as name are not updated
         ac.start_pos.lat = m.lat; // might change because of a new marker
         ac.start_pos.lon = m.lng; // might change because of a new marker
         ac.start_pos.alt = m.alt; // might change because of a new marker
@@ -207,8 +204,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         this.generateMarkersFromLeadPath();
     }
     onAircraftApplied(as: Aircraft[]) {
-        this._aircrafts.length = 0;
-        this._aircrafts.push(...as);
+        this.aircrafts = as;
         this.generateMarkersFromAircrafts();
     }
     onMissionApplied(m: Mission) {
@@ -220,11 +216,11 @@ export class PathEditPage implements OnInit, OnDestroy {
     }
     onObjectClicked(me: MarkerEvent) { // only handles plane group, triggers after down & up
         if (me.mgIdx !== 1) return;
-        const currentId = this._plGroup.markers[me.mIdx].id;
+        const currentId = this.plGroup.markers[me.mIdx].id;
         if (this.selectedMission.lead_id < 0) { // no leader selected yet
             if (me.primaryButton) { // only listens for left click - leader selection
                 this.setLeader(currentId);
-                this._plGroup.updateMarker(this._plGroup.markers[me.mIdx]); // force update
+                this.plGroup.updateMarker(this.plGroup.markers[me.mIdx]); // force update
             }
         } else {
             if (me.primaryButton && currentId !== this.selectedMission.lead_id) { // left click
@@ -245,12 +241,12 @@ export class PathEditPage implements OnInit, OnDestroy {
                     this.removeWaypoint(me.mIdx);
                 }
             } else if (me.middleButton) { // middle button down, edit waypoint alt
-                this.startAlt = this._wpGroup.markers[me.mIdx].alt;
+                this.startAlt = this.wpGroup.markers[me.mIdx].alt;
             }
         } else if (me.mgIdx === 1) { // plane group
             if (me.secondaryButton) { // right button down
                 if (this.isAltPressed) { // Alt+R on PL, remove plane instance
-                    const mId = this._plGroup.markers[me.mIdx].id;
+                    const mId = this.plGroup.markers[me.mIdx].id;
                     if (mId === this.selectedMission.lead_id) { // removed leader
                         this.clearFollowers();
                         this.setLeader(-1);
@@ -270,22 +266,22 @@ export class PathEditPage implements OnInit, OnDestroy {
     onObjectMoved(me: MarkerEvent) {
         if (this.isAltPressed || this.isCtrlPressed) return; // special key is pressed, do not handle move event
         if (me.mgIdx === 0) { // waypoint move
-            if (me.primaryButton && this._wpGroup.moveable) { // left button dragging: move to new position
-                const m = this._wpGroup.markers[me.mIdx].moveTo(me.lat, me.lng);
+            if (me.primaryButton && this.wpGroup.moveable) { // left button dragging: move to new position
+                const m = this.wpGroup.markers[me.mIdx].moveTo(me.lat, me.lng);
                 this.updateWaypoint(me.mIdx, m);
             } else if (me.middleButton) { // middle button dragging: change alt
                 const alt = this.dCoordsToAlt(me.dLat, me.dLng, 100);
                 const newAlt = Math.max(0, this.startAlt + alt);
-                const m = this._wpGroup.markers[me.mIdx].liftTo(newAlt);
+                const m = this.wpGroup.markers[me.mIdx].liftTo(newAlt);
                 this.updateWaypoint(me.mIdx, m);
             }
         } else { // plane move
-            if (me.primaryButton && this._plGroup.moveable) { // left button dragging: move to new position
-                const m = this._plGroup.markers[me.mIdx].moveTo(me.lat, me.lng);
+            if (me.primaryButton && this.plGroup.moveable) { // left button dragging: move to new position
+                const m = this.plGroup.markers[me.mIdx].moveTo(me.lat, me.lng);
                 this.updateAircraft(me.mIdx, m);
             } else if (me.secondaryButton) { // right button dragging: change hdg
                 const hdg = this.dCoordsToHdg(me.dLat, me.dLng);
-                const m = this._plGroup.markers[me.mIdx].rotateTo(hdg);
+                const m = this.plGroup.markers[me.mIdx].rotateTo(hdg);
                 this.updateAircraft(me.mIdx, m);
             }
         }

@@ -1,8 +1,8 @@
 <div class="flex p_full">
     <div class="flexc grow">
         <mapview class="flex grow bd_dbl bdc_tint bd_r5"
-            [markerGroups]="markerGroups"
-            [paths]="paths"
+            [markerGroups]="[wpGroup, plGroup]"
+            [paths]="[mPath]"
             [apiKey]="apiKey"
             [mapStyles]="['topo-v2', 'satellite']"
             [mapStyle]="'topo-v2'"
@@ -91,7 +91,7 @@
         </div>
         <div class="flexc p_halfh bd_dbl bdc_tint bd_r5 pad5">
             <obj-editor class="flexc grow"
-                [objToEdit]="planes"
+                [objToEdit]="aircrafts"
                 [objName]="'Planes'"
                 [textEnabled]="false"
                 [autoApply]="true"
