@@ -195,9 +195,39 @@ export class PathEditPage implements OnInit, OnDestroy {
         this._selectedMissionIdx = idx;
         this.generateMarkersFromLeadPath();
     }
-    onMissionDeleted() {
+    onMissionApplied(m: Mission) {
+        if (m !== this.selectedMission) this._missions[this._selectedMissionIdx] = m;
     }
-    onMissionApply() {
+    getMissionValidityMessage(m: Mission): string {
+        if (m.lead_id < 0) return "No leader selected, please select a leader first by left clicking on a plane instance.";
+        if (m.follower_ids.length === 0) return "No follower selected, please select followers by right clicking plane instances.";
+        if (m.lead_path.length === 0) return "No waypoints added, please add waypoints by Ctrl+Left clicking on the map.";
+        return "";
+    }
+    onMissionUpdate() {
+        const msg: string = this.getMissionValidityMessage(this.selectedMission);
+        if (msg.length > 0) { alert(msg); return; }
+        if (this.selectedMission.id < 0) { // create new mission
+            this._svc.callAPI("mission/create", (d: any) => {
+                if (this.validateResponse(d, "mission_config")) {
+                    const newMission = (d as APIResponse).data.mission_config as Mission;
+                    this._missions.push(newMission);
+                    this.missionNames.push(newMission.name);
+                    this._selectedMissionIdx = this._missions.length - 1;
+                }
+            }, { mission_config: this.selectedMission }, this.void);
+        } else { // update existing mission
+            this._svc.callAPI("mission/update", (d: any) => {
+                if (this.validateResponse(d, "mission_config")) {
+                    const newMission = (d as APIResponse).data.mission_config as Mission;
+                    this._missions[this._selectedMissionIdx] = newMission;
+                }
+            }, { mission_config: this.selectedMission }, this.void);
+        }
+        this._pendingMissionUpdate = true;
+        this._pendingAircraftUpdate = true;
+    }
+    onMissionDeleted() {
     }
     onWaypointApplied(wps: Waypoint[]) {
         this.selectedMission.lead_path = wps;
@@ -206,13 +236,6 @@ export class PathEditPage implements OnInit, OnDestroy {
     onAircraftApplied(as: Aircraft[]) {
         this.aircrafts = as;
         this.generateMarkersFromAircrafts();
-    }
-    onMissionApplied(m: Mission) {
-        if (m !== this.selectedMission) {
-            this._missions[this._selectedMissionIdx] = m;
-            console.log("Mission applied:", m);
-            // this._pendingMissionUpdate = true;
-        }
     }
     onObjectClicked(me: MarkerEvent) { // only handles plane group, triggers after down & up
         if (me.mgIdx !== 1) return;
