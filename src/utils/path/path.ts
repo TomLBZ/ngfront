@@ -37,11 +37,10 @@ export class Path {
     }
     public get segments(): Array<Segment> {
         const segments = new Array<Segment>();
-        for (let i = 0; i < this.length - 1; i++) {
-            segments.push(new Segment(this._points[i], this._points[i + 1]));
-        }
-        if (this.closed) {
-            segments.push(new Segment(this._points[this.length - 1], this._points[0]));
+        const pts: Array<IPoint> = this.points;
+        if (pts.length < 2) return segments;
+        for (let i = 0; i < pts.length - 1; i++) {
+            segments.push(new Segment(pts[i], pts[i + 1]));
         }
         return segments;
     }
