@@ -45,7 +45,7 @@ export class FieldEditorComponent {
     public get typeStr(): string { return this.isObject ? '<Object>' : this.isArray ? '<Array>' : '<Value>'; }
     public get keys(): string[] {
         const keys = this.isObject ? Object.keys(this.objToEdit) : this.isArray ? this.getArrayKeys() : [];
-        return keys.filter(this.includeFieldFilter);
+        return keys.filter(k => this.includeFieldFilter(this.fieldFullName(k))); // filter using full field names
     }
     private getArrayKeys(): string[] { // only called if isArray has been computed
         if (this._isArrayLike) { // ArrayLike takes precedence over ArrayBufferLike
