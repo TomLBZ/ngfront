@@ -46,7 +46,8 @@ export class PathEditPage implements OnInit, OnDestroy {
     private leaderPrevColor: Color = Color.Transparent;
     public readonly apiKey = env.mapKey;
     public readonly mIncludeFieldsFilter = (key: string) => { return key !== "lead_path"; }
-    public readonly plIncludeFieldsFilter = (key: string) => { return !key.includes("alt"); }
+    public readonly mReadOnlyFieldsFilter = (key: string) => { return key.includes("_id"); }
+    public readonly plIncludeFieldsFilter = (key: string) => { return !key.includes("start_pos.alt"); }
     public get markerGroups(): Array<MarkerGroup> { return [this._wpGroup, this._plGroup]; }
     public get waypoints(): Array<Waypoint> { return this.selectedMission.lead_path; }
     public get planes(): Array<Aircraft> { return [...this._aircrafts]; }
@@ -207,8 +208,12 @@ export class PathEditPage implements OnInit, OnDestroy {
         this._aircrafts.push(...as);
         this.refreshPlanes();
     }
-    onMissionApplied(obj: any) {
-        console.log(obj);
+    onMissionApplied(m: Mission) {
+        if (m !== this.selectedMission) {
+            this._missions[this._selectedMissionIdx] = m;
+            console.log("Mission applied:", m);
+            // this._pendingMissionUpdate = true;
+        }
     }
     onObjectClicked(me: MarkerEvent) { // only handles plane group, triggers after down & up
         if (me.mgIdx !== 1) return;
