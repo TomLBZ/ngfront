@@ -60,10 +60,6 @@
                         <span>Right Click</span>
                     </div>
                     <div class="flex justends">
-                        <span class="ital">Move Plane:</span>
-                        <span>Left Drag ✥</span>
-                    </div>
-                    <div class="flex justends">
                         <span class="ital">Rotate Plane:</span>
                         <span>Right Drag ↻</span>
                     </div>
@@ -76,6 +72,7 @@
                     [textEnabled]="false"
                     [autoApply]="true"
                     [includeFieldFilter]="mIncludeFieldsFilter"
+                    [readOnlyFieldFilter]="mReadOnlyFieldsFilter"
                     (applied)="onMissionApplied($event)"
                 ></obj-editor>
                 <button class="pad5 mar5" (click)="onMissionApply()">{{existingMission ? "Update" : "Create"}} Mission</button>
