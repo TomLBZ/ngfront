@@ -207,6 +207,14 @@ export class PathEditPage implements OnInit, OnDestroy {
     onMissionUpdate() {
         const msg: string = this.getMissionValidityMessage(this.selectedMission);
         if (msg.length > 0) { alert(msg); return; }
+        this._svc.callAPI("aircraft/update", (d: any) => { // update aircrafts first
+            if (this.validateResponse(d, "instances_config")) {
+                const newAircrafts = (d as APIResponse).data.instances_config as Aircraft[];
+                this.aircrafts = newAircrafts;
+                this.generateMarkersFromAircrafts();
+                this._pendingAircraftUpdate = true;
+            }
+        }, { instances_config: this.aircrafts }, this.void); // TODO: if aircrafts are not updated, do not call API to update missions
         if (this.selectedMission.id < 0) { // create new mission
             this._svc.callAPI("mission/create", (d: any) => {
                 if (this.validateResponse(d, "mission_config")) {
@@ -214,6 +222,7 @@ export class PathEditPage implements OnInit, OnDestroy {
                     this._missions.push(newMission);
                     this.missionNames.push(newMission.name);
                     this._selectedMissionIdx = this._missions.length - 1;
+                    this._pendingMissionUpdate = true;
                 }
             }, { mission_config: this.selectedMission }, this.void);
         } else { // update existing mission
@@ -221,11 +230,10 @@ export class PathEditPage implements OnInit, OnDestroy {
                 if (this.validateResponse(d, "mission_config")) {
                     const newMission = (d as APIResponse).data.mission_config as Mission;
                     this._missions[this._selectedMissionIdx] = newMission;
+                    this._pendingMissionUpdate = true;
                 }
             }, { mission_config: this.selectedMission }, this.void);
         }
-        this._pendingMissionUpdate = true;
-        this._pendingAircraftUpdate = true;
     }
     onMissionDeleted() {
     }
