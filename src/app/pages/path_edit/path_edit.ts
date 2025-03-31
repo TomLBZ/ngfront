@@ -13,7 +13,6 @@ import { AppService } from "../../app.service";
 import { APIResponse, Mission, Aircraft, Waypoint } from "../../app.interface";
 import { Callback } from "../../../utils/type/types";
 import { StructValidator } from "../../../utils/api/validate";
-import { Point } from "../../../utils/point/point";
 
 @Component({
     selector: "page-path-edit",
@@ -96,29 +95,11 @@ export class PathEditPage implements OnInit, OnDestroy {
                     const instances = (d as APIResponse).data.instances_config as Array<Aircraft>;
                     this._aircrafts.length = 0; // clear all aircrafts
                     this._aircrafts.push(...instances);
-                    this.refreshPlanes();
+                    this.generateMarkersFromAircrafts();
                     this._pendingAircraftUpdate = false;
                 }
             }, undefined, this.void);
         }
-    }
-    private refreshWaypoints() {
-        const pts: Array<Point> = [];
-        this._wpGroup.markers = this.selectedMission.lead_path.map((wp, idx) => {
-            pts.push(new Point(wp.lat, wp.lon));
-            const m = new Marker(wp.lat, wp.lon, idx); // id = idx, always consecutive
-            m.alt = wp.alt;
-            return m;
-        });
-        this._mPath.setPoints(pts);
-    }
-    private refreshPlanes() {
-        this._plGroup.markers = this._aircrafts.map((a) => {
-            const m = new Marker(a.start_pos.lat, a.start_pos.lon, a.id, a.name); // id, must recreate
-            m.alt = a.start_pos.alt;
-            m.hdg = a.start_pos.hdg;
-            return m;
-        });
     }
     private setLeader(mId: number) {
         if (mId < 0) {
@@ -160,40 +141,62 @@ export class PathEditPage implements OnInit, OnDestroy {
         const posRad = offsetRad < 0 ? 2 * Math.PI + offsetRad : offsetRad;
         return posRad * 180 / Math.PI;
     }
-    private addWaypoint(m: Marker) {
-        const wp = { lat: m.lat, lon: m.lng, alt: m.alt, toa: 0 } as Waypoint;
-        this.selectedMission.lead_path = [...this.selectedMission.lead_path, wp];
-        this.refreshWaypoints();
+    private generateMarkersFromLeadPath() {
+        this._wpGroup.markers = this.selectedMission.lead_path.map((wp, idx) => {
+            const m = new Marker(wp.lat, wp.lon, idx); // id = idx, always consecutive
+            m.alt = wp.alt;
+            return m;
+        });
+        this.selectedMission.lead_path = [...this.selectedMission.lead_path]; // force update
+        this._mPath.setPoints(this._wpGroup.markers);
     }
-    private addAircraft(m: Marker) {
-        const ac = { id: m.id, aircraft_type: 0, name: "New Aircraft", start_pos: { lat: m.lat, lon: m.lng, alt: m.alt, hdg: m.hdg } } as Aircraft;
+    private addWaypoint(lat: number, lon: number) {
+        const wp = { lat: lat, lon: lon, alt: 0, toa: 0 } as Waypoint;
+        this.selectedMission.lead_path.push(wp);
+        this.generateMarkersFromLeadPath();
+    }
+    private removeWaypoint(mIdx: number) {
+        this.selectedMission.lead_path.splice(mIdx, 1);
+        this._wpGroup.markers.splice(mIdx, 1);
+        this.generateMarkersFromLeadPath();
+    }
+    private updateWaypoint(mIdx: number, m: Marker) {
+        const wp = this.selectedMission.lead_path[mIdx]; // some fields such as toa are not updated
+        wp.lat = m.lat; // might change because of a new marker
+        wp.lon = m.lng; // might change because of a new marker
+        wp.alt = m.alt; // might change because of a new marker
+        this.generateMarkersFromLeadPath();
+    }
+    private generateMarkersFromAircrafts() {
+        this._plGroup.markers = this._aircrafts.map((a) => {
+            const m = new Marker(a.start_pos.lat, a.start_pos.lon, a.id, a.name); // id, must recreate
+            m.alt = a.start_pos.alt;
+            m.hdg = a.start_pos.hdg;
+            return m;
+        });
+    }
+    private addAircraft(lat: number, lon: number) {
+        const ids = this._aircrafts.map((a) => a.id);
+        const maxId = ids.length > 0 ? Math.max(...ids) : 0;
+        const ac = { id: maxId + 1, aircraft_type: 0, name: "New Aircraft", start_pos: { lat: lat, lon: lon, alt: 0, hdg: 0 } } as Aircraft;
         this._aircrafts.push(ac);
-        this.refreshPlanes();
+        this.generateMarkersFromAircrafts();
     }
-    private updateLeadPath() {
-        this.selectedMission.lead_path = this.selectedMission.lead_path.map((wp, idx) => {
-            const m = this._wpGroup.markers[idx];
-            wp.lat = m.lat;
-            wp.lon = m.lng;
-            wp.alt = m.alt;
-            return wp; // keeps toa
-        });
+    private removeAircraft(mIdx: number) {
+        this._aircrafts.splice(mIdx, 1);
+        this.generateMarkersFromAircrafts();
     }
-    private updateAircrafts() {
-        const newAircrafts = this._aircrafts.map((ac, idx) => {
-            const m = this._plGroup.markers[idx];
-            ac.start_pos.lat = m.lat;
-            ac.start_pos.lon = m.lng;
-            ac.start_pos.alt = m.alt;
-            ac.start_pos.hdg = m.hdg;
-            return ac;
-        });
-        this._aircrafts.length = 0;
-        this._aircrafts.push(...newAircrafts);
+    private updateAircraft(mIdx: number, m: Marker) {
+        const ac = this._aircrafts[mIdx]; // some fields such as name are not updated
+        ac.start_pos.lat = m.lat; // might change because of a new marker
+        ac.start_pos.lon = m.lng; // might change because of a new marker
+        ac.start_pos.alt = m.alt; // might change because of a new marker
+        ac.start_pos.hdg = m.hdg; // might change because of a new marker
+        this.generateMarkersFromAircrafts();
     }
     onMissionSelected(idx: number) {
         this._selectedMissionIdx = idx;
-        this.refreshWaypoints();
+        this.generateMarkersFromLeadPath();
     }
     onMissionDeleted() {
     }
@@ -201,12 +204,12 @@ export class PathEditPage implements OnInit, OnDestroy {
     }
     onWaypointApplied(wps: Waypoint[]) {
         this.selectedMission.lead_path = wps;
-        this.refreshWaypoints();
+        this.generateMarkersFromLeadPath();
     }
     onAircraftApplied(as: Aircraft[]) {
         this._aircrafts.length = 0;
         this._aircrafts.push(...as);
-        this.refreshPlanes();
+        this.generateMarkersFromAircrafts();
     }
     onMissionApplied(m: Mission) {
         if (m !== this.selectedMission) {
@@ -236,23 +239,27 @@ export class PathEditPage implements OnInit, OnDestroy {
         }
     }
     onObjectMouseDown(me: MarkerEvent) {
-        const mg = me.mgIdx === 0 ? this._wpGroup : this._plGroup;
-        if (me.secondaryButton) { // right button down
-            const mId = mg.markers[me.mIdx].id;
-            if (this.isCtrlPressed && me.mgIdx === 0) { // Ctrl+R on WP, remove waypoint (priority)
-                mg.removeMarker(me.mIdx);
-            } else if (this.isAltPressed && me.mgIdx === 1) { // Alt+R on PL, remove plane instance
-                if (mId === this.selectedMission.lead_id) { // removed leader
-                    this.clearFollowers();
-                    this.setLeader(-1);
-                } else if (this.selectedMission.follower_ids.includes(mId)) { // removed follower
-                    this.removeFollower(mId);
+        if (me.mgIdx === 0) { // waypoint group
+            if (me.secondaryButton) { // right button down
+                if (this.isCtrlPressed) { // Ctrl+R on WP, remove waypoint (priority)
+                    this.removeWaypoint(me.mIdx);
                 }
-                mg.removeMarker(me.mIdx);
+            } else if (me.middleButton) { // middle button down, edit waypoint alt
+                this.startAlt = this._wpGroup.markers[me.mIdx].alt;
             }
-            mg.refresh();
-        } else if (me.middleButton) { // middle button down
-            this.startAlt = mg.markers[me.mIdx].alt;
+        } else if (me.mgIdx === 1) { // plane group
+            if (me.secondaryButton) { // right button down
+                if (this.isAltPressed) { // Alt+R on PL, remove plane instance
+                    const mId = this._plGroup.markers[me.mIdx].id;
+                    if (mId === this.selectedMission.lead_id) { // removed leader
+                        this.clearFollowers();
+                        this.setLeader(-1);
+                    } else if (this.selectedMission.follower_ids.includes(mId)) { // removed follower
+                        this.removeFollower(mId);
+                    }
+                    this.removeAircraft(me.mIdx);
+                }
+            }
         }
     }
     onObjectMouseUp(me: MarkerEvent) {
@@ -262,32 +269,34 @@ export class PathEditPage implements OnInit, OnDestroy {
     }
     onObjectMoved(me: MarkerEvent) {
         if (this.isAltPressed || this.isCtrlPressed) return; // special key is pressed, do not handle move event
-        const mg = me.mgIdx === 0 ? this._wpGroup : this._plGroup;
-        if (me.primaryButton && mg.moveable) { // left button dragging: move to new position
-            const m = mg.markers[me.mIdx].moveTo(me.lat, me.lng);
-            mg.updateMarker(m);
-            if (me.mgIdx === 0) this.updateLeadPath(); // update lead path if waypoint is moved
-        } else if (me.secondaryButton && me.mgIdx === 1) { // R dragging on PL: change hdg for planes
-            const hdg = this.dCoordsToHdg(me.dLat, me.dLng);
-            const m = mg.markers[me.mIdx].rotateTo(hdg);
-            mg.updateMarker(m);
-            this.updateAircrafts(); // update aircrafts if plane hdg is changed
-        } else if (me.middleButton && me.mgIdx === 0) { // M dragging on WP: change alt for WPs
-            const alt = this.dCoordsToAlt(me.dLat, me.dLng, 100);
-            const newAlt = Math.max(0, this.startAlt + alt);
-            const m = mg.markers[me.mIdx].liftTo(newAlt);
-            mg.updateMarker(m);
-            this.updateLeadPath(); // update lead path if waypoint alt is changed
+        if (me.mgIdx === 0) { // waypoint move
+            if (me.primaryButton && this._wpGroup.moveable) { // left button dragging: move to new position
+                const m = this._wpGroup.markers[me.mIdx].moveTo(me.lat, me.lng);
+                this.updateWaypoint(me.mIdx, m);
+            } else if (me.middleButton) { // middle button dragging: change alt
+                const alt = this.dCoordsToAlt(me.dLat, me.dLng, 100);
+                const newAlt = Math.max(0, this.startAlt + alt);
+                const m = this._wpGroup.markers[me.mIdx].liftTo(newAlt);
+                this.updateWaypoint(me.mIdx, m);
+            }
+        } else { // plane move
+            if (me.primaryButton && this._plGroup.moveable) { // left button dragging: move to new position
+                const m = this._plGroup.markers[me.mIdx].moveTo(me.lat, me.lng);
+                this.updateAircraft(me.mIdx, m);
+            } else if (me.secondaryButton) { // right button dragging: change hdg
+                const hdg = this.dCoordsToHdg(me.dLat, me.dLng);
+                const m = this._plGroup.markers[me.mIdx].rotateTo(hdg);
+                this.updateAircraft(me.mIdx, m);
+            }
         }
     }
     onMapMouseDown(mve: MapViewEvent) {
         if (!this.isAltPressed && !this.isCtrlPressed) return; // no special key pressed, skip
         if (mve.primaryButton) { // left click
-            const m = new Marker(mve.lat, mve.lng);
             if (this.isCtrlPressed) { // add waypoint (priority)
-                this.addWaypoint(m);
+                this.addWaypoint(mve.lat, mve.lng);
             } else if (this.isAltPressed) { // add plane instance
-                this.addAircraft(m);
+                this.addAircraft(mve.lat, mve.lng);
             }
         }
     }
