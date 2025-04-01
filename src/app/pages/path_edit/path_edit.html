@@ -15,7 +15,9 @@
         <div class="flex px_h300">
             <div class="flexc p_halfw bd_dbl bdc_tint bd_r5 pad10h">
                 <dropselect class="pad5btm"
-                    [items]="missionNames"
+                    [items]="missions"
+                    [defaultItem]="missions[0]"
+                    [representation]="missionsRepr"
                     [title]="'Select Mission'"
                     [hoverMode]="true"
                     [indexMode]="true"
@@ -75,7 +77,14 @@
                     [readOnlyFieldFilter]="mReadOnlyFieldsFilter"
                     (applied)="onMissionApplied($event)"
                 ></obj-editor>
-                <button class="pad5 mar5" (click)="onMissionUpdate()">{{existingMission ? "Update" : "Create"}} Mission</button>
+                <div class="flex justends">
+                    <button class="pad5 mar5 p_halfw" (click)="onAircraftsCheckValidity()">Check Aircrafts Validity</button>
+                    <button class="pad5 mar5 p_halfw" (click)="onAircraftsUpdate()" [disabled]="!isAircraftsValid">Update Aircrafts</button>
+                </div>
+                <div class="flex justends">
+                    <button class="pad5 mar5 p_halfw" (click)="onMissionCheckValidity()" [disabled]="!isAircraftsValid">Check Mission Validity</button>
+                    <button class="pad5 mar5 p_halfw" (click)="onMissionUpdate()" [disabled]="!isMissionValid || !isAircraftsValid">{{existingMission ? "Update" : "Create"}} Mission</button>
+                </div>
             </div>
         </div>
     </div>
