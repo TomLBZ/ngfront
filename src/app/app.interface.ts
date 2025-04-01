@@ -28,7 +28,7 @@ export interface StartPos {
 }
 export interface Aircraft {
     id: number;
-    aircraft_type: number;
+    airframe_type: number;
     name: string;
     start_pos: StartPos;
 }
