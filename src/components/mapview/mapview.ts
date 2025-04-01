@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { MapComponent, LayerComponent, GeoJSONSourceComponent, 
     FeatureComponent, ImageComponent, PopupComponent } from "@maplibre/ngx-maplibre-gl";
 import { DropSelectComponent } from '../dropselect/dropselect';
-import { Map, MapLayerMouseEvent, ProjectionSpecification } from 'maplibre-gl';
+import { Map, MapLayerMouseEvent, Point, ProjectionSpecification } from 'maplibre-gl';
 import { MarkerEvent, MapViewEvent } from './event';
 import { MarkerGroup } from '../../utils/marker/markergrp';
 import { Path } from '../../utils/path/path';
@@ -169,6 +169,7 @@ export class MapViewComponent {
             } else { // marker has been removed, reset
                 this.opMgIdx = -1;
                 this.opMarkerIdx = -1;
+                this.opMapPoint = new Point(0, 0);
                 this.clickingButtons = -1;
             }
         }
@@ -176,6 +177,7 @@ export class MapViewComponent {
     }
     private opMgIdx: number = -1;
     private opMarkerIdx: number = -1;
+    private opMapPoint: Point = new Point(0, 0);
     private clickingButtons: number = -1;
     onMarkerDown(event: MapLayerMouseEvent, mgIdx: number) {
         this.clickingButtons = event.originalEvent.buttons; // starts clicking
@@ -186,20 +188,23 @@ export class MapViewComponent {
             event.preventDefault(); // prevent map default events
             this.opMgIdx = mgIdx;
             this.opMarkerIdx = mIdx;
+            this.opMapPoint = new Point(0, 0);
         }
         this.objectMouseDown.emit(me);
     }
     onMarkerUp(event: MapLayerMouseEvent, mgIdx: number) {
-        if (this.opMgIdx >= 0) {
+        if (this.opMgIdx >= 0) { // map trigger => cancel click
             event.preventDefault(); // prevent map drag
             this.opMgIdx = -1;
             this.opMarkerIdx = -1;
+            this.opMapPoint = event.point; // saves the point from the map up event
             this.popupVisible = false; // hide popup
         }
-        const mIdx = this.Event2MkrIdx(event, mgIdx);
-        if (mIdx < 0) return;
+        const mIdx = this.Event2MkrIdx(event, mgIdx); // will be -1 for map triggered event
+        if (mIdx < 0) return; // up on map, not on marker
         this.objectMouseUp.emit(new MarkerEvent(mIdx, mgIdx, event));
-        if (this.clickingButtons >= 0) { // clicking is done, trigger click event
+        if (this.opMapPoint.equals(event.point) && this.clickingButtons >= 0) { // clicking is done, trigger click event
+            this.opMapPoint = new Point(0, 0); // reset map up point
             this.onMarkerClick(event, mgIdx);
         }
     }
