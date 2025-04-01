@@ -18,7 +18,7 @@ export class PagesComponent implements OnInit {
         // {label: 'Controls', path: 'controls'},
         {label: 'Monitor', path: 'monitor'},
         {label: 'Configurations', path: 'configs'},
-        {label: 'Path Edit', path: 'path-edit'},
+        {label: 'Mission Editor', path: 'path-edit'},
         {label: 'Logs', path: 'logs'},
         {label: 'Test', path: 'test'},
     ];
