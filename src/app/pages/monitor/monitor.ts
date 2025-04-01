@@ -173,10 +173,7 @@ export class MonitorPage implements OnInit, OnDestroy {
                 if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
                 const dd = d as APIResponse;
                 if (!dd.success) return; // skip when failed
-                if (!this.isValidMission(dd.data)) {
-                    this.resetNeeded = true; // reset needed when invalid mission
-                    return; // invalid mission
-                }
+                if (!this.isValidMission(dd.data)) return; // invalid mission
                 const m = dd.data as Mission;
                 if (this.selectedMission === undefined) this.onMissionSelected(m); // select mission if not selected
                 else if (m.id !== this.selectedMission.id) {
@@ -270,7 +267,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
             else if (!(d as APIResponse).success) {
                 alert(d.msg);
-                this.resetNeeded = true; // reset needed when failed
+                this.resetNeeded = !this._health.sim; // reset needed when simulator is offline
             }
         }, this.selectedMission!.id, alert);
     }
