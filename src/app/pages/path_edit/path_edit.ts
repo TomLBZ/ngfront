@@ -350,6 +350,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         this.isMissionValid = true; // assume true if no error
         alert("Mission is valid! You can now create/update the mission.");
     }
+    @ViewChild("ds", { static: true }) ds!: DropSelectComponent;
     onMissionUpdate() {
         const ids = this.missions.map((m) => m.id); // exiting ids
         ids.shift(); // remove new mission id
@@ -358,7 +359,7 @@ export class PathEditPage implements OnInit, OnDestroy {
                 if (StructValidator.hasFields(d, ["success", "msg"])) {
                     if ((d as APIResponse).success) { // created successfully
                         this.missions.push({ ...this.selectedMission }); // add new mission
-                        this.onMissionSelected(this.missions.length - 1); // select new mission
+                        this.ds.reset([this.missions.length - 1], true); // select new mission
                         this.resetNewMission(); // reset new mission
                         this._pendingMissionUpdate = true;
                         alert("Mission created!");
@@ -381,8 +382,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         this._svc.callAPI("mission/delete", (d: any) => {
             if (StructValidator.hasFields(d, ["success", "msg"])) {
                 if ((d as APIResponse).success) { // deleted successfully
-                    this.missions.splice(this._selectedMissionIdx, 1);
-                    this.onMissionSelected(Math.max(0, this._selectedMissionIdx - 1)); // select previous mission
+                    this.ds.reset([0], true); // select new mission
                     this._pendingMissionUpdate = true;
                     alert("Mission deleted!");
                 } else alert("Failed to delete mission: " + (d as APIResponse).msg);
