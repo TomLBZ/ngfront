@@ -8,8 +8,11 @@ export class Flag {
     public set(name: string) {
         this._setFlag(name, true);
     }
-    public clear(name: string) {
+    public unset(name: string) {
         this._setFlag(name, false);
+    }
+    public clear() {
+        this._flags = 0;
     }
     public toggle(name: string) {
         this._setFlag(name, !this.get(name));
