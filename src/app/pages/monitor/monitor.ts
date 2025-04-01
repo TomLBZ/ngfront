@@ -84,6 +84,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public launchSettings: LaunchSettings = { fgEnable: false };
     public runtimeSettings: RuntimeSettings = { traces: 50, lead_id: 0 };
     public selectedMission?: Mission = undefined;
+    public resetNeeded: boolean = false;
     private isValidMission(m: any): boolean {
         return StructValidator.hasNonEmptyFields(m, ["id", "name", "description", "lead_id", "lead_path", "follower_ids"]);
     }
@@ -172,7 +173,10 @@ export class MonitorPage implements OnInit, OnDestroy {
                 if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
                 const dd = d as APIResponse;
                 if (!dd.success) return; // skip when failed
-                if (!this.isValidMission(dd.data)) return; // invalid mission
+                if (!this.isValidMission(dd.data)) {
+                    this.resetNeeded = true; // reset needed when invalid mission
+                    return; // invalid mission
+                }
                 const m = dd.data as Mission;
                 if (this.selectedMission === undefined) this.onMissionSelected(m); // select mission if not selected
                 else if (m.id !== this.selectedMission.id) {
@@ -264,7 +268,10 @@ export class MonitorPage implements OnInit, OnDestroy {
     onLaunch() {
         this._svc.callAPI("mission/start", (d: any) => {
             if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
-            else if (!(d as APIResponse).success) alert(d.msg);
+            else if (!(d as APIResponse).success) {
+                alert(d.msg);
+                this.resetNeeded = true; // reset needed when failed
+            }
         }, this.selectedMission!.id, alert);
     }
     onSigLoss(resumable: boolean) {
@@ -276,6 +283,13 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
             else if (!(d as APIResponse).success) alert(d.msg); // not successful
             else this.stopTelemetry(); // stop telemetry when stopped successfully
+        }, undefined, alert);
+    }
+    onReset() {
+        this._svc.callAPI("sim/reset", (d: any) => {
+            if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
+            else if (!(d as APIResponse).success) alert(d.msg); // not successful
+            else this.resetNeeded = false; // reset not needed
         }, undefined, alert);
     }
 }
