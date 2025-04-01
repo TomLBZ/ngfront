@@ -28,27 +28,36 @@ export class PathEditPage implements OnInit, OnDestroy {
     private readonly _plColor: Color = Color.blend(Color.Blue, Color.Cyan, 0.5);
     private readonly _flColor: Color = Color.Green;
     private readonly _ldColor: Color = Color.Red;
-    private readonly _newMission: Mission = { id: -1, name: "New Mission", description: "", lead_id: -1, lead_path: [], follower_ids: [] }
-    private readonly _missions: Array<Mission> = [this._newMission];
+    private readonly _newMission: Mission = { id: -1, name: "", description: "", lead_id: -1, lead_path: [], follower_ids: [] }
     private readonly void: Callback = () => {};
     private get isCtrlPressed(): boolean { return this._svc.keyCtrl.getKeyState("Control"); }
     private get isAltPressed(): boolean { return this._svc.keyCtrl.getKeyState("Alt"); }
     private _loopTimer: any;
+    private _aircraftUpdateTimer: any;
     private _selectedMissionIdx: number = 0;
     private _pendingMissionUpdate: boolean = true;
     private _pendingAircraftUpdate: boolean = true;
     private startAlt: number = -1;
     private leaderPrevColor: Color = Color.Transparent;
+    private readonly _aircraftsToCreate: Array<Aircraft> = [];
+    private readonly _aircraftsToUpdate: Array<Aircraft> = [];
+    private readonly _aircraftsToDelete: Array<Aircraft> = [];
+    private _aircraftsCreating: boolean = false;
+    private _aircraftsUpdating: boolean = false;
+    private _aircraftsDeleting: boolean = false;
     public aircrafts: Array<Aircraft> = [];
+    public isMissionValid: boolean = false;
+    public isAircraftsValid: boolean = false;
     public readonly apiKey = env.mapKey;
-    public readonly missionNames: Array<string> = [];
+    public readonly missions: Array<Mission> = [this._newMission];
+    public readonly missionsRepr = (m: Mission) => m.name.length > 0 ? m.name : "[New Mission]";
     public readonly wpGroup: MarkerGroup = new MarkerGroup(Icon.Circle(this._iconSize, this._wpColor), true, false, this._iconScale);
     public readonly plGroup: MarkerGroup = new MarkerGroup(Icon.Poly(this._iconSize, Icon.polyPlaneVecs, this._plColor), false, false, this._iconScale);
     public readonly mPath: Path = new Path(-1);
     public readonly mIncludeFieldsFilter = (key: string) => { return key !== "lead_path"; }
     public readonly mReadOnlyFieldsFilter = (key: string) => { return key.includes("_id"); }
     public readonly plIncludeFieldsFilter = (key: string) => { return !key.includes("start_pos.alt"); }
-    public get selectedMission(): Mission { return this._missions[this._selectedMissionIdx]; }
+    public get selectedMission(): Mission { return this.missions[this._selectedMissionIdx]; }
     public get existingMission(): boolean { return this._selectedMissionIdx > 0; }
 
     constructor(svc: AppService) { 
@@ -79,10 +88,8 @@ export class PathEditPage implements OnInit, OnDestroy {
             this._svc.callAPI("mission/all", (d: any) => {
                 if (this.validateResponse(d, "missions_config")) {
                     const missions = (d as APIResponse).data.missions_config as Array<Mission>;
-                    this._missions.length = 1; // clear all missions except the new mission
-                    this._missions.push(...missions);
-                    this.missionNames.length = 0; // clear all mission names
-                    this.missionNames.push(...this._missions.map((m) => m.name));
+                    this.missions.length = 1; // clear all missions except the new mission
+                    this.missions.push(...missions);
                     this._pendingMissionUpdate = false;
                 }
             }, undefined, this.void);
@@ -96,6 +103,54 @@ export class PathEditPage implements OnInit, OnDestroy {
                 }
             }, undefined, this.void);
         }
+        if (this._aircraftsToCreate.length + this._aircraftsToUpdate.length + this._aircraftsToDelete.length > 0) {
+            if (this._aircraftUpdateTimer === undefined) this._aircraftUpdateTimer = setTimeout(() => this.aircraftsUpdateLoop(), 100);
+        } else if (this._aircraftUpdateTimer !== undefined) {
+            clearTimeout(this._aircraftUpdateTimer);
+            this._aircraftUpdateTimer = undefined;
+            alert("Aircrafts updated!")
+        }
+    }
+    private aircraftsUpdateLoop() {
+        if (this._aircraftsToDelete.length > 0 && !this._aircraftsDeleting) {
+            console.log("Deleting aircraft: " + this._aircraftsToDelete[this._aircraftsToDelete.length - 1].name);
+            this._aircraftsDeleting = true;
+            this._svc.callAPI("aircraft/delete", (d: any) => {
+                if (StructValidator.hasFields(d, ["success", "msg"])) {
+                    if ((d as APIResponse).success) { // deleted successfully
+                        this._aircraftsToDelete.pop(); // remove deleted aircraft
+                        this._aircraftsDeleting = false;
+                        this._pendingAircraftUpdate = true; // force update
+                    } else alert("Failed to delete aircraft: " + (d as APIResponse).msg);
+                } else alert("Failed to delete aircraft: invalid response");
+            }, this._aircraftsToDelete[this._aircraftsToDelete.length - 1].id, this.void);
+        }
+        if (this._aircraftsToUpdate.length > 0 && !this._aircraftsUpdating) {
+            console.log("Updating aircraft: " + this._aircraftsToUpdate[this._aircraftsToUpdate.length - 1].name);
+            this._aircraftsUpdating = true;
+            this._svc.callAPI("aircraft/update", (d: any) => {
+                if (StructValidator.hasFields(d, ["success", "msg"])) {
+                    if ((d as APIResponse).success) { // updated successfully
+                        this._aircraftsToUpdate.pop(); // remove updated aircraft
+                        this._aircraftsUpdating = false;
+                        this._pendingAircraftUpdate = true; // force update
+                    } else alert("Failed to update aircraft: " + (d as APIResponse).msg);
+                } else alert("Failed to update aircraft: invalid response");
+            }, this._aircraftsToUpdate[this._aircraftsToUpdate.length - 1] , this.void);
+        }
+        if (this._aircraftsToCreate.length > 0 && !this._aircraftsCreating) {
+            console.log("Creating aircraft: " + this._aircraftsToCreate[this._aircraftsToCreate.length - 1].name);
+            this._aircraftsCreating = true;
+            this._svc.callAPI("aircraft/create", (d: any) => {
+                if (StructValidator.hasFields(d, ["success", "msg"])) {
+                    if ((d as APIResponse).success) { // created successfully
+                        this._aircraftsToCreate.pop(); // remove created aircraft
+                        this._aircraftsCreating = false;
+                        this._pendingAircraftUpdate = true; // force update
+                    } else alert("Failed to create aircraft: " + (d as APIResponse).msg);
+                } else alert("Failed to create aircraft: invalid response");
+            }, this._aircraftsToCreate[this._aircraftsToCreate.length - 1], this.void);
+        }
     }
     private setLeader(mId: number) {
         if (mId < 0) {
@@ -106,7 +161,7 @@ export class PathEditPage implements OnInit, OnDestroy {
             this.plGroup.setColor(mId, this._ldColor);
             this.selectedMission.lead_id = mId;
         }
-        this._missions[this._selectedMissionIdx] = { ...this.selectedMission }; // force update
+        this.missions[this._selectedMissionIdx] = { ...this.selectedMission }; // force update
     }
     private addFollower(mId: number) {
         this.plGroup.setColor(mId, this._flColor);
@@ -121,10 +176,10 @@ export class PathEditPage implements OnInit, OnDestroy {
         const isFollower = this.selectedMission.follower_ids.includes(mId);
         if (isFollower) this.removeFollower(mId);
         else this.addFollower(mId);
-        this._missions[this._selectedMissionIdx] = { ...this.selectedMission }; // force update
+        this.missions[this._selectedMissionIdx] = { ...this.selectedMission }; // force update
     }
     private clearFollowers() {
-        [...this.selectedMission.follower_ids].forEach((fId) => this.updateFollower(fId));
+        [...this.selectedMission.follower_ids].forEach((fId) => this.removeFollower(fId));
     }
     private dCoordsToAlt(diffLat: number, diffLng: number, mPerUnit: number): number {
         const dx = Math.abs(diffLng) * mPerUnit; // moving left or right has the same effect
@@ -175,7 +230,7 @@ export class PathEditPage implements OnInit, OnDestroy {
     private addAircraft(lat: number, lon: number) {
         const ids = this.aircrafts.map((a) => a.id);
         const maxId = ids.length > 0 ? Math.max(...ids) : 0;
-        const ac = { id: maxId + 1, aircraft_type: 0, name: "New Aircraft", start_pos: { lat: lat, lon: lon, alt: 0, hdg: 0 } } as Aircraft;
+        const ac = { id: maxId + 1, airframe_type: 0, name: "New Aircraft", start_pos: { lat: lat, lon: lon, alt: 0, hdg: 0 } } as Aircraft;
         this.aircrafts.push(ac);
         this.generateMarkersFromAircrafts();
     }
@@ -191,51 +246,148 @@ export class PathEditPage implements OnInit, OnDestroy {
         ac.start_pos.hdg = m.hdg; // might change because of a new marker
         this.generateMarkersFromAircrafts();
     }
+    private resetNewMission() {
+        this._newMission.name = "";
+        this._newMission.description = "";
+        this._newMission.lead_id = -1;
+        this._newMission.lead_path = [];
+        this._newMission.follower_ids = [];
+        this.missions[0] = this._newMission;
+    }
+    private aircraftEquals(a1: Aircraft, a2: Aircraft): boolean {
+        return a1.id === a2.id && a1.start_pos.lat === a2.start_pos.lat && a1.start_pos.lon === a2.start_pos.lon &&
+            a1.start_pos.alt === a2.start_pos.alt && a1.start_pos.hdg === a2.start_pos.hdg && a1.name === a2.name && a1.airframe_type === a2.airframe_type;
+    }
     onMissionSelected(idx: number) {
+        const old_leadId = this.selectedMission.lead_id;
+        const old_followerIds = this.selectedMission.follower_ids;
+        this.plGroup.setColor(old_leadId, this.leaderPrevColor); // reset old leader color
+        old_followerIds.forEach((fId) => this.plGroup.setColor(fId, Color.Transparent)); // reset old followers color
         this._selectedMissionIdx = idx;
+        this.plGroup.setColor(this.selectedMission.lead_id, this._ldColor); // set new leader color
+        this.selectedMission.follower_ids.forEach((fId) => this.plGroup.setColor(fId, this._flColor)); // set new followers color
+        this.isAircraftsValid = false; // reset aircrafts validity
+        this.isMissionValid = false; // reset mission validity
         this.generateMarkersFromLeadPath();
     }
     onMissionApplied(m: Mission) {
-        if (m !== this.selectedMission) this._missions[this._selectedMissionIdx] = m;
+        if (m.id !== this.selectedMission.id) this.selectedMission.id = m.id; // update id
+        if (m.name !== this.selectedMission.name) this.selectedMission.name = m.name; // update name
+        if (m.description !== this.selectedMission.description) this.selectedMission.description = m.description; // update description
     }
     getMissionValidityMessage(m: Mission): string {
-        if (m.lead_id < 0) return "No leader selected, please select a leader first by left clicking on a plane instance.";
+        const mids = this.missions.map((m) => m.id);
+        if (m.id <= 0) return "Invalid mission id: " + m.id + ", id should be > 0.";
+        if (mids.filter((id) => id === m.id).length > 1) return "Duplicate mission id: " + m.id;
+        if (m.id !== Math.floor(m.id)) return "Mission id must be an integer: " + m.id;
+        if (m.name.length === 0) return "Invalid mission name: [EMPTY]";
+        if (m.name.length > 32) return "Mission name is too long: " + m.name;
+        if (m.description.length > 256) return "Mission description is too long: " + m.description;
+        if (m.lead_id <= 0) return "No leader selected, please select a leader first by left clicking on a plane instance.";
         if (m.follower_ids.length === 0) return "No follower selected, please select followers by right clicking plane instances.";
         if (m.lead_path.length === 0) return "No waypoints added, please add waypoints by Ctrl+Left clicking on the map.";
         return "";
     }
-    onMissionUpdate() {
+    getAircraftValidityMessage(): string {
+        if (this.aircrafts.length === 0) return "No aircraft added, please add aircraft by Alt+Left clicking on the map.";
+        const ids = this.aircrafts.map((a) => a.id);
+        const names = this.aircrafts.map((a) => a.name);
+        for (const a of this.aircrafts) {
+            const suffix = ` for aircraft ${a.name} (id: ${a.id})`;
+            if (a.id <= 0) return "Invalid aircraft id (should be > 0): " + a.id + suffix;
+            if (a.id !== Math.floor(a.id)) return "Aircraft id must be an integer: " + a.id + suffix;
+            if (a.start_pos.lat < -90 || a.start_pos.lat > 90) return "Invalid latitude: " + a.start_pos.lat + suffix;
+            if (a.start_pos.lon < -180 || a.start_pos.lon > 180) return "Invalid longitude: " + a.start_pos.lon + suffix;
+            if (a.start_pos.alt < 0) return "Invalid altitude: " + a.start_pos.alt + suffix;
+            if (a.start_pos.alt > 8844) return "Invalid altitude: " + a.start_pos.alt + suffix;
+            if (a.start_pos.hdg < 0 || a.start_pos.hdg >= 360) return "Invalid heading: " + a.start_pos.hdg + suffix;
+            if (a.name.length === 0) return "Invalid aircraft name: [EMPTY]" + suffix;
+            if (names.filter((n) => n === a.name).length > 1) return "Duplicate aircraft name: " + a.name + suffix;
+            if (ids.filter((id) => id === a.id).length > 1) return "Duplicate aircraft id: " + a.id + suffix;
+            if (a.airframe_type < 0 || a.airframe_type > 1) return "Invalid airframe type (0=Default, 1=Custom): " + a.airframe_type + suffix;
+        }
+        return "";
+    }
+    onAircraftsCheckValidity() {
+        this.isAircraftsValid = false; // assume false first
+        const msg = this.getAircraftValidityMessage();
+        if (msg.length > 0) { alert(msg); return; }
+        this.isAircraftsValid = true; // assume true if no error
+        alert("Aircrafts are valid! You can now update aircrafts / check mission validity.");
+    }
+    onAircraftsUpdate() {
+        this._svc.callAPI("aircraft/all", (d: any) => {
+            if (this.validateResponse(d, "instances_config")) {
+                const aircrafts_old = (d as APIResponse).data.instances_config as Array<Aircraft>;
+                const old_ids = aircrafts_old.map((a) => a.id);
+                let isModified: boolean = false;
+                this.aircrafts.forEach((a) => {
+                    if (old_ids.includes(a.id)) { // update existing aircraft
+                        const idx = old_ids.indexOf(a.id);
+                        if (!this.aircraftEquals(a, aircrafts_old[idx])) {
+                            this._aircraftsToUpdate.push(a); // update if different
+                            isModified = true;
+                        }
+                        aircrafts_old.splice(idx, 1); // remove aircraft from old list
+                        old_ids.splice(idx, 1); // remove id from old id list
+                    } else {
+                        this._aircraftsToCreate.push(a); // create new aircraft
+                        isModified = true;
+                    }
+                });
+                aircrafts_old.forEach((a) => { isModified = true; this._aircraftsToDelete.push(a); }); // remaining aircrafts are deleted
+                if (!isModified) {
+                    alert("No aircrafts modified!");
+                    return;
+                }
+            }
+        }, undefined, this.void);
+    }
+    onMissionCheckValidity() {
+        this.isMissionValid = false; // assume false first
         const msg: string = this.getMissionValidityMessage(this.selectedMission);
         if (msg.length > 0) { alert(msg); return; }
-        this._svc.callAPI("aircraft/update", (d: any) => { // update aircrafts first
-            if (this.validateResponse(d, "instances_config")) {
-                const newAircrafts = (d as APIResponse).data.instances_config as Aircraft[];
-                this.aircrafts = newAircrafts;
-                this.generateMarkersFromAircrafts();
-                this._pendingAircraftUpdate = true;
-            }
-        }, { instances_config: this.aircrafts }, this.void); // TODO: if aircrafts are not updated, do not call API to update missions
-        if (this.selectedMission.id < 0) { // create new mission
+        this.isMissionValid = true; // assume true if no error
+        alert("Mission is valid! You can now create/update the mission.");
+    }
+    onMissionUpdate() {
+        const ids = this.missions.map((m) => m.id); // exiting ids
+        ids.shift(); // remove new mission id
+        if (!ids.includes(this.selectedMission.id)) { // create new mission
             this._svc.callAPI("mission/create", (d: any) => {
-                if (this.validateResponse(d, "mission_config")) {
-                    const newMission = (d as APIResponse).data.mission_config as Mission;
-                    this._missions.push(newMission);
-                    this.missionNames.push(newMission.name);
-                    this._selectedMissionIdx = this._missions.length - 1;
-                    this._pendingMissionUpdate = true;
+                if (StructValidator.hasFields(d, ["success", "msg"])) {
+                    if ((d as APIResponse).success) { // created successfully
+                        this.missions.push({ ...this.selectedMission }); // add new mission
+                        this.onMissionSelected(this.missions.length - 1); // select new mission
+                        this.resetNewMission(); // reset new mission
+                        this._pendingMissionUpdate = true;
+                        alert("Mission created!");
+                    } else alert("Failed to create mission: " + (d as APIResponse).msg);
                 }
-            }, { mission_config: this.selectedMission }, this.void);
+            }, this.selectedMission, this.void);
         } else { // update existing mission
             this._svc.callAPI("mission/update", (d: any) => {
-                if (this.validateResponse(d, "mission_config")) {
-                    const newMission = (d as APIResponse).data.mission_config as Mission;
-                    this._missions[this._selectedMissionIdx] = newMission;
-                    this._pendingMissionUpdate = true;
+                if (StructValidator.hasFields(d, ["success", "msg"])) {
+                    if ((d as APIResponse).success) { // updated successfully
+                        this.missions[this._selectedMissionIdx] = { ...this.selectedMission }; // force update
+                        this._pendingMissionUpdate = true;
+                        alert("Mission updated!");
+                    } else alert("Failed to update mission: " + (d as APIResponse).msg);
                 }
-            }, { mission_config: this.selectedMission }, this.void);
+            }, this.selectedMission, this.void);
         }
     }
     onMissionDeleted() {
+        this._svc.callAPI("mission/delete", (d: any) => {
+            if (StructValidator.hasFields(d, ["success", "msg"])) {
+                if ((d as APIResponse).success) { // deleted successfully
+                    this.missions.splice(this._selectedMissionIdx, 1);
+                    this.onMissionSelected(Math.max(0, this._selectedMissionIdx - 1)); // select previous mission
+                    this._pendingMissionUpdate = true;
+                    alert("Mission deleted!");
+                } else alert("Failed to delete mission: " + (d as APIResponse).msg);
+            }
+        }, this.selectedMission.id, this.void);
     }
     onWaypointApplied(wps: Waypoint[]) {
         this.selectedMission.lead_path = wps;
