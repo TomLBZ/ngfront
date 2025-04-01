@@ -102,7 +102,6 @@ export class PathEditPage implements OnInit, OnDestroy {
                             break;
                         }
                     }
-                    console.log("Aircrafts updated: ", changed);
                     if (changed) this.generateMarkersFromAircrafts();
                     this._pendingAircraftUpdate = false;
                 }
