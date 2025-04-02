@@ -69,3 +69,10 @@ export interface LogEntry {
     speed: number;
     yaw: number;
 }
+export interface MissionMetadata {
+    mission_start_time: string;
+    takeoff_start_time: string;
+    takeoff_completion_time: string;
+    lead_mission_start_time: string;
+    lead_mission_completed_time: string;
+}

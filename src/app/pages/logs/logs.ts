@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { TableViewComponent } from "../../../components/tableview/tableview";
 import { AppService } from "../../app.service";
-import { LogEntry } from "../../app.interface";
+import { LogEntry, MissionMetadata } from "../../app.interface";
 import { DateSelectComponent } from "../../../components/dateselect/dateselect";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
 import { DictS, Nullable, Pair } from "../../../utils/type/types";
@@ -77,11 +77,18 @@ export class LogsPage implements OnInit {
             if (!this._svc.isValidAPIResponse(d)) return; // invalid data
             this.missionMetaData = {};
             if (!d.success) {
-                alert(`Mission data access failed. Is the simulation still running? Please stop the simulation first!`);
+                alert(`Mission data access failed. Simulation could still be running, or file is corrupt!`);
                 return; // skip when failed
             }
             if (!d.data || !d.data.hasOwnProperty("meta_data")) return; // invalid data
-            (d.data.meta_data as Array<DictS<string>>).forEach(x => this.missionMetaData[Object.keys(x)[0]] = new Date(Object.values(x)[0]).toUTCString());
+            const metadata = d.data.meta_data as MissionMetadata;
+            for (const key in metadata) {
+                if (metadata.hasOwnProperty(key)) {
+                    const value: string = (metadata as any)[key] as string;
+                    if (key.includes("time")) this.missionMetaData[key] = new Date(value).toUTCString();
+                    else this.missionMetaData[key] = value;
+                }
+            }
         }, { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime }, this.void);
     }
     private fetchPreviewMissionLogs() {
