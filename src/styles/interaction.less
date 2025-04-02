@@ -33,6 +33,22 @@
     }
 }
 
+.selecthost {
+    cursor: pointer;
+    &.selected {
+        background-color: @c_dtint;
+        color: @c_white;
+    }
+    &:hover {
+        background-color: @c_ltint;
+        color: @c_black;
+    }
+    &.selected:hover {
+        background-color: @c_ltint;
+        color: @c_black;
+    }
+}
+
 .draghost {
     cursor: grab;
     &.dragging {
