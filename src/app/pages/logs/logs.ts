@@ -97,6 +97,7 @@ export class LogsPage implements OnInit {
             if (!d.success) return; // skip when failed
             if (!d.data || !d.data.hasOwnProperty("mission_log")) return; // invalid data
             this.previewLogList = d.data.mission_log as Array<LogEntry>;
+            console.log(d.data); // TODO: OTHER FIELDS: PAGE COUNT, ETC
         }
         , { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime, page: 1, limit: 100 }, this.void);
     }
