@@ -1,9 +1,51 @@
-<div class="flexc pad5 bd_dbl bdc_tint bd_r5 p_full">
-    <div class="p_hexah">
-        Placeholder Text
+<div class="flexc pad5 p_full">
+    <div class="flexc bd_dbl bdc_tint bd_r5">
+        <span class="ft_norm bold oblq txt_nowrap centtext">Log Download Instructions</span>
+        <span class="ft_smlr oblq txt_nowrap centtext">1. Filter the missions by date</span>
+        <span class="ft_smlr oblq txt_nowrap centtext">2. Select the mission of interest</span>
+        <span class="ft_smlr oblq txt_nowrap centtext">3. View logs for the mission and filter by fields</span>
+        <span class="ft_smlr oblq txt_nowrap centtext">4. Click the Export button to get a csv</span>
+    </div>
+    <div class="flexc bd_dbl bdc_tint bd_r5">
+        <span class="ft_norm bold oblq txt_nowrap centtext">1. Filter and Select Mission</span>
+        <div class="flex p_full">
+            <dateselect class="px_w250 bdc_tint bd_sng bd_r5 mar5"
+                [allowedDateStrs]="availableDates"
+                (dateRangeChanged)="onDateRangeChanged($event)"
+            ></dateselect>
+            <div class="flexc grow mar5">
+                <div class="flex justarnd">
+                    <dropselect class="pad5 disablehost"
+                        [class.disabled]="!nameSelectable"
+                        [items]="missionNames"
+                        [title]="'Mission Names'"
+                        [titleAbove]="false"
+                        [hoverMode]="true"
+                        (selectionChanged)="onMissionNameSelected($event)"
+                    ></dropselect>
+                    <dropselect class="pad5 disablehost"
+                        [class.disabled]="!timeSelectable"
+                        [items]="missionTimes"
+                        [title]="'Mission Times'"
+                        [representation]="missionTimesRepr"
+                        [titleAbove]="false"
+                        [hoverMode]="true"
+                        (selectionChanged)="onMissionTimeSelected($event)"
+                    ></dropselect>
+                    <button class="pad5 mar5" [disabled]="!logsFetchable" (click)="onPreviewMissionLogs()">Preview Logs</button>
+                    <button class="pad5 mar5" [disabled]="previewLogList.length <= 0" (click)="onReplayMissionLogs()">Replay</button>
+                </div>
+                <obj-editor class="flex grow bdc_tint bd_r5 bd_sng"
+                    [objToEdit]="missionMetaData"
+                    [objName]="'Mission Metadata'"
+                    [textEnabled]="false"
+                    [readOnly]="true"
+                ></obj-editor>
+            </div>
+        </div>
     </div>
     <tableview class="flexc grow"
-        [data]="objList"
+        [data]="previewLogList"
         [showBorder]="true"
     ></tableview>
 </div>
