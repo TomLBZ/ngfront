@@ -1,333 +1,141 @@
-import { Component } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { TableViewComponent } from "../../../components/tableview/tableview";
+import { AppService } from "../../app.service";
+import { LogEntry } from "../../app.interface";
+import { DateSelectComponent } from "../../../components/dateselect/dateselect";
+import { DropSelectComponent } from "../../../components/dropselect/dropselect";
+import { DictS, Nullable, Pair } from "../../../utils/type/types";
+import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 
 @Component({
     selector: "page-logs",
     standalone: true,
-    imports: [TableViewComponent],
+    imports: [TableViewComponent, DateSelectComponent, DropSelectComponent, ObjEditorComponent],
     templateUrl: "./logs.html"
 })
-export class LogsPage {
-    objList: Array<any> = [
-        {
-            name: 'John Doe',
-            age: 30,
-            position: 'Developer',
-            department: 'IT',
-            level: 'Senior',
-            experience: '5 years',
-            salary: '$80,000',
-            status: 'Active',
-            location: 'Remote',
-            phone: '123-456-7890',
-            address: '1234 Elm St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62701'
-        },
-        {
-            name: 'Jane Doe',
-            age: 25,
-            position: 'Designer',
-            department: 'Design',
-            level: 'Junior',
-            experience: '2 years',
-            salary: '$60,000',
-            status: 'Inactive',
-            location: 'Office',
-            phone: '098-765-4321',
-            address: '5678 Oak St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62702'
-        },
-        {
-            name: 'John Smith',
-            age: 35,
-            position: 'Manager',
-            department: 'Management',
-            level: 'Mid',
-            experience: '10 years',
-            salary: '$100,000',
-            status: 'Active',
-            location: 'Office',
-            phone: '456-789-0123',
-            address: '9012 Pine St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62703'
-        },
-        {
-            name: 'Jane Smith',
-            age: 40,
-            position: 'Engineer',
-            department: 'Engineering',
-            level: 'Senior',
-            experience: '15 years',
-            salary: '$120,000',
-            status: 'Inactive',
-            location: 'Remote',
-            phone: '654-321-0987',
-            address: '3456 Maple St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62704'
-        },
-        {
-            name: 'Bob Doe',
-            age: 30,
-            position: 'Developer',
-            department: 'IT',
-            level: 'Senior',
-            experience: '5 years',
-            salary: '$80,000',
-            status: 'Active',
-            location: 'Remote',
-            phone: '123-456-7890',
-            address: '1234 Elm St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62701'
-        },
-        {
-            name: 'Bella Doe',
-            age: 25,
-            position: 'Designer',
-            department: 'Design',
-            level: 'Junior',
-            experience: '2 years',
-            salary: '$60,000',
-            status: 'Inactive',
-            location: 'Office',
-            phone: '098-765-4321',
-            address: '5678 Oak St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62702'
-        },
-        {
-            name: 'Bob Smith',
-            age: 35,
-            position: 'Manager',
-            department: 'Management',
-            level: 'Mid',
-            experience: '10 years',
-            salary: '$100,000',
-            status: 'Active',
-            location: 'Office',
-            phone: '456-789-0123',
-            address: '9012 Pine St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62703'
-        },
-        {
-            name: 'Bella Smith',
-            age: 40,
-            position: 'Engineer',
-            department: 'Engineering',
-            level: 'Senior',
-            experience: '15 years',
-            salary: '$120,000',
-            status: 'Inactive',
-            location: 'Remote',
-            phone: '654-321-0987',
-            address: '3456 Maple St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62704'
-        },
-        {
-            name: 'Alex Doe',
-            age: 35,
-            position: 'Developer',
-            department: 'IT',
-            level: 'Senior',
-            experience: '5 years',
-            salary: '$80,000',
-            status: 'Active',
-            location: 'Remote',
-            phone: '123-456-7890',
-            address: '1234 Elm St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62701'
-        },
-        {
-            name: 'Alexia Doe',
-            age: 40,
-            position: 'Engineer',
-            department: 'Engineering',
-            level: 'Senior',
-            experience: '15 years',
-            salary: '$120,000',
-            status: 'Inactive',
-            location: 'Remote',
-            phone: '654-321-0987',
-            address: '3456 Maple St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62704'
-        },
-        {
-            name: 'Alex Smith',
-            age: 35,
-            position: 'Developer',
-            department: 'IT',
-            level: 'Senior',
-            experience: '5 years',
-            salary: '$80,000',
-            status: 'Active',
-            location: 'Remote',
-            phone: '123-456-7890',
-            address: '1234 Elm St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62701'
-        },
-        {
-            name: 'Alexia Smith',
-            age: 40,
-            position: 'Engineer',
-            department: 'Engineering',
-            level: 'Senior',
-            experience: '15 years',
-            salary: '$120,000',
-            status: 'Inactive',
-            location: 'Remote',
-            phone: '654-321-0987',
-            address: '3456 Maple St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62704'
-        },
-        {
-            name: 'David Doe',
-            age: 30,
-            position: 'Developer',
-            department: 'IT',
-            level: 'Senior',
-            experience: '5 years',
-            salary: '$80,000',
-            status: 'Active',
-            location: 'Remote',
-            phone: '123-456-7890',
-            address: '1234 Elm St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62701'
-        },
-        {
-            name: 'Daisy Doe',
-            age: 25,
-            position: 'Designer',
-            department: 'Design',
-            level: 'Junior',
-            experience: '2 years',
-            salary: '$60,000',
-            status: 'Inactive',
-            location: 'Office',
-            phone: '098-765-4321',
-            address: '5678 Oak St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62702'
-        },
-        {
-            name: 'David Smith',
-            age: 35,
-            position: 'Manager',
-            department: 'Management',
-            level: 'Mid',
-            experience: '10 years',
-            salary: '$100,000',
-            status: 'Active',
-            location: 'Office',
-            phone: '456-789-0123',
-            address: '9012 Pine St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62703'
-        },
-        {
-            name: 'Daisy Smith',
-            age: 40,
-            position: 'Engineer',
-            department: 'Engineering',
-            level: 'Senior',
-            experience: '15 years',
-            salary: '$120,000',
-            status: 'Inactive',
-            location: 'Remote',
-            phone: '654-321-0987',
-            address: '3456 Maple St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62704'
-        },
-        {
-            name: 'Frank Doe',
-            age: 30,
-            position: 'Developer',
-            department: 'IT',
-            level: 'Senior',
-            experience: '5 years',
-            salary: '$80,000',
-            status: 'Active',
-            location: 'Remote',
-            phone: '123-456-7890',
-            address: '1234 Elm St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62701'
-        },
-        {
-            name: 'Fiona Doe',
-            age: 25,
-            position: 'Designer',
-            department: 'Design',
-            level: 'Junior',
-            experience: '2 years',
-            salary: '$60,000',
-            status: 'Inactive',
-            location: 'Office',
-            phone: '098-765-4321',
-            address: '5678 Oak St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62702'
-        },
-        {
-            name: 'Frank Smith',
-            age: 35,
-            position: 'Manager',
-            department: 'Management',
-            level: 'Mid',
-            experience: '10 years',
-            salary: '$100,000',
-            status: 'Active',
-            location: 'Office',
-            phone: '456-789-0123',
-            address: '9012 Pine St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62703'
-        },
-        {
-            name: 'Fiona Smith',
-            age: 40,
-            position: 'Engineer',
-            department: 'Engineering',
-            level: 'Senior',
-            experience: '15 years',
-            salary: '$120,000',
-            status: 'Inactive',
-            location: 'Remote',
-            phone: '654-321-0987',
-            address: '3456 Maple St, Springfield, IL',
-            city: 'Springfield',
-            state: 'IL',
-            zip: '62704'
-        },
-      ];
+export class LogsPage implements OnInit {
+    
+    private readonly _svc: AppService;
+    private readonly void = () => {};
+    private _loopTimer: any = null;
+    public availableDates: Array<string> = [];
+    public missionNames: Array<string> = [];
+    public missionTimes: Array<string> = [];
+    public readonly missionTimesRepr: (s: string) => string = s => s.replace(/_/g, ':');
+    public get nameSelectable(): boolean { return this.selectedDateStr.length > 0; }
+    public get timeSelectable(): boolean { return this.selectedMissionName.length > 0 && this.nameSelectable; }
+    public get logsFetchable(): boolean { return this.selectedMissionTime.length > 0 && this.timeSelectable && !this.logsFetching; }
+    private selectedDateStr: string = "";
+    private selectedMissionName: string = "";
+    private selectedMissionTime: string = "";
+    private logsFetching: boolean = false;
+    public missionMetaData: DictS<string> = {};
+    public previewLogList: Array<LogEntry> = [];
+    constructor(svc: AppService) {
+        this._svc = svc;
+    }
+
+    ngOnInit(): void {
+        this._loopTimer = setInterval(() => {
+            if (this.availableDates.length > 0) {
+                clearInterval(this._loopTimer);
+                this._loopTimer = null;
+            } else this.fetchLogDates();
+        }, 1000);
+    }
+
+    private fetchLogDates() {
+        this._svc.callAPI("logs/dates", (d: any) => {
+            if (!this._svc.isValidAPIResponse(d)) return; // invalid data
+            if (!d.success) return; // skip when failed
+            if (!d.data || !d.data.hasOwnProperty("mission_log_dates")) return; // invalid data
+            this.availableDates = (d.data.mission_log_dates as Array<string>).map((s: string) => {
+                const [year, month, day] = s.split('_').map(x => +x);
+                const dateObj = new Date(year, month - 1, day);
+                return dateObj.toDateString(); // Convert to Date string
+            });
+        }, undefined, this.void);
+    }
+    private fetchMissionNames() {
+        this._svc.callAPI("logs/metadata", (d: any) => {
+            if (!this._svc.isValidAPIResponse(d)) return; // invalid data
+            if (!d.success) return; // skip when failed
+            if (!d.data || !d.data.hasOwnProperty("logged_missions")) return; // invalid data
+            this.missionNames = d.data.logged_missions as Array<string>;
+        }, { date: this.selectedDateStr }, this.void);
+    }
+    private fetchMissionTimes() {
+        this._svc.callAPI("logs/metadata", (d: any) => {
+            if (!this._svc.isValidAPIResponse(d)) return; // invalid data
+            if (!d.success) return; // skip when failed
+            if (!d.data || !d.data.hasOwnProperty("logged_missions")) return; // invalid data
+            this.missionTimes = d.data.logged_missions as Array<string>;
+        }, { date: this.selectedDateStr, name: this.selectedMissionName }, this.void);
+    }
+    private fetchMissionMetadata() {
+        this._svc.callAPI("logs/metadata", (d: any) => {
+            if (!this._svc.isValidAPIResponse(d)) return; // invalid data
+            this.missionMetaData = {};
+            if (!d.success) {
+                alert(`Mission data access failed. Is the simulation still running? Please stop the simulation first!`);
+                return; // skip when failed
+            }
+            if (!d.data || !d.data.hasOwnProperty("meta_data")) return; // invalid data
+            (d.data.meta_data as Array<DictS<string>>).forEach(x => this.missionMetaData[Object.keys(x)[0]] = new Date(Object.values(x)[0]).toUTCString());
+        }, { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime }, this.void);
+    }
+    private fetchPreviewMissionLogs() {
+        this._svc.callAPI("logs/preview", (d: any) => {
+            if (!this._svc.isValidAPIResponse(d)) return; // invalid data
+            if (!d.success) return; // skip when failed
+            if (!d.data || !d.data.hasOwnProperty("mission_log")) return; // invalid data
+            this.previewLogList = d.data.mission_log as Array<LogEntry>;
+        }
+        , { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime, page: 1, limit: 100 }, this.void);
+    }
+    private fetchAllLogs() {
+        console.log(new Date().toUTCString());
+        this._svc.callAPI("logs/download", (d: any) => {
+            if (!this._svc.isValidAPIResponse(d)) {
+
+                return; // invalid data
+            }
+            console.log(new Date().toUTCString());
+            console.log(d.success);
+            console.log(Object.keys(d.data));
+            if (!d.success) return; // skip when failed
+            if (!d.data || !d.data.hasOwnProperty("mission_log")) return; // invalid data
+            this.previewLogList = d.data.mission_log as Array<LogEntry>;
+        }, { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime }, console.log);
+    }
+
+    onDateRangeChanged(dates: Pair<Nullable<Date>>) {
+        const [start, end] = dates;
+        if (!start) return; // no start date
+        const date = new Date(start);
+        const [year, month, day] = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
+        this.selectedDateStr = `${year}_${month}_${day}`;
+        this.fetchMissionNames();
+    }
+    onMissionNameSelected(mName: string) {
+        this.selectedMissionName = mName;
+        this.fetchMissionTimes();
+    }
+    onMissionTimeSelected(mTime: string) {
+        this.selectedMissionTime = mTime;
+        this.fetchMissionMetadata();
+    }
+    onPreviewMissionLogs() {
+        this.fetchPreviewMissionLogs();
+        // this.fetchAllLogs();
+    }
+    onReplayMissionLogs() {
+        this._svc.callAPI("logs/replay", (d: any) => {
+            if (!this._svc.isValidAPIResponse(d)) return; // invalid data
+            if (!d.success) return; // skip when failed
+            console.log(d.data);
+            if (!d.data || !d.data.hasOwnProperty("mission_log")) return; // invalid data
+            this.previewLogList = d.data.mission_log as Array<LogEntry>;
+        }, { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime }, this.void);
+    }
 }
