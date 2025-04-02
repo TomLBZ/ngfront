@@ -1,0 +1,30 @@
+<div class="p_full">
+    <div class="flexc grow p_fullw">
+        <dropselect class="pad10btm"
+            [items]="items"
+            [title]="title"
+            [hoverMode]="true"
+            [multiSelect]="multiple"
+            [representation]="representation"
+            (selectionChanged)="onSelectionChanged($event)"
+        ></dropselect>
+        @if (buttonsShown.includes("download")) {
+            <button class="pad5 mar5" [disabled]="!itemSelected" (click)="onDownload()">Download</button>
+        }
+        @if (buttonsShown.includes("upload")) {
+            <button class="pad5 mar5" (click)="onUpload()">Upload</button>
+        }
+        @if (buttonsShown.includes("apply")) {
+            <button class="pad5 mar5" [disabled]="!itemSelected" (click)="onApply()">Apply</button>
+        }
+        @if (buttonsShown.includes("rename")) {
+            <button class="pad5 mar5" [disabled]="!itemSelected" (click)="onRename()">Rename</button>
+        }
+        @if (buttonsShown.includes("duplicate")) {
+            <button class="pad5 mar5" [disabled]="!itemSelected" (click)="onDuplicate()">Duplicate</button>
+        }
+        @if (buttonsShown.includes("delete")) {
+            <button class="pad5 mar5" [disabled]="!itemSelected" (click)="onDelete()">Delete</button>
+        }
+    </div>
+</div>
