@@ -58,3 +58,14 @@ export interface ConfigFile {
     description: string;
     type: ConfigFileType;
 }
+export interface LogEntry {
+    ac_id: number;
+    alt: number;
+    datetime: string;
+    lat: number;
+    lng: number;
+    pitch: number;
+    roll: number;
+    speed: number;
+    yaw: number;
+}
