@@ -2,9 +2,10 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { env } from './app.config';
-import { UniResponseType, FormDataEntry } from './app.interface';
+import { UniResponseType, FormDataEntry, APIResponse } from './app.interface';
 import { Callback } from '../utils/type/types';
 import { KeyController } from '../utils/controller/keyctrl';
+import { StructValidator } from '../utils/api/validate';
 
 @Injectable({
   providedIn: 'root'
@@ -45,7 +46,11 @@ export class AppService {
         }
     }
     
-    callAPI(op: string, next: Callback, data: any = {}, error: Callback = console.log, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
+    public callAPI(op: string, next: Callback, data: any = {}, error: Callback = console.log, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
         this.uniPost(op, data, resType, ...formData).subscribe({ next, error });
+    }
+
+    public isValidAPIResponse(d: any): d is APIResponse {
+        return StructValidator.hasFields(d, ["success", "msg", "data"]);
     }
 }
