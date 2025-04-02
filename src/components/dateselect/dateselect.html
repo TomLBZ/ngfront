@@ -1,0 +1,21 @@
+<div class="p_full">
+    <!-- Calendar Header: Prev / Next buttons -->
+    <div class="flex justarnd centcont">
+      <button (click)="prevMonth()">&lt;</button>
+      <span>{{ displayedYear }} - {{ displayedMonth }}</span>
+      <button (click)="nextMonth()">&gt;</button>
+    </div>
+  
+    <!-- Calendar Grid -->
+    <div class="justcent dategrid">
+        @for (day of daysInMonth; track $index) {
+            <div class=" ft_smal centcont centtext bd_r5 bd_dsh bdc_tint disablehost selecthost px_h30 px_w30"
+                [class.disabled]="!isAllowed(day)"
+                [class.selected]="isSelected(day)"
+                (click)="onDayClick(day)"
+            >
+                {{ day.getDate() }}
+            </div>
+        }
+    </div>
+</div>  
