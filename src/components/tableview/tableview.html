@@ -1,27 +1,32 @@
 <div class="p_full bd_r5 flexc">
-    @if(data.length > 0) {
-        <div class="flex justarnd bd_sng bdc_tint">
-            <dropselect class="flex justends p_3quarth"
-                [items]="columns"
-                title="Fields Filter"
-                [titleAbove]="false"
-                [indexMode]="true"
-                [hoverMode]="true"
-                [multiSelect]="true"
-                [fixDropdown]="false"
-                [representation]="repr"
-                (selectionChanged)="onSelectionChanged($event)">
-            </dropselect>
-            <label class="pad5">
-                <span class="ft_smal oblq">Page Size: </span>
-                <input [disabled]="isShowAllPages" name="itc" type="number" [step]="1" [min]="1" [max]="totalCount" [value]="pageSize" (input)="onPageSizeChanged($event)" />
-            </label>
-            <label class="pad5 flex justcent">
-                <input type="checkbox" name="csap" [checked]="isShowAllPages" (change)="onIsShowAllPagesChanged()" />
-                <span class="ft_smlr centcont">Show all pages</span>
-            </label>
-            <button class="px_minw80" (click)="onExport()">Export as CSV</button>
-        </div>
+    @let dataNotLoaded = data === undefined || data === null || data.length === 0;
+    <div class="flex justarnd bd_sng bdc_tint">
+        <dropselect class="flex justends p_3quarth disablehost"
+            [class.disabled]="dataNotLoaded"
+            [items]="columns"
+            title="Fields Filter"
+            [titleAbove]="false"
+            [indexMode]="true"
+            [hoverMode]="true"
+            [multiSelect]="true"
+            [fixDropdown]="false"
+            [representation]="repr"
+            (selectionChanged)="onSelectionChanged($event)">
+        </dropselect>
+        <label class="pad5">
+            <span class="ft_smal oblq">Page Size: </span>
+            <input [disabled]="isShowAllPages || dataNotLoaded" name="itc" type="number" [step]="1" [min]="1" [max]="totalCount" [value]="pageSize" (input)="onPageSizeChanged($event)" />
+        </label>
+        <label class="pad5 flex justcent">
+            <input type="checkbox" name="csap" [checked]="isShowAllPages" [disabled]="dataNotLoaded" (change)="onIsShowAllPagesChanged()" />
+            <span class="ft_smlr centcont oblq">Show all pages</span>
+        </label>
+        <button class="px_minw80" [disabled]="dataNotLoaded" (click)="onExport()">Export as CSV</button>
+    </div>
+    @if(dataNotLoaded) {
+        <div class="flex grow justcent centcont ft_huge c_grey bdc_tint bd_tsng bd_lsng bd_rsng">No data available.</div>
+    }
+    @else {
         <div class="flex grow ov_scr pos_rel bdc_tint bd_lsng bd_rsng">
             <table class="pos_abs top0 lft0 rht0 btm0">
                 <thead>
@@ -43,14 +48,11 @@
             </table>
         </div>    
     }
-    @else {
-        <p class="flex grow justcent centcont ft_huge c_grey">No data available.</p>
-    }
     <div class="flex justends bd_sng bdc_tint">
         <button class="px_minw80" [disabled]="isFirstPage" (click)="onPrevButtonClicked()">Prev</button>
         <label class="pad5">
             <span class="ft_smal oblq">Current Page: </span>
-            <input [disabled]="isShowAllPages || lastPageIdx === 1" name="itc" type="number" [step]="1" [min]="1" [max]="lastPageIdx" [value]="currentPage" (input)="onCurrentPageChanged($event)" />
+            <input [disabled]="isShowAllPages || dataNotLoaded || lastPageIdx === 1" name="itc" type="number" [step]="1" [min]="1" [max]="lastPageIdx" [value]="currentPage" (input)="onCurrentPageChanged($event)" />
             <span class="ft_smlr"> / {{ lastPageIdx }}</span>
         </label>
         <div class="ft_smal centcont flex">
