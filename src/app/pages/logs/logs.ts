@@ -15,43 +15,56 @@ import { HttpResponse } from "@angular/common/http";
     templateUrl: "./logs.html"
 })
 export class LogsPage implements OnInit {
-    public availableDates: Array<string> = [];
-    public missionNames: Array<string> = [];
+    public previewLogList: Array<LogEntry> = [];
+    public missionMetaData: DictS<string> = {};
     public missionTimes: Array<string> = [];
-    public loading: boolean = false;
+    public missionNames: Array<string> = [];
+    public missionDates: Array<string> = [];
+    public downloading: boolean = false;
     public readonly missionTimesRepr: (s: string) => string = s => s.replace(/_/g, ':');
     public get nameSelectable(): boolean { return this._selectedDateStr.length > 0; }
     public get timeSelectable(): boolean { return this._selectedMissionName.length > 0 && this.nameSelectable; }
-    public get logsFetchable(): boolean { return this._selectedMissionTime.length > 0 && this.timeSelectable && !this._logsFetching; }
+    public get logsFetchable(): boolean { return this._selectedMissionTime.length > 0 && this.timeSelectable && !this.downloading; }
     public get fileName(): string { return `${this._selectedDateStr}_${this._selectedMissionName}_${this._selectedMissionTime}.csv`; }
-    public missionMetaData: DictS<string> = {};
-    public previewLogList: Array<LogEntry> = [];
     private readonly _svc: AppService;
     private readonly void = () => {};
-    private _loopTimer: any = null;
     private _selectedDateStr: string = "";
     private _selectedMissionName: string = "";
     private _selectedMissionTime: string = "";
-    private _logsFetching: boolean = false;
     constructor(svc: AppService) {
         this._svc = svc;
     }
 
     ngOnInit(): void {
-        this._loopTimer = setInterval(() => {
-            if (this.availableDates.length > 0) {
-                clearInterval(this._loopTimer);
-                this._loopTimer = null;
-            } else this.fetchLogDates();
-        }, 1000);
+        const interval = setInterval(() => {
+            if (this.missionDates.length === 0) this.fetchLogDates();
+            else clearInterval(interval);
+        }, 500);
     }
 
+    private resetTimes(fetch: boolean = true) {
+        this.missionTimes = [];
+        this._selectedMissionTime = "";
+        if (fetch) this.fetchMissionTimes();
+    }
+    private resetNames(fetch: boolean = true) {
+        this.resetTimes(false);
+        this.missionNames = [];
+        this._selectedMissionName = "";
+        if (fetch) this.fetchMissionNames();
+    }
+    private resetDates(fetch: boolean = true) {
+        this.resetNames(false);
+        this.missionDates = [];
+        this._selectedDateStr = "";
+        if (fetch) this.fetchLogDates();
+    }
     private fetchLogDates() {
         this._svc.callAPI("logs/dates", (d: any) => {
             if (!this._svc.isValidAPIResponse(d)) return; // invalid data
             if (!d.success) return; // skip when failed
             if (!d.data || !d.data.hasOwnProperty("mission_log_dates")) return; // invalid data
-            this.availableDates = (d.data.mission_log_dates as Array<string>).map((s: string) => {
+            this.missionDates = (d.data.mission_log_dates as Array<string>).map((s: string) => {
                 const [year, month, day] = s.split('_').map(x => +x);
                 const dateObj = new Date(year, month - 1, day);
                 return dateObj.toDateString(); // Convert to Date string
@@ -115,10 +128,23 @@ export class LogsPage implements OnInit {
                     reader.readAsText(d.body);
                 } else alert("Download failed: Invalid Blob Type!\n" + d.body.type);
             } else alert("Download failed: Empty Data Response!");
-            this.loading = false;
+            this.downloading = false;
         }, 
         { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime }, 
-        () => this.loading = false, "blob");
+        () => this.downloading = false, "blob");
+    }
+    private deleteMissionLogs(date: string = "", name: string = "", time: string = "") {
+        this._svc.callAPI("logs/delete", (d: any) => {
+            if (!this._svc.isValidAPIResponse(d)) return; // invalid data
+            this.missionMetaData = {};
+            if (d.success) alert(`Mission logs deleted: Date = ${date}; Mission Name = ${name}; Log Time = ${time}`);
+            else alert(`Failed to delete mission logs: Date = ${date}; Mission Name = ${name}; Log Time = ${time}`);
+            this.previewLogList = [];
+            this.missionMetaData = {};
+            if (time.length > 0) this.resetTimes(); // reset time only
+            else if (name.length > 0) this.resetNames(); // reset name and time
+            else this.resetDates(); // reset all
+        }, { date, name, time }, this.void);
     }
 
     onDateRangeChanged(dates: Pair<Nullable<Date>>) {
@@ -126,7 +152,10 @@ export class LogsPage implements OnInit {
         if (!start) return; // no start date
         const date = new Date(start);
         const [year, month, day] = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
-        this._selectedDateStr = `${year}_${month}_${day}`;
+        const yyyy = year.toString().padStart(4, "0");
+        const mm = month.toString().padStart(2, "0");
+        const dd = day.toString().padStart(2, "0");
+        this._selectedDateStr = `${yyyy}_${mm}_${dd}`;
         this.fetchMissionNames();
     }
     onMissionNameSelected(mName: string) {
@@ -138,10 +167,15 @@ export class LogsPage implements OnInit {
         this.fetchMissionMetadata();
     }
     onViewMissionLogs() {
-        if (this.loading) return; // skip when loading
-        this.loading = true;
+        if (this.downloading) return; // skip when loading
+        this.downloading = true;
         this.downloadMissionLogs();
         alert("Fetching mission logs may takes a long time since log files could be large.\nPlease be patient.");
+    }
+    onDeleteMissionLogs(mode: number) {
+        if (mode === 0) this.deleteMissionLogs(this._selectedDateStr, this._selectedMissionName, this._selectedMissionTime);
+        else if (mode === 1) this.deleteMissionLogs(this._selectedDateStr, this._selectedMissionName);
+        else if (mode === 2) this.deleteMissionLogs(this._selectedDateStr);
     }
     onReplayMissionLogs() {
         this._svc.callAPI("logs/replay", (d: any) => {
