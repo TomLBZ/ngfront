@@ -1,6 +1,4 @@
-<div class="p_full bd_r5 flexc"
-    [class.bd_dsh]="showBorder"
->
+<div class="p_full bd_r5 flexc">
     @if(data.length > 0) {
         <div class="flex justarnd bd_sng bdc_tint">
             <dropselect class="flex justends p_3quarth"
@@ -11,12 +9,12 @@
                 [hoverMode]="true"
                 [multiSelect]="true"
                 [fixDropdown]="false"
-                [representation]="getTitleCase"
+                [representation]="repr"
                 (selectionChanged)="onSelectionChanged($event)">
             </dropselect>
             <label class="pad5">
                 <span class="ft_smal oblq">Page Size: </span>
-                <input [disabled]="isShowAllPages" name="itc" type="number" [step]="1" [min]="0" [max]="totalCount" [value]="pageSize" (input)="onPageSizeChanged($event)" />
+                <input [disabled]="isShowAllPages" name="itc" type="number" [step]="1" [min]="1" [max]="totalCount" [value]="pageSize" (input)="onPageSizeChanged($event)" />
             </label>
             <label class="pad5 flex justcent">
                 <input type="checkbox" name="csap" [checked]="isShowAllPages" (change)="onIsShowAllPagesChanged()" />
@@ -24,12 +22,12 @@
             </label>
             <button class="px_minw80" (click)="onExport()">Export as CSV</button>
         </div>
-        <div class="flex grow ov_scr pos_rel">
+        <div class="flex grow ov_scr pos_rel bdc_tint bd_lsng bd_rsng">
             <table class="pos_abs top0 lft0 rht0 btm0">
                 <thead>
                     <tr>
                         @for(col of selectedColumns; track $index) {
-                            <th>{{ getTitleCase(col) }}</th>
+                            <th>{{ repr(col) }}</th>
                         }
                     </tr>
                 </thead>
@@ -50,7 +48,15 @@
     }
     <div class="flex justends bd_sng bdc_tint">
         <button class="px_minw80" [disabled]="isFirstPage" (click)="onPrevButtonClicked()">Prev</button>
-        <span class="txt_hdg">{{ pageInfo }}</span>
+        <label class="pad5">
+            <span class="ft_smal oblq">Current Page: </span>
+            <input [disabled]="isShowAllPages || lastPageIdx === 1" name="itc" type="number" [step]="1" [min]="1" [max]="lastPageIdx" [value]="currentPage" (input)="onCurrentPageChanged($event)" />
+            <span class="ft_smlr"> / {{ lastPageIdx }}</span>
+        </label>
+        <div class="ft_smal centcont flex">
+            <span class="oblq pad5rht">Rows:</span>
+            <span class="bold">{{ pageInfo }}</span>
+        </div>
         <button class="px_minw80" [disabled]="isLastPage" (click)="onNextButtonClicked()">Next</button>
     </div>   
 </div>

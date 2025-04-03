@@ -11,7 +11,6 @@ import { Pair } from '../../utils/type/types';
 export class TableViewComponent implements OnChanges {
     @Input() data: any[] = [];
     @Input() exportName = 'Export.csv';
-    @Input() showBorder = false;
     @Input() totalCount = 0;
     @Input() pageSize = 10;
     @Input() dataContainsAllPages = true; // true if data contains all pages, false if data contains only current page
@@ -20,28 +19,28 @@ export class TableViewComponent implements OnChanges {
     public columns: string[] = [];
     public selectedColumns: string[] = [];
     public isShowAllPages: boolean = false;
+    public currentPage: number = 1;
+    public readonly repr = (item: string): string => item ? item.charAt(0).toUpperCase() + item.slice(1).toLowerCase() : '';
+    public get isFirstPage(): boolean { return this.currentPage === 1; }
+    public get isLastPage(): boolean { return this.currentPage === this.lastPageIdx; }
+    public get lastPageIdx(): number { 
+        const num = this.totalCount / this.pageSize;
+        const intNum = Math.ceil(num);
+        return num === intNum ? intNum + 1 : intNum;
+    }
     public get pageInfo(): string {
         if (this.totalCount <= 0) return 'No data available';
         const start = (this.currentPage - 1) * this.pageSize + 1;
         const end = Math.min(this.currentPage * this.pageSize, this.totalCount);
         return `${start} - ${end} of ${this.totalCount}`;
     }
-    public get isFirstPage(): boolean { return this.currentPage === 1; }
-    public get isLastPage(): boolean { return this.currentPage === this.lastPageIdx; }
     public get currentPageData(): any[] {
         if (this.dataContainsAllPages) {
             return this.data.slice((this.currentPage - 1) * this.pageSize, this.currentPage * this.pageSize);
         }
         return this.data.length > this.pageSize ? this.data.slice(0, this.pageSize) : this.data;
     }
-    private currentPage: number = 1;
     private prevPageSize: number = 0;
-    private get lastPageIdx(): number { 
-        const num = this.totalCount / this.pageSize;
-        const intNum = Math.ceil(num);
-        return num === intNum ? intNum + 1 : intNum;
-    }
-    repr = (item: string): string => this.getTitleCase(item);
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['data'] && this.data && this.data.length > 0) {
@@ -56,11 +55,6 @@ export class TableViewComponent implements OnChanges {
         }
     }
 
-    getTitleCase(value: string): string {
-      if (!value) return '';
-      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-    }
-
     onSelectionChanged(selected: number[]) {
         if (selected.length === 0) {
             this.selectedColumns = [...this.columns];
@@ -71,7 +65,6 @@ export class TableViewComponent implements OnChanges {
         }
         this.selectedColumnsChanged.emit(this.selectedColumns);
     }
-
     // Exports the current table data (using selected columns) as a CSV file.
     onExport(): void {
         if (!this.data || this.data.length === 0 || !this.selectedColumns.length) {
@@ -101,7 +94,6 @@ export class TableViewComponent implements OnChanges {
         a.click();
         window.URL.revokeObjectURL(url);
     }
-
     onPrevButtonClicked() {
         this.currentPage = Math.max(1, this.currentPage - 1);
         this.pageChanged.emit([this.currentPage, this.pageSize]);
@@ -124,7 +116,16 @@ export class TableViewComponent implements OnChanges {
     onPageSizeChanged(event: any) {
         const newPageSizeStr = event.target.value as string;
         const newPageSize = parseInt(newPageSizeStr);
-        if (newPageSize <= 0) alert('Invalid page size: Must be a positive number');
-        this.onPageSizeChangedInner(newPageSize);
+        if (newPageSize <= 0 || newPageSize > this.totalCount) alert(`Invalid page size: Must be between 1 and ${this.totalCount}`);
+        else this.onPageSizeChangedInner(newPageSize);
+    }
+    onCurrentPageChanged(event: any) {
+        const newPageStr = event.target.value as string;
+        const newPage = parseInt(newPageStr);
+        if (newPage <= 0 || newPage > this.lastPageIdx) alert(`Invalid page: Must be between 1 and ${this.lastPageIdx}`);
+        else {
+            this.currentPage = newPage;
+            this.pageChanged.emit([this.currentPage, this.pageSize]);
+        }
     }
 }
