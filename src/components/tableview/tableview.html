@@ -1,6 +1,6 @@
 <div class="p_full bd_r5 flexc">
     @let dataNotLoaded = totalCount === 0;
-    <div class="flex justarnd bd_sng bdc_tint">
+    <div class="flex justarnd bd_bsng bdc_tint">
         <dropselect class="flex justends p_3quarth disablehost"
             [class.disabled]="dataNotLoaded"
             [items]="columns"
@@ -15,19 +15,19 @@
         </dropselect>
         <label class="pad5">
             <span class="ft_smal oblq">Page Size: </span>
-            <input [disabled]="isShowAllPages || dataNotLoaded" name="itc" type="number" [step]="1" [min]="1" [max]="totalCount" [value]="pageSize" (input)="onPageSizeChanged($event)" />
+            <input [disabled]="isShowAllPages || dataNotLoaded" name="itc" type="number" [step]="1" [min]="1" [max]="totalCount > 1 ? totalCount : pageSize" [value]="pageSize" (input)="onPageSizeChanged($event)" />
         </label>
-        <label class="pad5 flex justcent">
+        <label class="pad5 flex justcent disablehost" [class.disabled]="dataNotLoaded">
             <input type="checkbox" name="csap" [checked]="isShowAllPages" [disabled]="dataNotLoaded" (change)="onIsShowAllPagesChanged()" />
-            <span class="ft_smlr centcont oblq">Show all pages</span>
+            <span class="ft_smlr centcont oblq cs_ptr">Show all pages</span>
         </label>
         <button class="px_minw80" [disabled]="dataNotLoaded" (click)="onExport()">Export as CSV</button>
     </div>
     @if(dataNotLoaded) {
-        <div class="flex grow justcent centcont ft_huge c_grey bdc_tint bd_tsng bd_lsng bd_rsng">No data available.</div>
+        <div class="flex grow justcent centcont ft_huge c_grey">No data available.</div>
     }
     @else {
-        <div class="flex grow ov_scr pos_rel bdc_tint bd_lsng bd_rsng">
+        <div class="flex grow ov_scr pos_rel">
             <table class="pos_abs top0 lft0 rht0 btm0">
                 <thead>
                     <tr>
@@ -48,7 +48,7 @@
             </table>
         </div>    
     }
-    <div class="flex justends bd_sng bdc_tint">
+    <div class="flex justends bd_tsng bdc_tint">
         <button class="px_minw80" [disabled]="isFirstPage" (click)="onPrevButtonClicked()">Prev</button>
         <label class="pad5">
             <span class="ft_smal oblq">Current Page: </span>
