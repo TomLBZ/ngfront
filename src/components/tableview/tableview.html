@@ -1,5 +1,5 @@
 <div class="p_full bd_r5 flexc">
-    @let dataNotLoaded = data === undefined || data === null || data.length === 0;
+    @let dataNotLoaded = totalCount === 0;
     <div class="flex justarnd bd_sng bdc_tint">
         <dropselect class="flex justends p_3quarth disablehost"
             [class.disabled]="dataNotLoaded"

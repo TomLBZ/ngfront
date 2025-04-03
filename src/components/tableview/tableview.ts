@@ -11,11 +11,11 @@ import { Pair } from '../../utils/type/types';
 export class TableViewComponent implements OnChanges {
     @Input() data: any[] = [];
     @Input() exportName = 'Export.csv';
-    @Input() totalCount = 0;
     @Input() pageSize = 10;
     @Input() dataContainsAllPages = true; // true if data contains all pages, false if data contains only current page
     @Output() pageChanged = new EventEmitter<Pair<number>>();
     @Output() selectedColumnsChanged = new EventEmitter<string[]>();
+    public totalCount = 0;
     public columns: string[] = [];
     public selectedColumns: string[] = [];
     public isShowAllPages: boolean = false;
@@ -49,9 +49,12 @@ export class TableViewComponent implements OnChanges {
             if (this.selectedColumns.length === 0) {
                 this.selectedColumns = [...this.columns];
             }
+            this.totalCount = this.data.length;
         } else {
             this.columns = [];
             this.selectedColumns = [];
+            this.totalCount = 0;
+            this.currentPage = 1;
         }
     }
 
