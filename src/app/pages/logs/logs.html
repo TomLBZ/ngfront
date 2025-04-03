@@ -1,16 +1,23 @@
 <div class="flexc pad5 p_full">
     <div class="flexc bd_dbl bdc_tint bd_r5">
-        <span class="ft_norm bold oblq txt_nowrap centtext">Log Download Instructions</span>
-        <span class="ft_smlr oblq txt_nowrap centtext">1. Filter the missions by date</span>
-        <span class="ft_smlr oblq txt_nowrap centtext">2. Select the mission of interest</span>
-        <span class="ft_smlr oblq txt_nowrap centtext">3. View logs for the mission and filter by fields</span>
-        <span class="ft_smlr oblq txt_nowrap centtext">4. Click the Export button to get a csv</span>
-    </div>
-    <div class="flexc bd_dbl bdc_tint bd_r5">
-        <span class="ft_norm bold oblq txt_nowrap centtext">1. Filter and Select Mission</span>
+        <span class="ft_norm bold txt_nowrap centtext">Log Page Instructions</span>
+        <div class="flex grow justarnd bdc_dtint bd_dsh ft_smal mar5h bd_r5 ital">
+            <div class="flexc p_halfw">
+                <span>1. Select a Date on the Calendar</span>
+                <span>2. Select a Mission Name from the Missions Dropdown</span>
+                <span>3. Select a Run from the Mission Runs Dropdown</span>
+                <span>4. Click View Logs button to fetch logs</span>
+            </div>
+            <div class="flexc p_halfw">
+                <span>5. Filter the fields as needed in the table</span>
+                <span>6. Click Export as CSV to download logs</span>
+                <span>7. Click Delete Run/Mission/Date to delete the logs</span>
+                <span>8. Click Replay Logs to replay the logs</span>
+            </div>
+        </div>
         <div class="flex p_full">
             <dateselect class="px_w250 bdc_tint bd_sng bd_r5 mar5"
-                [allowedDateStrs]="availableDates"
+                [allowedDateStrs]="missionDates"
                 (dateRangeChanged)="onDateRangeChanged($event)"
             ></dateselect>
             <div class="flexc grow pad5">
@@ -18,7 +25,7 @@
                     <dropselect class="pad5 disablehost"
                         [class.disabled]="!nameSelectable"
                         [items]="missionNames"
-                        [title]="'Mission Names'"
+                        [title]="'Missions'"
                         [titleAbove]="false"
                         [hoverMode]="true"
                         (selectionChanged)="onMissionNameSelected($event)"
@@ -26,31 +33,34 @@
                     <dropselect class="pad5 disablehost"
                         [class.disabled]="!timeSelectable"
                         [items]="missionTimes"
-                        [title]="'Mission Times'"
+                        [title]="'Mission Runs'"
                         [representation]="missionTimesRepr"
                         [titleAbove]="false"
                         [hoverMode]="true"
                         (selectionChanged)="onMissionTimeSelected($event)"
                     ></dropselect>
                 </div>
-                <obj-editor class="flex grow bdc_tint bd_r5 bd_sng ft_smal"
+                <obj-editor class="flex grow ft_smal"
                     [objToEdit]="missionMetaData"
                     [objName]="'Mission Metadata'"
                     [textEnabled]="false"
                     [readOnly]="true"
                 ></obj-editor>
-                <div class="flex justarnd">
-                    <button class="pad5 mar5 px_minw80" [disabled]="!logsFetchable" (click)="onViewMissionLogs()">
-                        @if (loading) {
+                <div class="flex justends">
+                    <button class="mar5v pad5v px_minw80" [disabled]="!logsFetchable" (click)="onViewMissionLogs()">
+                        @if (downloading) {
                             <span class="spinner centcont"></span>
                         } @else {View Logs}
                     </button>
-                    <button class="pad5 mar5 px_minw80" [disabled]="!logsFetchable" (click)="onReplayMissionLogs()">Replay Mission From Logs</button>
+                    <button class="mar5v pad5v px_minw80" [disabled]="!logsFetchable" (click)="onDeleteMissionLogs(0)">Delete Run</button>
+                    <button class="mar5v pad5v px_minw80" [disabled]="!timeSelectable || downloading" (click)="onDeleteMissionLogs(1)">Delete Mission</button>
+                    <button class="mar5v pad5v px_minw80" [disabled]="!nameSelectable || downloading" (click)="onDeleteMissionLogs(2)">Delete Date</button>
+                    <button class="mar5v pad5v px_minw80" [disabled]="!logsFetchable" (click)="onReplayMissionLogs()">Replay Logs</button>
                 </div>
             </div>
         </div>
     </div>
-    <tableview class="flexc grow"
+    <tableview class="flexc grow bdc_tint bd_r5 bd_dbl"
         [data]="previewLogList"
         [pageSize]="50"
         [exportName]="fileName"
