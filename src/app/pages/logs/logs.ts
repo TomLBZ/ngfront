@@ -18,8 +18,6 @@ export class LogsPage implements OnInit {
     public availableDates: Array<string> = [];
     public missionNames: Array<string> = [];
     public missionTimes: Array<string> = [];
-    public totalCount: number = 0;
-    public pageSize: number = 100;
     public loading: boolean = false;
     public readonly missionTimesRepr: (s: string) => string = s => s.replace(/_/g, ':');
     public get nameSelectable(): boolean { return this._selectedDateStr.length > 0; }
@@ -113,8 +111,6 @@ export class LogsPage implements OnInit {
                             return obj;
                         });
                         this.previewLogList = data as Array<LogEntry>;
-                        this.totalCount = data.length;
-                        this.pageSize = data.length;
                     }
                     reader.readAsText(d.body);
                 } else alert("Download failed: Invalid Blob Type!\n" + d.body.type);
@@ -142,8 +138,10 @@ export class LogsPage implements OnInit {
         this.fetchMissionMetadata();
     }
     onViewMissionLogs() {
+        if (this.loading) return; // skip when loading
         this.loading = true;
         this.downloadMissionLogs();
+        alert("Fetching mission logs may takes a long time since log files could be large.\nPlease be patient.");
     }
     onReplayMissionLogs() {
         this._svc.callAPI("logs/replay", (d: any) => {
