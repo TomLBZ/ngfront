@@ -92,7 +92,7 @@ export class ConfigsPage implements OnInit, OnDestroy {
             if (d.body) {
                 if (d.body.type === 'application/json') {
                     d.body.text().then((t: string) => this._res2str(JSON.parse(t)));
-                } else if (d.body.type === 'application/octet-stream') {
+                } else if (d.body.type === 'application/xml') {
                     const url = window.URL.createObjectURL(d.body);
                     const a = document.createElement('a');
                     a.href = url;
@@ -100,7 +100,7 @@ export class ConfigsPage implements OnInit, OnDestroy {
                     a.click();
                     window.URL.revokeObjectURL(url);
                     a.remove();
-                } else alert("Download failed: Invalid Blob Type!");
+                } else alert("Download failed: Invalid Blob Type!\n" + d.body.type);
             } else alert("Download failed: Empty Data Response!");
         }, this.cfgFileToType(items[0]), console.error, 'blob');
     }
