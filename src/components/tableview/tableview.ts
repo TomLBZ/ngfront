@@ -1,5 +1,6 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { DropSelectComponent } from '../dropselect/dropselect';
+import { Pair } from '../../utils/type/types';
 
 @Component({
     selector: 'tableview',
@@ -9,9 +10,37 @@ import { DropSelectComponent } from '../dropselect/dropselect';
 })
 export class TableViewComponent implements OnChanges {
     @Input() data: any[] = [];
+    @Input() exportName = 'Export.csv';
     @Input() showBorder = false;
-    columns: string[] = [];
-    selectedColumns: string[] = [];
+    @Input() totalCount = 0;
+    @Input() pageSize = 10;
+    @Input() dataContainsAllPages = true; // true if data contains all pages, false if data contains only current page
+    @Output() pageChanged = new EventEmitter<Pair<number>>();
+    @Output() selectedColumnsChanged = new EventEmitter<string[]>();
+    public columns: string[] = [];
+    public selectedColumns: string[] = [];
+    public isShowAllPages: boolean = false;
+    public get pageInfo(): string {
+        if (this.totalCount <= 0) return 'No data available';
+        const start = (this.currentPage - 1) * this.pageSize + 1;
+        const end = Math.min(this.currentPage * this.pageSize, this.totalCount);
+        return `${start} - ${end} of ${this.totalCount}`;
+    }
+    public get isFirstPage(): boolean { return this.currentPage === 1; }
+    public get isLastPage(): boolean { return this.currentPage === this.lastPageIdx; }
+    public get currentPageData(): any[] {
+        if (this.dataContainsAllPages) {
+            return this.data.slice((this.currentPage - 1) * this.pageSize, this.currentPage * this.pageSize);
+        }
+        return this.data.length > this.pageSize ? this.data.slice(0, this.pageSize) : this.data;
+    }
+    private currentPage: number = 1;
+    private prevPageSize: number = 0;
+    private get lastPageIdx(): number { 
+        const num = this.totalCount / this.pageSize;
+        const intNum = Math.ceil(num);
+        return num === intNum ? intNum + 1 : intNum;
+    }
     repr = (item: string): string => this.getTitleCase(item);
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -40,10 +69,11 @@ export class TableViewComponent implements OnChanges {
             const sortedSelected = selected.sort((a, b) => a - b);
             this.selectedColumns = sortedSelected.map(index => this.columns[index]);
         }
+        this.selectedColumnsChanged.emit(this.selectedColumns);
     }
 
-      // Exports the current table data (using selected columns) as a CSV file.
-    exportToCSV(): void {
+    // Exports the current table data (using selected columns) as a CSV file.
+    onExport(): void {
         if (!this.data || this.data.length === 0 || !this.selectedColumns.length) {
             return;
         }
@@ -67,8 +97,34 @@ export class TableViewComponent implements OnChanges {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'table_export.csv';
+        a.download = this.exportName;
         a.click();
         window.URL.revokeObjectURL(url);
+    }
+
+    onPrevButtonClicked() {
+        this.currentPage = Math.max(1, this.currentPage - 1);
+        this.pageChanged.emit([this.currentPage, this.pageSize]);
+    }
+    onNextButtonClicked() {
+        this.currentPage = Math.min(this.lastPageIdx, this.currentPage + 1);
+        this.pageChanged.emit([this.currentPage, this.pageSize]);
+    }
+    onIsShowAllPagesChanged() {
+        this.isShowAllPages = !this.isShowAllPages;
+        if (this.isShowAllPages) this.onPageSizeChangedInner(this.totalCount);
+        else this.onPageSizeChangedInner(this.prevPageSize);
+    }
+    onPageSizeChangedInner(num: number) {
+        this.prevPageSize = this.pageSize;
+        this.pageSize = num;
+        this.currentPage = 1;
+        this.pageChanged.emit([this.currentPage, this.pageSize]);
+    }
+    onPageSizeChanged(event: any) {
+        const newPageSizeStr = event.target.value as string;
+        const newPageSize = parseInt(newPageSizeStr);
+        if (newPageSize <= 0) alert('Invalid page size: Must be a positive number');
+        this.onPageSizeChangedInner(newPageSize);
     }
 }
