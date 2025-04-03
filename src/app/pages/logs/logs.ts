@@ -6,6 +6,7 @@ import { DateSelectComponent } from "../../../components/dateselect/dateselect";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
 import { DictS, Nullable, Pair } from "../../../utils/type/types";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
+import { HttpResponse } from "@angular/common/http";
 
 @Component({
     selector: "page-logs",
@@ -14,23 +15,26 @@ import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
     templateUrl: "./logs.html"
 })
 export class LogsPage implements OnInit {
-    
-    private readonly _svc: AppService;
-    private readonly void = () => {};
-    private _loopTimer: any = null;
     public availableDates: Array<string> = [];
     public missionNames: Array<string> = [];
     public missionTimes: Array<string> = [];
+    public totalCount: number = 0;
+    public pageSize: number = 100;
+    public loading: boolean = false;
     public readonly missionTimesRepr: (s: string) => string = s => s.replace(/_/g, ':');
-    public get nameSelectable(): boolean { return this.selectedDateStr.length > 0; }
-    public get timeSelectable(): boolean { return this.selectedMissionName.length > 0 && this.nameSelectable; }
-    public get logsFetchable(): boolean { return this.selectedMissionTime.length > 0 && this.timeSelectable && !this.logsFetching; }
-    private selectedDateStr: string = "";
-    private selectedMissionName: string = "";
-    private selectedMissionTime: string = "";
-    private logsFetching: boolean = false;
+    public get nameSelectable(): boolean { return this._selectedDateStr.length > 0; }
+    public get timeSelectable(): boolean { return this._selectedMissionName.length > 0 && this.nameSelectable; }
+    public get logsFetchable(): boolean { return this._selectedMissionTime.length > 0 && this.timeSelectable && !this._logsFetching; }
+    public get fileName(): string { return `${this._selectedDateStr}_${this._selectedMissionName}_${this._selectedMissionTime}.csv`; }
     public missionMetaData: DictS<string> = {};
     public previewLogList: Array<LogEntry> = [];
+    private readonly _svc: AppService;
+    private readonly void = () => {};
+    private _loopTimer: any = null;
+    private _selectedDateStr: string = "";
+    private _selectedMissionName: string = "";
+    private _selectedMissionTime: string = "";
+    private _logsFetching: boolean = false;
     constructor(svc: AppService) {
         this._svc = svc;
     }
@@ -60,17 +64,17 @@ export class LogsPage implements OnInit {
         this._svc.callAPI("logs/metadata", (d: any) => {
             if (!this._svc.isValidAPIResponse(d)) return; // invalid data
             if (!d.success) return; // skip when failed
-            if (!d.data || !d.data.hasOwnProperty("logged_missions")) return; // invalid data
+            if (!this._svc.hasDataProperties(d, ["logged_missions"])) return; // invalid data
             this.missionNames = d.data.logged_missions as Array<string>;
-        }, { date: this.selectedDateStr }, this.void);
+        }, { date: this._selectedDateStr }, this.void);
     }
     private fetchMissionTimes() {
         this._svc.callAPI("logs/metadata", (d: any) => {
             if (!this._svc.isValidAPIResponse(d)) return; // invalid data
             if (!d.success) return; // skip when failed
-            if (!d.data || !d.data.hasOwnProperty("logged_missions")) return; // invalid data
+            if (!this._svc.hasDataProperties(d, ["logged_missions"])) return; // invalid data
             this.missionTimes = d.data.logged_missions as Array<string>;
-        }, { date: this.selectedDateStr, name: this.selectedMissionName }, this.void);
+        }, { date: this._selectedDateStr, name: this._selectedMissionName }, this.void);
     }
     private fetchMissionMetadata() {
         this._svc.callAPI("logs/metadata", (d: any) => {
@@ -80,7 +84,7 @@ export class LogsPage implements OnInit {
                 alert(`Mission data access failed. Simulation could still be running, or file is corrupt!`);
                 return; // skip when failed
             }
-            if (!d.data || !d.data.hasOwnProperty("meta_data")) return; // invalid data
+            if (!this._svc.hasDataProperties(d, ["meta_data"])) return; // invalid data
             const metadata = d.data.meta_data as MissionMetadata;
             for (const key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
@@ -89,32 +93,36 @@ export class LogsPage implements OnInit {
                     else this.missionMetaData[key] = value;
                 }
             }
-        }, { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime }, this.void);
+        }, { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime }, this.void);
     }
-    private fetchPreviewMissionLogs() {
-        this._svc.callAPI("logs/preview", (d: any) => {
-            if (!this._svc.isValidAPIResponse(d)) return; // invalid data
-            if (!d.success) return; // skip when failed
-            if (!d.data || !d.data.hasOwnProperty("mission_log")) return; // invalid data
-            this.previewLogList = d.data.mission_log as Array<LogEntry>;
-            console.log(d.data); // TODO: OTHER FIELDS: PAGE COUNT, ETC
-        }
-        , { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime, page: 1, limit: 100 }, this.void);
-    }
-    private fetchAllLogs() {
-        console.log(new Date().toUTCString());
-        this._svc.callAPI("logs/download", (d: any) => {
-            if (!this._svc.isValidAPIResponse(d)) {
-
-                return; // invalid data
-            }
-            console.log(new Date().toUTCString());
-            console.log(d.success);
-            console.log(Object.keys(d.data));
-            if (!d.success) return; // skip when failed
-            if (!d.data || !d.data.hasOwnProperty("mission_log")) return; // invalid data
-            this.previewLogList = d.data.mission_log as Array<LogEntry>;
-        }, { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime }, console.log);
+    private downloadMissionLogs() {
+        this._svc.callAPI("logs/download", (d: HttpResponse<Blob>) => {
+            if (d.body) {
+                if (d.body.type === 'text/csv') {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const csvText = e.target?.result as string;
+                        const lines = csvText.split('\n');
+                        const headerText = lines[0].split(',').map((col: string) => col.trim());
+                        const dataText = lines.slice(1).map((line: string) => line.split(',').map((col: string) => col.trim()));
+                        const data = dataText.map((row: string[]) => {
+                            const obj: any = {};
+                            headerText.forEach((header: string, index: number) => {
+                                obj[header] = row[index];
+                            });
+                            return obj;
+                        });
+                        this.previewLogList = data as Array<LogEntry>;
+                        this.totalCount = data.length;
+                        this.pageSize = data.length;
+                    }
+                    reader.readAsText(d.body);
+                } else alert("Download failed: Invalid Blob Type!\n" + d.body.type);
+            } else alert("Download failed: Empty Data Response!");
+            this.loading = false;
+        }, 
+        { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime }, 
+        () => this.loading = false, "blob");
     }
 
     onDateRangeChanged(dates: Pair<Nullable<Date>>) {
@@ -122,20 +130,20 @@ export class LogsPage implements OnInit {
         if (!start) return; // no start date
         const date = new Date(start);
         const [year, month, day] = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
-        this.selectedDateStr = `${year}_${month}_${day}`;
+        this._selectedDateStr = `${year}_${month}_${day}`;
         this.fetchMissionNames();
     }
     onMissionNameSelected(mName: string) {
-        this.selectedMissionName = mName;
+        this._selectedMissionName = mName;
         this.fetchMissionTimes();
     }
     onMissionTimeSelected(mTime: string) {
-        this.selectedMissionTime = mTime;
+        this._selectedMissionTime = mTime;
         this.fetchMissionMetadata();
     }
-    onPreviewMissionLogs() {
-        this.fetchPreviewMissionLogs();
-        // this.fetchAllLogs();
+    onViewMissionLogs() {
+        this.loading = true;
+        this.downloadMissionLogs();
     }
     onReplayMissionLogs() {
         this._svc.callAPI("logs/replay", (d: any) => {
@@ -144,6 +152,6 @@ export class LogsPage implements OnInit {
             console.log(d.data);
             if (!d.data || !d.data.hasOwnProperty("mission_log")) return; // invalid data
             this.previewLogList = d.data.mission_log as Array<LogEntry>;
-        }, { date: this.selectedDateStr, name: this.selectedMissionName, time: this.selectedMissionTime }, this.void);
+        }, { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime }, this.void);
     }
 }

@@ -13,7 +13,7 @@
                 [allowedDateStrs]="availableDates"
                 (dateRangeChanged)="onDateRangeChanged($event)"
             ></dateselect>
-            <div class="flexc grow mar5">
+            <div class="flexc grow pad5">
                 <div class="flex justarnd">
                     <dropselect class="pad5 disablehost"
                         [class.disabled]="!nameSelectable"
@@ -32,20 +32,28 @@
                         [hoverMode]="true"
                         (selectionChanged)="onMissionTimeSelected($event)"
                     ></dropselect>
-                    <button class="pad5 mar5" [disabled]="!logsFetchable" (click)="onPreviewMissionLogs()">Preview Logs</button>
-                    <button class="pad5 mar5" [disabled]="previewLogList.length <= 0" (click)="onReplayMissionLogs()">Replay</button>
                 </div>
-                <obj-editor class="flex grow bdc_tint bd_r5 bd_sng"
+                <obj-editor class="flex grow bdc_tint bd_r5 bd_sng ft_smal"
                     [objToEdit]="missionMetaData"
                     [objName]="'Mission Metadata'"
                     [textEnabled]="false"
                     [readOnly]="true"
                 ></obj-editor>
+                <div class="flex justarnd">
+                    <button class="pad5 mar5 px_minw80" [disabled]="!logsFetchable" (click)="onViewMissionLogs()">
+                        @if (loading) {
+                            <span class="spinner centcont"></span>
+                        } @else {View Logs}
+                    </button>
+                    <button class="pad5 mar5 px_minw80" [disabled]="!logsFetchable" (click)="onReplayMissionLogs()">Replay Mission From Logs</button>
+                </div>
             </div>
         </div>
     </div>
     <tableview class="flexc grow"
         [data]="previewLogList"
+        [exportName]="fileName"
+        [totalCount]="totalCount"
         [showBorder]="true"
     ></tableview>
 </div>
