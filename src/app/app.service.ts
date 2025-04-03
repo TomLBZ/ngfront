@@ -53,4 +53,12 @@ export class AppService {
     public isValidAPIResponse(d: any): d is APIResponse {
         return StructValidator.hasFields(d, ["success", "msg", "data"]);
     }
+
+    public hasDataProperties(d: APIResponse, props: string[]): boolean {
+        if (!d.data) return false;
+        for (const prop of props) {
+            if (!d.data.hasOwnProperty(prop)) return false;
+        }
+        return true;
+    }
 }
