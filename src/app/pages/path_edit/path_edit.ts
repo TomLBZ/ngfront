@@ -43,6 +43,8 @@ export class PathEditPage implements OnInit, OnDestroy {
     private readonly _aircraftChangeFlags: Flag = new Flag(["create", "update", "delete", "started", "failed"]);
     public aircrafts: Array<Aircraft> = [];
     public isAircraftsValid: boolean = false;
+    public isAircraftsCompiled: boolean = false;
+    public compiling: boolean = false;
     public readonly apiKey = env.mapKey;
     public readonly missions: Array<Mission> = [this._newMission];
     public readonly missionsRepr = (m: Mission) => m.name.length > 0 ? m.name : "[New Mission]";
@@ -54,6 +56,7 @@ export class PathEditPage implements OnInit, OnDestroy {
     public readonly plIncludeFieldsFilter = (key: string) => { return !key.includes("start_pos.alt"); }
     public get selectedMission(): Mission { return this.missions[this._selectedMissionIdx]; }
     public get existingMission(): boolean { return this._selectedMissionIdx > 0; }
+    public get planesUpdating(): boolean { return this._aircraftChangeFlags.get("started"); }
 
     constructor(svc: AppService) { 
         this._svc = svc; 
@@ -315,6 +318,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         if (m.description !== this.selectedMission.description) this.selectedMission.description = m.description; // update description
     }
     onPlanesUpdate() {
+        if (this.planesUpdating) return; // already started updating
         this.isAircraftsValid = false; // assume false first
         const msg = this.getAircraftValidityMessage();
         if (msg.length > 0) { alert(msg); return; } // check failed
@@ -342,8 +346,21 @@ export class PathEditPage implements OnInit, OnDestroy {
                     alert("Already updated, no plane instance modified!");
                     this.isAircraftsValid = true; // assume true if no error
                     return;
-                }
+                } else this.isAircraftsCompiled = false; // reset aircrafts compiled status since aircrafts are modified
             }
+        }, undefined, this.void);
+    }
+    onPlanesCompile() {
+        if (this.compiling) return; // already waiting for response
+        this.compiling = true; // set waiting flag
+        this._svc.callAPI("aircraft/compile", (d: any) => {
+            this.compiling = false; // reset waiting flag
+            if (StructValidator.hasFields(d, ["success", "msg"])) {
+                if ((d as APIResponse).success) { // recompiled successfully
+                    this.isAircraftsCompiled = true; // set aircrafts compiled status
+                    alert("Plane instances recompiled!");
+                } else alert("Failed to recompile aircraft: " + (d as APIResponse).msg);
+            } else alert("Failed to recompile aircraft: invalid response\n" + JSON.stringify(d)); // invalid response
         }, undefined, this.void);
     }
     @ViewChild("ds", { static: true }) ds!: DropSelectComponent;

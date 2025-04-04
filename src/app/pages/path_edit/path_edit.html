@@ -78,8 +78,17 @@
                     (applied)="onMissionApplied($event)"
                 ></obj-editor>
                 <div class="flex justends">
-                    <button class="pad5 mar5 p_halfw" (click)="onPlanesUpdate()">Update Planes</button>
-                    <button class="pad5 mar5 p_halfw" (click)="onMissionUpdate()" [disabled]="!isAircraftsValid">{{existingMission ? "Update" : "Create"}} Mission</button>
+                    <button class="pad5 mar5 p_halfw" (click)="onPlanesUpdate()">
+                        @if (planesUpdating) {
+                            <span class="spinner centcont"></span>
+                        } @else { Update Planes }
+                    </button>
+                    <button class="pad5 mar5 p_halfw" (click)="onPlanesCompile()" [disabled]="!isAircraftsValid">
+                        @if (compiling) {
+                            <span class="spinner centcont"></span>
+                        } @else { Recompile Planes }
+                    </button>
+                    <button class="pad5 mar5 p_halfw" (click)="onMissionUpdate()" [disabled]="!isAircraftsCompiled">{{existingMission ? "Update" : "Create"}} Mission</button>
                 </div>
             </div>
         </div>
