@@ -126,6 +126,10 @@ export class ConfigsPage implements OnInit, OnDestroy {
     }
     onFileOpDeleteClicked(items: Array<ConfigFile>) {
         const cfgType = this.cfgFileToType(items[0]);
+        if (cfgType.id! < 0) { // id must exist
+            alert("Cannot delete the default configuration file!");
+            return;
+        }
         if (cfgType.airframe_type === null || cfgType.airframe_type === undefined) cfgType.airframe_type = 0;
         this._svc.callAPI("files/delete", this._res2str, cfgType);
         const type = this.typeToNumber(items[0].type);
