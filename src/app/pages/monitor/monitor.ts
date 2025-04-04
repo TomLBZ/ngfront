@@ -85,7 +85,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public readonly nameRepr: Function = (o: any) => o.name;
     public missions: Array<Mission> = [];
     public launchSettings: LaunchSettings = { fgEnable: false };
-    public runtimeSettings: RuntimeSettings = { traces: 50, lead_id: 0 };
+    public runtimeSettings: RuntimeSettings = { traces: 100, lead_id: 0 };
     public selectedMission?: Mission = undefined;
     public resetNeeded: boolean = false;
     public waiting: boolean = false;
@@ -95,13 +95,16 @@ export class MonitorPage implements OnInit, OnDestroy {
     private isValidTelemetry(t: Telemetry): boolean {
         return StructValidator.hasNonEmptyFields(t, ["roll", "pitch", "yaw", "lat", "lon", "alt", "hdg", "agl", "speed", "course", "climb", "throttle"]);
     }
+    private resetRuntimeSettings() {
+        this.runtimeSettings = { traces: 100, lead_id: 0 }; // reset runtime settings
+    }
     private resetMissionStatus() {
         this._visibleTelemetryIndices.length = 0; // clear all visible telemetries
         this._telemetries.length = 0; // clear all telemetries
         this._planeMgrp.clearMarkers(); // clear all plane markers
         this._planePtsCache.clear(); // clear all cached path points
         this._ppaths.splice(0, this._ppaths.length); // clear all plane paths
-        this.runtimeSettings = { traces: 50, lead_id: 0 }; // reset runtime settings
+        this.resetRuntimeSettings(); // reset runtime settings
         this.selectedMission = undefined; // reset selected mission
         this._wpGrp.clearMarkers(); // clear all waypoints
         this._mpath.clear(); // clear lead path
@@ -228,7 +231,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             leadPoints.push(new Point(wp.lon, wp.lat));
         });
         this._mpath.setPoints(leadPoints); // set lead path
-        this.runtimeSettings = { traces: 50, lead_id: m.lead_id }; // reset runtime settings
+        this.resetRuntimeSettings(); // reset runtime settings
     }
     onLaunchSettingsChanged(newSettings: LaunchSettings) {
         if (newSettings.fgEnable !== this.launchSettings.fgEnable) {

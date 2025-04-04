@@ -41,7 +41,7 @@
             }
         </div>
         @if (online) {
-            <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5">
+            <div class="flexc px_h250 bd_r5 bd_dbl bdc_tint pad5">
                 <div class="flexc px_h50">
                     @if (stoppable) {
                         <span class="ft_norm bold oblq txt_nowrap centtext">Current Mission:</span>
@@ -74,12 +74,12 @@
                     </button>
                     <button class="p_halfw mar5lft pad5v" [disabled]="!stoppable || waiting" (click)="onStop()">Stop</button>
                 </div>
-                <obj-editor class="zeromin px_maxh90 pad10h pad10top errhost"
+                <obj-editor class="zeromin flexc grow pad10h pad10top errhost"
                     [class.err]="!allPlaneIds.includes(runtimeSettings.lead_id)"
                     [objToEdit]="runtimeSettings"
                     [readOnly]="!running"
                     [objName]="'Runtime Settings'"
-                    [autoApply]="true"
+                    [autoApply]="false"
                     [textEnabled]="false"
                     (applied)="onRuntimeSettingsChanged($event)"
                 ></obj-editor>
