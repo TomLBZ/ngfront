@@ -150,6 +150,7 @@ export class LogsPage implements OnInit {
     onDateRangeChanged(dates: Pair<Nullable<Date>>) {
         const [start, end] = dates;
         if (!start) return; // no start date
+        this.resetNames(false);
         const date = new Date(start);
         const [year, month, day] = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
         const yyyy = year.toString().padStart(4, "0");
@@ -159,6 +160,7 @@ export class LogsPage implements OnInit {
         this.fetchMissionNames();
     }
     onMissionNameSelected(mName: string) {
+        this.resetTimes(false);
         this._selectedMissionName = mName;
         this.fetchMissionTimes();
     }
