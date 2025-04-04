@@ -22,6 +22,6 @@ export class Point implements IPoint {
         return Hash.hash([this.x, this.y]);
     }
     public equals(point: Point): boolean {
-        return this.x === point.x && this.y === point.y;
+        return this.hash === point.hash;
     }
 }
