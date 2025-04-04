@@ -14,7 +14,7 @@
             (selectionChanged)="onSelectionChanged($event)">
         </dropselect>
         <label class="pad5">
-            <span class="ft_smal oblq">Page Size: </span>
+            <span class="ft_smlr oblq">Page Size: </span>
             <input [disabled]="isShowAllPages || dataNotLoaded" name="itc" type="number" [step]="1" [min]="1" [max]="totalCount > 1 ? totalCount : pageSize" [value]="pageSize" (input)="onPageSizeChanged($event)" />
         </label>
         <label class="pad5 flex justcent disablehost" [class.disabled]="dataNotLoaded">
@@ -28,7 +28,7 @@
     }
     @else {
         <div class="flex grow ov_scr pos_rel">
-            <table class="pos_abs top0 lft0 rht0 btm0">
+            <table class="pos_abs top0 btm0 p_fullw">
                 <thead>
                     <tr>
                         @for(col of selectedColumns; track $index) {
@@ -36,7 +36,7 @@
                         }
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="ft_smlr">
                     @for(row of currentPageData; track $index) {
                         <tr>
                             @for(col of selectedColumns; track $index) {
@@ -51,11 +51,11 @@
     <div class="flex justends bd_tsng bdc_tint">
         <button class="px_minw80" [disabled]="isFirstPage" (click)="onPrevButtonClicked()">Prev</button>
         <label class="pad5">
-            <span class="ft_smal oblq">Current Page: </span>
+            <span class="ft_smlr oblq">Current Page: </span>
             <input [disabled]="isShowAllPages || dataNotLoaded || lastPageIdx === 1" name="itc" type="number" [step]="1" [min]="1" [max]="lastPageIdx" [value]="currentPage" (input)="onCurrentPageChanged($event)" />
             <span class="ft_smlr"> / {{ lastPageIdx }}</span>
         </label>
-        <div class="ft_smal centcont flex">
+        <div class="ft_smlr centcont flex">
             <span class="oblq pad5rht">Rows:</span>
             <span class="bold">{{ pageInfo }}</span>
         </div>
