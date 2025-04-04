@@ -40,7 +40,7 @@ export class PathEditPage implements OnInit, OnDestroy {
     private startAlt: number = -1;
     private leaderPrevColor: Color = Color.Transparent;
     private readonly _aircraftsChanged: DictS<Array<Aircraft>> = {"create": [], "update": [], "delete": []};
-    private readonly _aircraftChangeFlags: Flag = new Flag(["create", "update", "delete", "started"]);
+    private readonly _aircraftChangeFlags: Flag = new Flag(["create", "update", "delete", "started", "failed"]);
     public aircrafts: Array<Aircraft> = [];
     public isAircraftsValid: boolean = false;
     public readonly apiKey = env.mapKey;
@@ -115,9 +115,13 @@ export class PathEditPage implements OnInit, OnDestroy {
         } else if (this._aircraftChangeFlags.get("started")) {
             const done = ops.reduce((acc, op) => acc && this._aircraftChangeFlags.get(op), true);
             if (done) { // all operations are done
+                const failed = this._aircraftChangeFlags.get("failed");
                 this._aircraftChangeFlags.clear(); // clear all flags
-                this.isAircraftsValid = true; // assume true if no error
-                alert("Plane instances up to date!"); // notify user
+                if (failed) alert("Failed to update some of the aircrafts, please edit and try again.");
+                else {
+                    this.isAircraftsValid = true; // assume true if no error
+                    alert("Plane instances up to date!"); // notify user
+                }
             }
         }
     }
@@ -129,14 +133,21 @@ export class PathEditPage implements OnInit, OnDestroy {
                 return;
             }
             this._aircraftChangeFlags.unset(op); // set to false
-            console.log(`${op} aircraft: ${ac.name}`);
+            this._aircraftChangeFlags.unset("failed"); // set to false
+            console.log(`${op} ${ac.name}`);
             this._svc.callAPI(`aircraft/${op}`, (d: any) => {
                 this._aircraftChangeFlags.set(op); // got result, set to true
                 if (StructValidator.hasFields(d, ["success", "msg"])) {
                     if ((d as APIResponse).success) { // updated successfully
                         this._pendingAircraftUpdate = true; // force update
-                    } else alert(`Failed to ${op} aircraft: ` + (d as APIResponse).msg); // update failed
-                } else alert(`Failed to ${op} aircraft: invalid response\n${JSON.stringify(d)}`); // invalid response
+                    } else {
+                        this._aircraftChangeFlags.set("failed"); // set to true
+                        alert(`Failed to ${op} aircraft: ` + (d as APIResponse).msg); // update failed
+                    }
+                } else {
+                    this._aircraftChangeFlags.set("failed"); // set to true
+                    alert(`Failed to ${op} aircraft: invalid response\n${JSON.stringify(d)}`); // invalid response
+                }
             }, op === "delete" ? ac.id : ac, this.void);
         } else this._aircraftChangeFlags.set(op); // no aircraft to update, set to true
     }
@@ -248,6 +259,46 @@ export class PathEditPage implements OnInit, OnDestroy {
         return a1.id === a2.id && a1.start_pos.lat === a2.start_pos.lat && a1.start_pos.lon === a2.start_pos.lon &&
             a1.start_pos.alt === a2.start_pos.alt && a1.start_pos.hdg === a2.start_pos.hdg && a1.name === a2.name && a1.airframe_type === a2.airframe_type;
     }
+    private verifyName(name: string): string {
+        if (name.length === 0) return "Name cannot be empty"; // empty name
+        if (name.length > 32) return "Name cannot exceed 32 characters: " + name; // too long name
+        if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(name)) return "Name must start with a letter and can only contain letters, numbers, and underscores: " + name; // invalid name
+        return ""; // valid name
+    }
+    private getMissionValidityMessage(m: Mission): string {
+        const mids = this.missions.map((m) => m.id);
+        if (m.id <= 0) return "Invalid mission id: " + m.id + ", id should be > 0.";
+        if (mids.filter((id) => id === m.id).length > 1) return "Duplicate mission id: " + m.id;
+        if (m.id !== Math.floor(m.id)) return "Mission id must be an integer: " + m.id;
+        const nMsg = this.verifyName(m.name);
+        if (nMsg.length > 0) return nMsg; // invalid name
+        if (m.description.length > 256) return "Mission description is too long: " + m.description;
+        if (m.lead_id <= 0) return "No leader selected, please select a leader first by left clicking on a plane instance.";
+        if (m.follower_ids.length === 0) return "No follower selected, please select followers by right clicking plane instances.";
+        if (m.lead_path.length === 0) return "No waypoints added, please add waypoints by Ctrl+Left clicking on the map.";
+        return "";
+    }
+    private getAircraftValidityMessage(): string {
+        if (this.aircrafts.length === 0) return "No aircraft added, please add aircraft by Alt+Left clicking on the map.";
+        const ids = this.aircrafts.map((a) => a.id);
+        const names = this.aircrafts.map((a) => a.name);
+        for (const a of this.aircrafts) {
+            const suffix = ` for aircraft ${a.name} (id: ${a.id})`;
+            if (a.id <= 0) return "Invalid aircraft id (should be > 0): " + a.id + suffix;
+            if (a.id !== Math.floor(a.id)) return "Aircraft id must be an integer: " + a.id + suffix;
+            if (a.start_pos.lat < -90 || a.start_pos.lat > 90) return "Invalid latitude: " + a.start_pos.lat + suffix;
+            if (a.start_pos.lon < -180 || a.start_pos.lon > 180) return "Invalid longitude: " + a.start_pos.lon + suffix;
+            if (a.start_pos.alt < 0) return "Invalid altitude: " + a.start_pos.alt + suffix;
+            if (a.start_pos.alt > 8844) return "Invalid altitude: " + a.start_pos.alt + suffix;
+            if (a.start_pos.hdg < 0 || a.start_pos.hdg >= 360) return "Invalid heading: " + a.start_pos.hdg + suffix;
+            const nMsg = this.verifyName(a.name);
+            if (nMsg.length > 0) return nMsg + suffix; // invalid name
+            if (names.filter((n) => n === a.name).length > 1) return "Duplicate aircraft name: " + a.name + suffix;
+            if (ids.filter((id) => id === a.id).length > 1) return "Duplicate aircraft id: " + a.id + suffix;
+            if (a.airframe_type < 0 || a.airframe_type > 1) return "Invalid airframe type (0=Default, 1=Custom): " + a.airframe_type + suffix;
+        }
+        return "";
+    }
     onMissionSelected(idx: number) {
         const old_leadId = this.selectedMission.lead_id;
         const old_followerIds = this.selectedMission.follower_ids;
@@ -262,39 +313,6 @@ export class PathEditPage implements OnInit, OnDestroy {
         if (m.id !== this.selectedMission.id) this.selectedMission.id = m.id; // update id
         if (m.name !== this.selectedMission.name) this.selectedMission.name = m.name; // update name
         if (m.description !== this.selectedMission.description) this.selectedMission.description = m.description; // update description
-    }
-    getMissionValidityMessage(m: Mission): string {
-        const mids = this.missions.map((m) => m.id);
-        if (m.id <= 0) return "Invalid mission id: " + m.id + ", id should be > 0.";
-        if (mids.filter((id) => id === m.id).length > 1) return "Duplicate mission id: " + m.id;
-        if (m.id !== Math.floor(m.id)) return "Mission id must be an integer: " + m.id;
-        if (m.name.length === 0) return "Invalid mission name: [EMPTY]";
-        if (m.name.length > 32) return "Mission name is too long: " + m.name;
-        if (m.description.length > 256) return "Mission description is too long: " + m.description;
-        if (m.lead_id <= 0) return "No leader selected, please select a leader first by left clicking on a plane instance.";
-        if (m.follower_ids.length === 0) return "No follower selected, please select followers by right clicking plane instances.";
-        if (m.lead_path.length === 0) return "No waypoints added, please add waypoints by Ctrl+Left clicking on the map.";
-        return "";
-    }
-    getAircraftValidityMessage(): string {
-        if (this.aircrafts.length === 0) return "No aircraft added, please add aircraft by Alt+Left clicking on the map.";
-        const ids = this.aircrafts.map((a) => a.id);
-        const names = this.aircrafts.map((a) => a.name);
-        for (const a of this.aircrafts) {
-            const suffix = ` for aircraft ${a.name} (id: ${a.id})`;
-            if (a.id <= 0) return "Invalid aircraft id (should be > 0): " + a.id + suffix;
-            if (a.id !== Math.floor(a.id)) return "Aircraft id must be an integer: " + a.id + suffix;
-            if (a.start_pos.lat < -90 || a.start_pos.lat > 90) return "Invalid latitude: " + a.start_pos.lat + suffix;
-            if (a.start_pos.lon < -180 || a.start_pos.lon > 180) return "Invalid longitude: " + a.start_pos.lon + suffix;
-            if (a.start_pos.alt < 0) return "Invalid altitude: " + a.start_pos.alt + suffix;
-            if (a.start_pos.alt > 8844) return "Invalid altitude: " + a.start_pos.alt + suffix;
-            if (a.start_pos.hdg < 0 || a.start_pos.hdg >= 360) return "Invalid heading: " + a.start_pos.hdg + suffix;
-            if (a.name.length === 0) return "Invalid aircraft name: [EMPTY]" + suffix;
-            if (names.filter((n) => n === a.name).length > 1) return "Duplicate aircraft name: " + a.name + suffix;
-            if (ids.filter((id) => id === a.id).length > 1) return "Duplicate aircraft id: " + a.id + suffix;
-            if (a.airframe_type < 0 || a.airframe_type > 1) return "Invalid airframe type (0=Default, 1=Custom): " + a.airframe_type + suffix;
-        }
-        return "";
     }
     onPlanesUpdate() {
         this.isAircraftsValid = false; // assume false first
@@ -344,7 +362,7 @@ export class PathEditPage implements OnInit, OnDestroy {
                         this._pendingMissionUpdate = true;
                         alert("Mission created!");
                     } else alert("Failed to create mission: " + (d as APIResponse).msg);
-                }
+                } else alert("Failed to create mission: invalid response\n" + JSON.stringify(d)); // invalid response
             }, this.selectedMission, this.void);
         } else { // update existing mission
             this._svc.callAPI("mission/update", (d: any) => {
@@ -354,7 +372,7 @@ export class PathEditPage implements OnInit, OnDestroy {
                         this._pendingMissionUpdate = true;
                         alert("Mission updated!");
                     } else alert("Failed to update mission: " + (d as APIResponse).msg);
-                }
+                } else alert("Failed to update mission: invalid response\n" + JSON.stringify(d)); // invalid response
             }, this.selectedMission, this.void);
         }
     }
@@ -366,7 +384,7 @@ export class PathEditPage implements OnInit, OnDestroy {
                     this._pendingMissionUpdate = true;
                     alert("Mission deleted!");
                 } else alert("Failed to delete mission: " + (d as APIResponse).msg);
-            }
+            } else alert("Failed to delete mission: invalid response\n" + JSON.stringify(d)); // invalid response
         }, this.selectedMission.id, this.void);
     }
     onWaypointApplied(wps: Waypoint[]) {
