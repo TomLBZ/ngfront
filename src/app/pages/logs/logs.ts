@@ -100,7 +100,7 @@ export class LogsPage implements OnInit {
             for (const key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
                     const value: string = (metadata as any)[key] as string;
-                    if (key.includes("time")) this.missionMetaData[key] = new Date(value).toUTCString();
+                    if (key.includes("time")) this.missionMetaData[key] = new Date(value).toLocaleString();
                     else this.missionMetaData[key] = value;
                 }
             }

@@ -20,9 +20,9 @@
                 [allowedDateStrs]="missionDates"
                 (dateRangeChanged)="onDateRangeChanged($event)"
             ></dateselect>
-            <div class="flexc grow pad5">
-                <div class="flex justarnd">
-                    <dropselect class="pad5 disablehost"
+            <div class="flexc grow pad5rht">
+                <div class="flex justends">
+                    <dropselect class="pad5v disablehost"
                         [class.disabled]="!nameSelectable"
                         [items]="missionNames"
                         [title]="'Missions'"
@@ -30,7 +30,7 @@
                         [hoverMode]="true"
                         (selectionChanged)="onMissionNameSelected($event)"
                     ></dropselect>
-                    <dropselect class="pad5 disablehost"
+                    <dropselect class="pad5v disablehost"
                         [class.disabled]="!timeSelectable"
                         [items]="missionTimes"
                         [title]="'Mission Runs'"
@@ -40,22 +40,22 @@
                         (selectionChanged)="onMissionTimeSelected($event)"
                     ></dropselect>
                 </div>
-                <obj-editor class="flex grow ft_smal"
+                <obj-editor class="flex grow ft_smal px_maxh120"
                     [objToEdit]="missionMetaData"
                     [objName]="'Mission Metadata'"
                     [textEnabled]="false"
                     [readOnly]="true"
                 ></obj-editor>
                 <div class="flex justends">
-                    <button class="mar5v pad5v px_minw80" [disabled]="!logsFetchable" (click)="onViewMissionLogs()">
+                    <button class="mar5btm pad5v px_minw80" [disabled]="!logsFetchable" (click)="onViewMissionLogs()">
                         @if (downloading) {
                             <span class="spinner centcont"></span>
                         } @else {View Logs}
                     </button>
-                    <button class="mar5v pad5v px_minw80" [disabled]="!logsFetchable" (click)="onDeleteMissionLogs(0)">Delete Run</button>
-                    <button class="mar5v pad5v px_minw80" [disabled]="!timeSelectable || downloading" (click)="onDeleteMissionLogs(1)">Delete Mission</button>
-                    <button class="mar5v pad5v px_minw80" [disabled]="!nameSelectable || downloading" (click)="onDeleteMissionLogs(2)">Delete Date</button>
-                    <button class="mar5v pad5v px_minw80" [disabled]="!logsFetchable" (click)="onReplayMissionLogs()">Replay Logs</button>
+                    <button class="mar5btm pad5v px_minw80" [disabled]="!logsFetchable" (click)="onDeleteMissionLogs(0)">Delete Run</button>
+                    <button class="mar5btm pad5v px_minw80" [disabled]="!timeSelectable || downloading" (click)="onDeleteMissionLogs(1)">Delete Mission</button>
+                    <button class="mar5btm pad5v px_minw80" [disabled]="!nameSelectable || downloading" (click)="onDeleteMissionLogs(2)">Delete Date</button>
+                    <button class="mar5btm pad5v px_minw80" [disabled]="!logsFetchable" (click)="onReplayMissionLogs()">Replay Logs</button>
                 </div>
             </div>
         </div>
