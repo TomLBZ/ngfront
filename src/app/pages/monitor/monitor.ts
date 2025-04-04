@@ -95,16 +95,13 @@ export class MonitorPage implements OnInit, OnDestroy {
     private isValidTelemetry(t: Telemetry): boolean {
         return StructValidator.hasNonEmptyFields(t, ["roll", "pitch", "yaw", "lat", "lon", "alt", "hdg", "agl", "speed", "course", "climb", "throttle"]);
     }
-    private resetRuntimeSettings() {
-        this.runtimeSettings = { traces: 100, lead_id: 0 }; // reset runtime settings
-    }
     private resetMissionStatus() {
         this._visibleTelemetryIndices.length = 0; // clear all visible telemetries
         this._telemetries.length = 0; // clear all telemetries
         this._planeMgrp.clearMarkers(); // clear all plane markers
         this._planePtsCache.clear(); // clear all cached path points
         this._ppaths.splice(0, this._ppaths.length); // clear all plane paths
-        this.resetRuntimeSettings(); // reset runtime settings
+        this.runtimeSettings = { traces: 100, lead_id: 0 }; // reset runtime settings
         this.selectedMission = undefined; // reset selected mission
         this._wpGrp.clearMarkers(); // clear all waypoints
         this._mpath.clear(); // clear lead path
@@ -135,16 +132,18 @@ export class MonitorPage implements OnInit, OnDestroy {
             const newp = new Point(t.lon, t.lat);
             if (last === undefined || !last.equals(newp)) points.push(newp); // add new point if it's different from the last
             if (points.length > this.runtimeSettings.traces) points.splice(0, points.length - this.runtimeSettings.traces); // remove oldest points
-            if (t.id === this.selectedMission?.lead_id) this._colorsCache.set(t.id, this._leadColor);
-            else if (!this._colorsCache.has(t.id) || this._colorsCache.get(t.id) === this._leadColor) this._colorsCache.set(t.id, Color.Random());
+            if (t.id === this.selectedMission?.lead_id) {
+                this._colorsCache.set(t.id, this._leadColor);
+                this._planeMgrp.setColor(t.id, this._leadColor); // set lead plane Border
+            } else {
+                this._planeMgrp.setColor(t.id, Color.Transparent); // reset old lead plane Border
+                if (!this._colorsCache.has(t.id) || this._colorsCache.get(t.id) === this._leadColor) this._colorsCache.set(t.id, Color.Random());
+            }
             path.color = this._colorsCache.get(t.id);
             path.weight = 1;
             path.setPoints(points);
             this._ppaths.push(path);
         });
-        if (this.selectedMission !== undefined && this._colorsCache.has(this.selectedMission.lead_id)) {
-            this._planeMgrp.setColor(this.selectedMission.lead_id, this._leadColor); // set lead plane Border
-        }
     }
     private stopTelemetry() {
         if (this.websocket !== undefined) {
@@ -231,7 +230,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             leadPoints.push(new Point(wp.lon, wp.lat));
         });
         this._mpath.setPoints(leadPoints); // set lead path
-        this.resetRuntimeSettings(); // reset runtime settings
+        this.runtimeSettings = { traces: this.runtimeSettings.traces, lead_id: m.lead_id }; // set runtime settings
     }
     onLaunchSettingsChanged(newSettings: LaunchSettings) {
         if (newSettings.fgEnable !== this.launchSettings.fgEnable) {
