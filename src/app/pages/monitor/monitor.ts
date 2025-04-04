@@ -131,7 +131,8 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (last === undefined || !last.equals(newp)) points.push(newp); // add new point if it's different from the last
             if (points.length > this.runtimeSettings.traces) points.splice(0, points.length - this.runtimeSettings.traces); // remove oldest points
             if (!this._colorsCache.has(t.id)) {
-                this._colorsCache.set(t.id, Color.Random());
+                if (t.id === this.selectedMission?.lead_id) this._colorsCache.set(t.id, Color.Red);
+                else this._colorsCache.set(t.id, Color.Random());
             }
             path.color = this._colorsCache.get(t.id);
             path.weight = 1;
@@ -265,8 +266,8 @@ export class MonitorPage implements OnInit, OnDestroy {
             this.waiting = false; // stop waiting
             if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
             else if (!(d as APIResponse).success) {
-                alert(d.msg);
-                this.resetNeeded = !this._health.sim; // reset needed when simulator is offline
+                alert(`Failed to launch mission, please stop simulator immediately and retry: ${d.msg}`);
+                this.resetNeeded = true; // reset needed when simulator is offline
             }
         }, this.selectedMission!.id, this.alert);
     }

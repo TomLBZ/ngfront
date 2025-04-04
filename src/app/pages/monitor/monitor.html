@@ -57,24 +57,16 @@
                     [textEnabled]="false"
                     (applied)="onLaunchSettingsChanged($event)"
                 ></obj-editor>
-                @if (resetNeeded) {
-                    <button class="pad5 mar5" (click)="onReset()">
+                <div class="flex p_fullw justarnd pad5h">
+                    <button class="p_halfw mar5rht pad5v" [disabled]="!launchable" (click)="resetNeeded ? onReset() : onLaunch()">
                         @if (waiting) {
                             <span class="spinner centcont"></span>
-                        } @else { Reset Papparazzi }
+                        } @else {
+                            {{ resetNeeded ? "Reset Papparazzi" : restartable ? "Restart" : "Launch"}}
+                        }
                     </button>
-                } @else {
-                    <div class="flex p_fullw justarnd pad5h">
-                        <button class="p_halfw mar5rht pad5v" [disabled]="!launchable" (click)="onLaunch()">
-                            @if (waiting) {
-                                <span class="spinner centcont"></span>
-                            } @else {
-                                {{restartable ? "Restart" : "Launch"}}
-                            }
-                        </button>
-                        <button class="p_halfw mar5lft pad5v" [disabled]="!stoppable" (click)="onStop()">Stop</button>
-                    </div>
-                }
+                    <button class="p_halfw mar5lft pad5v" [disabled]="!stoppable || waiting" (click)="onStop()">Stop</button>
+                </div>
                 <obj-editor class="zeromin px_maxh90 pad10h pad10top errhost"
                     [class.err]="!allPlaneIds.includes(runtimeSettings.lead_id)"
                     [objToEdit]="runtimeSettings"
