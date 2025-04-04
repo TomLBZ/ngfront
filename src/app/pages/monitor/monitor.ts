@@ -73,7 +73,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public get restartable(): boolean { return ["COMPLETED", "ERROR"].includes(this._health.mstatus); }
     public get launchable(): boolean { return ["EXITED", "COMPLETED", "ERROR"].includes(this._health.mstatus) && this.selectedMission !== undefined; }
     public get stoppable(): boolean { return this._health.sim; } // can stop simulator when running
-    public get markerGroups(): Array<MarkerGroup> { return [this._planeMgrp, this._wpGrp]; }
+    public get markerGroups(): Array<MarkerGroup> { return [this._wpGrp, this._planeMgrp]; }
     public get paths(): Array<Path> { return [this._mpath, ...this._ppaths]; }
     public get apiKey(): string { return env.mapKey; }
     public get allPlaneIds(): Array<number> { return this.selectedMission !== undefined ? [this.selectedMission.lead_id, ...this.selectedMission.follower_ids] : [0]; }
