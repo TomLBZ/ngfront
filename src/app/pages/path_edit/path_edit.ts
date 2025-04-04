@@ -220,7 +220,7 @@ export class PathEditPage implements OnInit, OnDestroy {
     private addAircraft(lat: number, lon: number) {
         const ids = this.aircrafts.map((a) => a.id);
         const maxId = ids.length > 0 ? Math.max(...ids) : 0;
-        const ac = { id: maxId + 1, airframe_type: 0, name: `Aircraft${maxId + 1}`, start_pos: { lat: lat, lon: lon, alt: 0, hdg: 0 } } as Aircraft;
+        const ac = { id: maxId + 1, airframe_type: 0, name: `Aircraft${maxId + 1}`, start_pos: { lat: lat, lon: lon, alt: 500, hdg: 0 } } as Aircraft;
         this.aircrafts.push(ac);
         this.generateMarkersFromAircrafts();
     }
