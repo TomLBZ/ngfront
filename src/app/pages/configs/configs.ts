@@ -27,6 +27,7 @@ export class ConfigsPage implements OnInit, OnDestroy {
     public readonly AC_CFG = [0, 1, 2, 3];
     public readonly F = 4;
     public readonly fileDict: DictN<Array<ConfigFile>> = {0: [], 1: [], 2: [], 3: [], 4: []};
+    public waiting: boolean = false;
     constructor(svc: AppService) { this._svc = svc; }
     private clearFileDict() {
         for (const key in this.fileDict) this.fileDict[key].length = 0;
@@ -54,10 +55,10 @@ export class ConfigsPage implements OnInit, OnDestroy {
         return `[Default]${name}${ext}`;
     }
     public numToName(num: number): string {
-        return num === this.D_JSB ? "JSBSim Default" :
-            num === this.C_JSB ? "JSBSim Custom" :
-            num === this.D_PAP ? "Paparazzi Default" :
-            num === this.C_PAP ? "Paparazzi Custom" :
+        return num === this.D_JSB ? "JSB (Default Model)" :
+            num === this.C_JSB ? "JSB (Custom Model)" :
+            num === this.D_PAP ? "PPRZ (Default Model)" :
+            num === this.C_PAP ? "PPRZ (Custom Model)" :
             num === this.F ? "Flocking Algorithm" : "Unknown";
     }
     ngOnInit(): void {
@@ -122,17 +123,34 @@ export class ConfigsPage implements OnInit, OnDestroy {
         input.remove();
     }
     onFileOpApplyClicked(items: Array<ConfigFile>) {
+        if (items.length === 1 && items[0].id < 0) {
+            alert("The default configuration is a reference for download only, it cannot be applied!");
+            return;
+        }
         this._svc.callAPI("files/apply", this._res2str, { selected_files: items });
     }
     onFileOpDeleteClicked(items: Array<ConfigFile>) {
-        const cfgType = this.cfgFileToType(items[0]);
-        if (cfgType.id! < 0) { // id must exist
-            alert("Cannot delete the default configuration file!");
+        if (items.length === 1 && items[0].id < 0) { // id must exist
+            alert("The default configuration is a reference for download only, it cannot be deleted!");
             return;
         }
+        const cfgType = this.cfgFileToType(items[0]);
         if (cfgType.airframe_type === null || cfgType.airframe_type === undefined) cfgType.airframe_type = 0;
         this._svc.callAPI("files/delete", this._res2str, cfgType);
         const type = this.typeToNumber(items[0].type);
         this.fileDict[type] = this.fileDict[type].filter((cfg: ConfigFile) => cfg.id !== items[0].id);
+    }
+    onReset() {
+        if (this.waiting) return; // skip when waiting
+        this.waiting = true;
+        this._svc.callAPI("sim/reset", (d: any) => {
+            this.waiting = false; // stop waiting
+            if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Failed to reset simulator configs: Invalid Response!");
+            else if (!(d as APIResponse).success) alert(`Failed to reset simulator configs!\n${d.msg}`);
+            else alert("Simulator configs reset successfully!");
+        }, undefined, (e: any) => {
+            this.waiting = false; // stop waiting
+            alert(`Failed to reset simulator: ${e}`);
+        });
     }
 }
