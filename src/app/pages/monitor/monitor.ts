@@ -57,6 +57,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     private readonly _visibleTelemetryIndices: Array<number> = [];
     private websocket?: WebSocket;
     private void: Callback = () => {};
+    private alert: Callback = (e: any) => { this.waiting = false; alert(e); };
     public get healthStr(): string {
         const header = "===== System Health =====\n";
         const br = `Bridge: ${this._health.br ? "Online" : "Offline"}\n`;
@@ -70,7 +71,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public get pausable(): boolean { return ["STARTED"].includes(this._health.mstatus); }
     public get resumable(): boolean { return ["STOPPED"].includes(this._health.mstatus); }
     public get restartable(): boolean { return ["COMPLETED", "ERROR"].includes(this._health.mstatus); }
-    public get launchable(): boolean { return ["EXITED", "COMPLETED", "ERROR"].includes(this._health.mstatus); }
+    public get launchable(): boolean { return ["EXITED", "COMPLETED", "ERROR"].includes(this._health.mstatus) && this.selectedMission !== undefined; }
     public get stoppable(): boolean { return this._health.sim; } // can stop simulator when running
     public get markerGroups(): Array<MarkerGroup> { return [this._planeMgrp, this._wpGrp]; }
     public get paths(): Array<Path> { return [this._mpath, ...this._ppaths]; }
@@ -85,6 +86,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public runtimeSettings: RuntimeSettings = { traces: 50, lead_id: 0 };
     public selectedMission?: Mission = undefined;
     public resetNeeded: boolean = false;
+    public waiting: boolean = false;
     private isValidMission(m: any): boolean {
         return StructValidator.hasNonEmptyFields(m, ["id", "name", "description", "lead_id", "lead_path", "follower_ids"]);
     }
@@ -234,10 +236,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             }
             const oldLaunchSettings = this.launchSettings;
             this._svc.callAPI("sim/fgenable", (d: any) => {
-                if (!d.success) {
-                    alert(`Set Failed: ${JSON.stringify(d)}`);
-                    this.launchSettings = oldLaunchSettings;
-                }
+                if (!d.success) this.launchSettings = oldLaunchSettings;
             }, { fg_enable: newSettings.fgEnable }, (d: any) => {
                 alert(`Error: ${JSON.stringify(d)}`);
                 this.launchSettings = oldLaunchSettings;
@@ -250,10 +249,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         if (newSettings.lead_id !== this.runtimeSettings.lead_id) { // lead id changed
             const backup_settings = this.runtimeSettings;
             this._svc.callAPI("mission/changelead", (d: any) => {
-                if (!d.success) {
-                    alert(`Set Failed: ${JSON.stringify(d)}`);
-                    this.runtimeSettings = backup_settings;
-                }
+                if (!d.success) this.runtimeSettings = backup_settings;
                 else this._planeMgrp.setColor(backup_settings.lead_id, Color.Transparent); // reset old lead plane Border
             }, newSettings.lead_id, (d: any) => {
                 alert(`Error: ${JSON.stringify(d)}`);
@@ -263,13 +259,16 @@ export class MonitorPage implements OnInit, OnDestroy {
         this.runtimeSettings = newSettings;
     }
     onLaunch() {
+        if (this.waiting) return; // skip when waiting
+        this.waiting = true;
         this._svc.callAPI("mission/start", (d: any) => {
+            this.waiting = false; // stop waiting
             if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
             else if (!(d as APIResponse).success) {
                 alert(d.msg);
                 this.resetNeeded = !this._health.sim; // reset needed when simulator is offline
             }
-        }, this.selectedMission!.id, alert);
+        }, this.selectedMission!.id, this.alert);
     }
     onSigLoss(resumable: boolean) {
         if (resumable) this._svc.callAPI("mission/start", () => alert("Signal resumed"), this.selectedMission!.id, alert);
@@ -283,10 +282,13 @@ export class MonitorPage implements OnInit, OnDestroy {
         }, undefined, alert);
     }
     onReset() {
+        if (this.waiting) return; // skip when waiting
+        this.waiting = true;
         this._svc.callAPI("sim/reset", (d: any) => {
+            this.waiting = false; // stop waiting
             if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
             else if (!(d as APIResponse).success) alert(d.msg); // not successful
             else this.resetNeeded = false; // reset not needed
-        }, undefined, alert);
+        }, undefined, this.alert);
     }
 }
