@@ -41,6 +41,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     private readonly _ppaths: Array<Path> = [];
     private readonly _planePtsCache: Cache<Array<Point>> = new Cache<Array<Point>>();
     private readonly _colorsCache: Cache<Color> = new Cache<Color>();
+    private readonly _leadColor: Color = Color.Red;
     private readonly _rtos: RTOS = new RTOS({
         cycleIntervalMs: 100,
         continueAfterInterrupt: true,
@@ -130,17 +131,15 @@ export class MonitorPage implements OnInit, OnDestroy {
             const newp = new Point(t.lon, t.lat);
             if (last === undefined || !last.equals(newp)) points.push(newp); // add new point if it's different from the last
             if (points.length > this.runtimeSettings.traces) points.splice(0, points.length - this.runtimeSettings.traces); // remove oldest points
-            if (!this._colorsCache.has(t.id)) {
-                if (t.id === this.selectedMission?.lead_id) this._colorsCache.set(t.id, Color.Red);
-                else this._colorsCache.set(t.id, Color.Random());
-            }
+            if (t.id === this.selectedMission?.lead_id) this._colorsCache.set(t.id, this._leadColor);
+            else if (!this._colorsCache.has(t.id) || this._colorsCache.get(t.id) === this._leadColor) this._colorsCache.set(t.id, Color.Random());
             path.color = this._colorsCache.get(t.id);
             path.weight = 1;
             path.setPoints(points);
             this._ppaths.push(path);
         });
         if (this.selectedMission !== undefined && this._colorsCache.has(this.selectedMission.lead_id)) {
-            this._planeMgrp.setColor(this.selectedMission.lead_id, Color.Red); // set lead plane Border
+            this._planeMgrp.setColor(this.selectedMission.lead_id, this._leadColor); // set lead plane Border
         }
     }
     private stopTelemetry() {
