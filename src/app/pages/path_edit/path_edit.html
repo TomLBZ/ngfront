@@ -24,7 +24,18 @@
                     (selectionChanged)="onMissionSelected($event)"
                 ></dropselect>
                 <button class="pad5 mar5" [disabled]="!existingMission" (click)="onMissionDeleted()">Delete Mission</button>
-                <div class="txt_hdg ft_smal">Edit Waypoints</div>
+                <obj-editor class="flex grow"
+                    [objToEdit]="selectedMission"
+                    [objName]="'Mission Info'"
+                    [textEnabled]="false"
+                    [autoApply]="true"
+                    [includeFieldFilter]="mIncludeFieldsFilter"
+                    [readOnlyFieldFilter]="mReadOnlyFieldsFilter"
+                    (applied)="onMissionApplied($event)"
+                ></obj-editor>
+            </div>
+            <div class="flexc justends p_halfw bd_dbl bdc_tint bd_r5">
+                <div class="txt_hdg ft_smal">Edit Waypoint(WP)s</div>
                 <div class="ft_smal pad5">
                     <div class="flex justends">
                         <span class="ital">+ WP:</span>
@@ -43,40 +54,36 @@
                         <span>Middle Drag ✥</span>
                     </div>            
                 </div>
-                <div class="txt_hdg ft_smal">Edit Plane Insts</div>
+                <div class="txt_hdg ft_smal">Edit Plane(PL)s</div>
                 <div class="ft_smal pad5">           
                     <div class="flex justends">
-                        <span class="ital">+ Plane Inst:</span>
+                        <span class="ital">+ PL:</span>
                         <span>Alt + Left Click</span>
                     </div>
                     <div class="flex justends">
-                        <span class="ital">- Plane Inst:</span>
+                        <span class="ital">- PL:</span>
                         <span>Alt + Right Click</span>
                     </div>
                     <div class="flex justends">
-                        <span class="ital">Assign Leader:</span>
-                        <span>Left Click</span>
-                    </div>
-                    <div class="flex justends">
-                        <span class="ital">+/- Follower:</span>
-                        <span>Right Click</span>
-                    </div>
-                    <div class="flex justends">
-                        <span class="ital">Rotate Plane:</span>
+                        <span class="ital">Rotate PL:</span>
                         <span>Right Drag ↻</span>
                     </div>
                 </div>
-            </div>
-            <div class="p_halfw bd_dbl bdc_tint bd_r5">
-                <obj-editor class="flex grow bdc_tint bd_r5 bd_sng"
-                    [objToEdit]="selectedMission"
-                    [objName]="'Mission Metadata'"
-                    [textEnabled]="false"
-                    [autoApply]="true"
-                    [includeFieldFilter]="mIncludeFieldsFilter"
-                    [readOnlyFieldFilter]="mReadOnlyFieldsFilter"
-                    (applied)="onMissionApplied($event)"
-                ></obj-editor>
+                <div class="txt_hdg ft_smal">Edit Mission</div>
+                <div class="ft_smal pad5">
+                    <div class="flex justends">
+                        <span class="ital">Change Id / Name / Desc:</span>
+                        <span>Edit in Info</span>
+                    </div>
+                    <div class="flex justends">
+                        <span class="ital">Assign Leader:</span>
+                        <span>Lefrt click on PL</span>
+                    </div>
+                    <div class="flex justends">
+                        <span class="ital">+/- Followers:</span>
+                        <span>Right click on PL</span>
+                    </div>
+                </div>
                 <div class="flex justends">
                     <button class="pad5 mar5 p_halfw" (click)="onPlanesUpdate()">
                         @if (planesUpdating) {
@@ -86,7 +93,7 @@
                     <button class="pad5 mar5 p_halfw" (click)="onPlanesCompile()" [disabled]="!isAircraftsValid">
                         @if (compiling) {
                             <span class="spinner centcont"></span>
-                        } @else { Recompile Planes }
+                        } @else { Compile Planes }
                     </button>
                     <button class="pad5 mar5 p_halfw" (click)="onMissionUpdate()" [disabled]="!isAircraftsCompiled">{{existingMission ? "Update" : "Create"}} Mission</button>
                 </div>
