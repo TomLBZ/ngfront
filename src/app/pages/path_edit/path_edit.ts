@@ -205,7 +205,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         this.mPath.setPoints(this.wpGroup.markers);
     }
     private addWaypoint(lat: number, lon: number) {
-        const wp = { lat: lat, lon: lon, alt: 0, toa: 0 } as Waypoint;
+        const wp = { lat: lat, lon: lon, alt: 500, toa: 0 } as Waypoint;
         this.selectedMission.lead_path.push(wp);
         this.generateMarkersFromLeadPath();
     }
