@@ -286,8 +286,8 @@ export class MonitorPage implements OnInit, OnDestroy {
         this.waiting = true;
         this._svc.callAPI("sim/reset", (d: any) => {
             this.waiting = false; // stop waiting
-            if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Invalid response");
-            else if (!(d as APIResponse).success) alert(d.msg); // not successful
+            if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Failed to reset simulator: Invalid Response!");
+            else if (!(d as APIResponse).success) alert(`Failed to reset simulator!\nPlease go to Configurations and apply correct files.\n${d.msg}`);
             else this.resetNeeded = false; // reset not needed
         }, undefined, this.alert);
     }
