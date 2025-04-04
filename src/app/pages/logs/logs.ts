@@ -178,7 +178,10 @@ export class LogsPage implements OnInit {
         else if (mode === 2) this.deleteMissionLogs(this._selectedDateStr);
     }
     onReplayMissionLogs() {
+        alert("Feature not available in Plase 1\nPlease wait for the next phase!");
+        return;
         this._svc.callAPI("logs/replay", (d: any) => {
+            console.log(d);
             if (!this._svc.isValidAPIResponse(d)) return; // invalid data
             if (!d.success) return; // skip when failed
             console.log(d.data);
