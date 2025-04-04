@@ -9,29 +9,36 @@
             [mapStyle]="'satellite'"
         ></mapview>   
         <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_tint bold ft_huge centcont justcent">
-            Manual Flight in Next Phase
+            [Manual Flight] In Next Phase
         </div>
     </div>
-    <div class="flexc px_maxw300">
+    <div class="flexc px_maxw200 px_w200">
         <div class="flexc grow bd_r5 bd_dbl bdc_tint pad5 zeromin">
-            <dropselect class="pad5btm"
-                [items]="telemetryNames"
-                [title]="'Select Planes to show Telemetry'"
-                [indexMode]="true"
-                [hoverMode]="true"
-                [multiSelect]="true"
-                [fixDropdown]="false"
-                (selectionChanged)="onPlaneSelected($event)"
-            ></dropselect>
-            <div class="zeromin flexc v_3pentah">
-                @for (t of visibleTelemetries; track t.id) {
-                    <obj-editor
-                        [objToEdit]="t"
-                        [readOnly]="true"
-                        [objName]="`ID = ${t.id}`"
-                    ></obj-editor>
-                }
-            </div>
+            @if (telemetryEnabled) {
+                <dropselect class="pad5btm"
+                    [items]="telemetryNames"
+                    [title]="'Select Telemetries'"
+                    [indexMode]="true"
+                    [hoverMode]="true"
+                    [multiSelect]="true"
+                    [fixDropdown]="false"
+                    (selectionChanged)="onPlaneSelected($event)"
+                ></dropselect>
+                <div class="zeromin flexc v_3pentah">
+                    @for (t of visibleTelemetries; track t.id) {
+                        <obj-editor
+                            [objToEdit]="t"
+                            [readOnly]="true"
+                            [objName]="`ID = ${t.id}`"
+                        ></obj-editor>
+                    }
+                </div>
+            } @else {
+                <div class="flexc p_full bold c_tint ft_huge centcont justcent">
+                    <span>[Telemetry]</span>
+                    <span>Not Running</span>
+                </div>
+            }
         </div>
         @if (online) {
             <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5">
@@ -80,10 +87,10 @@
             </div>
         } @else {
             <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint pad5 c_dtint bold ft_huge centcont justcent">
-                <span>[Unavailable]</span>
-                <span>Backend Offline</span>
+                <span>[Backend]</span>
+                <span>Offline</span>
             </div>
         }
-        <outbox class="px_h90 bd_r5 bd_dbl bdc_tint" [clearable]="false" title="" [text]="healthStr"></outbox>
+        <outbox class="px_minh90 bd_r5 bd_dbl bdc_tint" [clearable]="false" title="" [text]="healthStr"></outbox>
     </div>    
 </div>

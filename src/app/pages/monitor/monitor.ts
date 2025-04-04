@@ -60,7 +60,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     private void: Callback = () => {};
     private alert: Callback = (e: any) => { this.waiting = false; alert(e); };
     public get healthStr(): string {
-        const header = "===== System Health =====\n";
+        const header = "=== System Health ===\n";
         const br = `Bridge: ${this._health.br ? "Online" : "Offline"}\n`;
         const sim = `Simulator: ${this._health.sim ? "Online" : "Offline"}\n`;
         const algo = `Algorithm: ${this._health.algo ? "Online" : "Offline"}\n`;
@@ -74,6 +74,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public get restartable(): boolean { return ["COMPLETED", "ERROR"].includes(this._health.mstatus); }
     public get launchable(): boolean { return ["EXITED", "COMPLETED", "ERROR"].includes(this._health.mstatus) && this.selectedMission !== undefined; }
     public get stoppable(): boolean { return this._health.sim; } // can stop simulator when running
+    public get telemetryEnabled(): boolean { return this._health.sim && this._health.mstatus !== "EXITED" && this.selectedMission !== undefined; }
     public get markerGroups(): Array<MarkerGroup> { return [this._wpGrp, this._planeMgrp]; }
     public get paths(): Array<Path> { return [this._mpath, ...this._ppaths]; }
     public get apiKey(): string { return env.mapKey; }
