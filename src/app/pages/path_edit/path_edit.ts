@@ -82,6 +82,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         return true;
     }
     private apiLoop() {
+        this.updateAircrafts();
         if (this._pendingMissionUpdate) {
             this._svc.callAPI("mission/all", (d: any) => {
                 if (this.validateResponse(d, "missions_config")) {
@@ -110,6 +111,8 @@ export class PathEditPage implements OnInit, OnDestroy {
                 }
             }, undefined, this.void);
         }
+    }
+    private updateAircrafts() {
         const ops = ["delete", "create", "update"]; // order matters
         const len = ops.reduce((acc, op) => acc + this._aircraftsChanged[op].length, 0);
         if (len > 0) {
@@ -122,8 +125,8 @@ export class PathEditPage implements OnInit, OnDestroy {
                 this._aircraftChangeFlags.clear(); // clear all flags
                 if (failed) alert("Failed to update some of the aircrafts, please edit and try again.");
                 else {
-                    this.isAircraftsValid = true; // assume true if no error
                     alert("Plane instances up to date!"); // notify user
+                    this.isAircraftsValid = true; // assume true if no error
                 }
             }
         }
@@ -358,9 +361,9 @@ export class PathEditPage implements OnInit, OnDestroy {
             if (StructValidator.hasFields(d, ["success", "msg"])) {
                 if ((d as APIResponse).success) { // recompiled successfully
                     this.isAircraftsCompiled = true; // set aircrafts compiled status
-                    alert("Plane instances recompiled!");
-                } else alert("Failed to recompile aircraft: " + (d as APIResponse).msg);
-            } else alert("Failed to recompile aircraft: invalid response\n" + JSON.stringify(d)); // invalid response
+                    alert("Plane instances compiled!");
+                } else alert("Failed to compile aircraft: " + (d as APIResponse).msg);
+            } else alert("Failed to compile aircraft: invalid response\n" + JSON.stringify(d)); // invalid response
         }, undefined, this.void);
     }
     @ViewChild("ds", { static: true }) ds!: DropSelectComponent;
