@@ -1,0 +1,11 @@
+._size(@axis, @v, @bound: "") when (isnumber(@v)) { // example: ._size(width, 100, min)
+    ._size(@axis, unit(@v, px), @bound) // numeric value assumed to be in px
+}
+._size(@axis, @len, @bound: "") { // example: ._size(width, 100px, min)
+    @prop: if(@bound = "", @axis, ~"@{bound}-@{axis}"); // prop: min-width
+    @{prop}: @len; // min-width: 100px;
+}
+._enum(@axis, @name, @bound:""){ // example: ._enum(style, solid, border)
+    @prop: if(@bound = "", @axis, ~"@{bound}-@{axis}"); // prop: border-style
+    @{prop}: ~"@{name}"; // border-style: solid;
+}
