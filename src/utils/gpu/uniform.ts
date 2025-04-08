@@ -104,3 +104,37 @@ export function isUniformValueLike(u: Uniform): u is UniformValueLike {
 }
 export type Uniform = UniformVecLike | UniformArrayLike | UniformValueLike;
 export type UniformDict = { [key: string]: Uniform };
+
+export type UniformData =
+    | number
+    | boolean
+    | number[]
+    | boolean[]
+    | Int32Array
+    | Uint32Array
+    | Float32Array;
+
+export enum UniformType {
+    FLOAT,
+    VEC2,
+    VEC3,
+    VEC4,
+    INT,
+    IVEC2,
+    IVEC3,
+    IVEC4,
+    UINT,
+    UVEC2,
+    UVEC3,
+    UVEC4,
+    BOOL,
+    BVEC2,
+    BVEC3,
+    BVEC4,
+    MAT2,
+    MAT3,
+    MAT4,
+    SAMPLER2D,
+    SAMPLERCUBE,
+    SAMPLER2DARRAY, // NEW: texture array sampler
+}
