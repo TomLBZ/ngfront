@@ -1,21 +1,12 @@
 import { ShaderProgram } from "./program";
+import { PipelineAttributeConfig, ProgramSource, UniformData, UniformType } from "./types";
+import { downloadSources } from "./helper";
 
-interface PipelineAttributeConfig {
-    buffer: WebGLBuffer;
-    size: GLint;
-    type?: GLenum;
-    normalized?: GLboolean;
-    stride?: GLsizei;
-    offset?: GLintptr;
-}
-  
-export interface ProgramSource { name: string; vertex: string; fragment: string; }
-  
 export class RenderPipeline {
     private readonly gl: WebGL2RenderingContext;
     private readonly vao: WebGLVertexArrayObject;
     private readonly programs = new Map<string, ShaderProgram>();
-    private currentProgram: ShaderProgram;
+    private currentProgram!: ShaderProgram;
   
     private readonly attributeConfigs = new Map<string, PipelineAttributeConfig>();
     private indexBuffer: WebGLBuffer | null = null;
@@ -26,29 +17,26 @@ export class RenderPipeline {
      * @param gl WebGL2 context
      * @param sources Array of program sources (name, vertex shader, fragment shader)
      */
-    constructor(gl: WebGL2RenderingContext, sources: ProgramSource[] = [], urlSoures: ProgramSource[] = []) {
+    constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
-        // download shaders from URLs
-        const shaderPromises = urlSoures.map(async ps => {
-            const [vertex, fragment] = await Promise.all([
-                fetch(ps.vertex).then(res => res.text()),
-                fetch(ps.fragment).then(res_1 => res_1.text())
-            ]);
-            return ({ name: ps.name, vertex, fragment } as ProgramSource);
-        });
-        // wait for all shaders to be downloaded
-        Promise.all(shaderPromises).then(loadedSources => sources.push(...loadedSources));
-        // create all shader programs
-        sources.forEach(src => {
-          if (this.programs.has(src.name)) throw new Error(`Duplicate program name '${src.name}'.`);
-          this.programs.set(src.name, new ShaderProgram(gl, src.vertex, src.fragment));
+        const vao = gl.createVertexArray();
+        if (!vao) throw new Error("Unable to create VAO.");
+        this.vao = vao;
+        console.log("RenderPipeline created. Please initialize with init().");
+    }
+
+    async init(sources: Array<ProgramSource>): Promise<RenderPipeline> {
+        const srcs = await downloadSources(sources);
+        srcs.forEach(src => {
+            if (this.programs.has(src.name)) throw new Error(`Duplicate program name '${src.name}'.`);
+            this.programs.set(src.name, new ShaderProgram(this.gl, src.vertex, src.fragment));
         });
         if (this.programs.size === 0) throw new Error("RenderPipeline requires at least one program.");
         // default to first program
         this.currentProgram = this.programs.values().next().value!;
-        const vao = gl.createVertexArray();
-        if (!vao) throw new Error("Unable to create VAO.");
-        this.vao = vao;
+        this.currentProgram.use();
+        console.log("RenderPipeline initialized with programs:", Array.from(this.programs.keys()));
+        return this;
     }
 
     /**
@@ -57,10 +45,13 @@ export class RenderPipeline {
      * @returns The activated ShaderProgram
      * @throws Error if the program is not found
      */
-    useProgram(name: string): ShaderProgram {
+    useProgram(name: string, uniforms: Record<string, UniformData | any | any[]>): ShaderProgram {
+        console.log(`Using program '${name}'`);
         const prog = this.programs.get(name);
         if (!prog) throw new Error(`Program '${name}' not found.`);
         this.currentProgram = prog;
+        prog.use();
+        prog.setUniforms(uniforms);
         return prog;
     }
   
@@ -140,7 +131,6 @@ export class RenderPipeline {
      * @param offset Offset in the index buffer
      */
     draw(mode: GLenum, count?: number, offset = 0): void {
-        this.currentProgram.use();
         this.gl.bindVertexArray(this.vao);
         if (this.indexBuffer) {
             this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
@@ -157,21 +147,4 @@ export class RenderPipeline {
         if (this.vao) this.gl.deleteVertexArray(this.vao);
         if (this.indexBuffer) this.gl.deleteBuffer(this.indexBuffer);
     }
-  }
-  
-  /**************************
-   * Helper utilities (unchanged)
-   *************************/
-  export function createBuffer(
-    gl: WebGL2RenderingContext,
-    data: BufferSource,
-    target: GLenum = gl.ARRAY_BUFFER,
-    usage: GLenum = gl.STATIC_DRAW
-  ): WebGLBuffer {
-    const buffer = gl.createBuffer();
-    if (!buffer) throw new Error("Unable to create buffer.");
-    gl.bindBuffer(target, buffer);
-    gl.bufferData(target, data, usage);
-    gl.bindBuffer(target, null);
-    return buffer;
-  }
+}
