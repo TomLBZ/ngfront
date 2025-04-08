@@ -1,9 +1,5 @@
-export enum TextureTarget {
-    TEX_2D        = WebGL2RenderingContext.TEXTURE_2D,
-    TEX_2D_ARRAY  = WebGL2RenderingContext.TEXTURE_2D_ARRAY,
-    TEX_3D        = WebGL2RenderingContext.TEXTURE_3D,
-    TEX_CUBE      = WebGL2RenderingContext.TEXTURE_CUBE_MAP,
-}
+import { TextureTarget, TextureOptions } from "./types";
+
 /** Mapping for cube‑map face order (+X,‑X,+Y,‑Y,+Z,‑Z). */
 const CUBE_FACES: GLenum[] = [
     WebGL2RenderingContext.TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -13,19 +9,7 @@ const CUBE_FACES: GLenum[] = [
     WebGL2RenderingContext.TEXTURE_CUBE_MAP_POSITIVE_Z,
     WebGL2RenderingContext.TEXTURE_CUBE_MAP_NEGATIVE_Z,
 ];
-/** Options for creating a texture. */
-export interface TextureOptions {
-    width?: number;
-    height?: number;
-    depth?: number;    // for 3‑D
-    layers?: number;   // for 2‑D array
-    internalFormat?: GLenum; // default RGBA8
-    format?: GLenum;         // default RGBA
-    type?: GLenum;           // default UNSIGNED_BYTE
-    mipmaps?: boolean;
-    parameters?: Record<GLenum, GLint | GLfloat>;
-    crossOrigin?: string | null;
-}
+
 export class Texture {
     private readonly gl: WebGL2RenderingContext;
     private readonly target: GLenum;
