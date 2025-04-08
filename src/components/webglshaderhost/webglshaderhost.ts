@@ -4,7 +4,7 @@ import { UniformDict, UniformTexture, UniformTextureArray, UniformVec4Array,
     UniformValueLike, UniformArrayLike, UniformVecLike, 
     UniformVec2, UniformVec4, 
     isUniformValueLike, isUniformVecLike, isUniformArrayLike,
-    } from '../../utils/uniform/u';
+    } from '../../utils/gpu/uniform';
 import { Downloader } from '../../utils/api/downloader';
 
 export type VertLoader = () => Array<number>;
@@ -39,8 +39,9 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         }
         this.gl = glContext;
         // Load shaders and initialize the program
-        this.initWebGLProgram()
-        .then(() => {
+        this.initWebGLProgram(this.vertexShaderPath, this.fragmentShaderPath)
+        .then((prog: WebGLProgram) => {
+            this.program = prog;
             this.isProgramReady = true;
             console.log('WebGL program initialized.');
         })
@@ -89,10 +90,10 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         this.onDraw.emit(this.gl);
     }
   
-    private async initWebGLProgram(): Promise<void> {
+    private async initWebGLProgram(vsPath: string, fsPath: string): Promise<WebGLProgram> {
         const [vertSource, fragSource] = await Promise.all([
-            this.loadShaderSource(this.vertexShaderPath),
-            this.loadShaderSource(this.fragmentShaderPath),
+            this.loadShaderSource(vsPath),
+            this.loadShaderSource(fsPath),
         ]);
         const vertexShader = this.compileShader(vertSource, this.gl.VERTEX_SHADER);
         const fragmentShader = this.compileShader(fragSource, this.gl.FRAGMENT_SHADER);
@@ -113,7 +114,7 @@ export class WebGLShaderHostComponent implements AfterViewInit, OnDestroy {
         }
         this.gl.deleteShader(vertexShader);
         this.gl.deleteShader(fragmentShader);
-        this.program = program;
+        return program;
     }
     private async loadShaderSource(path: string): Promise<string> {
         const response = await fetch(path);
