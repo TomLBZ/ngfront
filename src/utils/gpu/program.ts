@@ -1,5 +1,5 @@
 import { Shader } from "./shader";
-import { UniformData, UniformType } from "./uniform";
+import { UniformData, UniformType } from "./types";
 
 export class ShaderProgram {
     private readonly gl: WebGL2RenderingContext;
@@ -70,6 +70,7 @@ export class ShaderProgram {
     setUniform(name: string, value: UniformData, type: UniformType): void {
         const loc = this.getUniformLocation(name);
         if (loc == null) return;
+        console.log(`uniform ${UniformType[type]} ${name} = ${value}`);
         switch (type) {
             case UniformType.FLOAT:
                 this.gl.uniform1f(loc, value as number);
@@ -206,6 +207,21 @@ export class ShaderProgram {
             }
         }
         return undefined;
+    }
+    /**
+     * Sets multiple uniform variables in the shader program using a single call.
+     * @param uniforms Object containing uniform names and values
+     */
+    setUniforms(uniforms: Record<string, UniformData | any | any[]>): void {
+        for (const [name, value] of Object.entries(uniforms)) {
+            const type = this.guessUniformType(value);
+            if (type === undefined) {
+                console.warn(`Unable to infer uniform type for '${name}'. Using setStructuredUniform.`);
+                this.setStructuredUniform(name, value);
+            } else {
+                this.setUniform(name, value as UniformData, type);
+            }
+        }
     }
     /** Delete the program from GPU memory. */
     dispose(): void {
