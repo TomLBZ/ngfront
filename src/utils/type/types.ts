@@ -11,3 +11,5 @@ export type FuncN<I, O> = (...i: I[]) => O;
 export type Func<I, O> = Func1<I, O> | FuncN<I, O>;
 export type Callback = Func<any, void>;
 export type Pair<T> = [T, T];
+export type Trio<T> = [T, T, T];
+export type Quad<T> = [T, T, T, T];
