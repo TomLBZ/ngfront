@@ -1,19 +1,19 @@
 import { Component, ViewChild, OnInit, OnDestroy, AfterViewInit, ElementRef } from "@angular/core";
-import { WebGLShaderHostComponent } from "../../../components/webglshaderhost/webglshaderhost";
-import { RTOS } from "../../../utils/rtos/rtos";
-import { AU, SUNR } from "../../../utils/geo/geo";
-import { Earth } from "../../../utils/geo/earth";
-import { ObserverOnEarth } from "../../../utils/geo/observer";
-import { Vec3 } from "../../../utils/vec/vec3";
-import { Queue } from "../../../utils/queue/q";
-import { MissedDeadlinePolicy } from "../../../utils/rtos/rtostypes";
-import { UniformDict, UniformTexture, UniformTextureArray, UniformVec2, UniformVec3, UniformVec3Array } from "../../../utils/gpu/uniform";
-import { KeyController } from "../../../utils/controller/keyctrl";
-import { MapTiler } from "../../../utils/api/maptiler";
-import { env } from "../../app.config";
+// import { WebGLShaderHostComponent } from "../../../components/webglshaderhost/webglshaderhost";
+// import { RTOS } from "../../../utils/rtos/rtos";
+// import { AU, SUNR } from "../../../utils/geo/helper";
+// import { Earth } from "../../../utils/geo/earth_old";
+// import { ObserverOnEarth } from "../../../utils/geo/observer_old";
+// import { Vec3 } from "../../../utils/vec/vec3";
+// import { Queue } from "../../../utils/queue/q";
+// import { MissedDeadlinePolicy } from "../../../utils/rtos/rtostypes";
+// import { UniformDict, UniformTexture, UniformTextureArray, UniformVec2, UniformVec3, UniformVec3Array } from "../../../utils/gpu/uniform";
+// import { KeyController } from "../../../utils/controller/keyctrl";
+// import { MapTiler } from "../../../utils/api/maptiler";
+// import { env } from "../../app.config";
 import { RenderPipeline } from "../../../utils/gpu/pipeline";
 import { createBuffer } from "../../../utils/gpu/helper";
-import { UniformType } from "../../../utils/gpu/types";
+import { UniformRecord, UniformType } from "../../../utils/gpu/types";
 
 @Component({
     selector: 'page-test',
@@ -37,18 +37,17 @@ export class TestPage implements AfterViewInit, OnDestroy {
             { name: "raymarch", vertexUrl: "/shaders/twotrig.vert", fragmentUrl: "/shaders/raymarch.frag" },
             { name: "obj3d", vertexUrl: "/shaders/twotrig.vert", fragmentUrl: "/shaders/obj3d.frag" },
             { name: "hud2d", vertexUrl: "/shaders/twotrig.vert", fragmentUrl: "/shaders/hud2d.frag" },
-        ]).then((p: RenderPipeline) => {
+        ], true).then((p: RenderPipeline) => {
             p.setAttribute("a_position", {
                 buffer: createBuffer(gl, new Float32Array([
-                    -1, -1, 1, -1, -1,  1, // first triangle
-                    -1,  1, 1, -1, 1,  1 // second triangle
+                    -1, -1, 1, -1, -1,  1, 1,  1 // quad
                 ])),
                 size: 2, // 2 components per vertex
             });
-            // p.setIndexBuffer(createBuffer(gl, new Uint16Array([
-            //     0, 1, 2, // first triangle
-            //     2, 1, 3 // second triangle
-            // ]), gl.ELEMENT_ARRAY_BUFFER), gl.UNSIGNED_SHORT, 6);
+            p.setIndexBuffer(createBuffer(gl, new Uint16Array([
+                0, 1, 2, // first triangle
+                2, 1, 3 // second triangle
+            ]), gl.ELEMENT_ARRAY_BUFFER), gl.UNSIGNED_SHORT, 6);
             this._startTimeMs = Date.now();
             this.drawFrame();
         });
@@ -61,20 +60,16 @@ export class TestPage implements AfterViewInit, OnDestroy {
         if (!this._pipeline) return;
         const now = Date.now();
         const dt = now - this._startTimeMs;
-        const resolution = [this.canvasRef.nativeElement.width, this.canvasRef.nativeElement.height];
-        this._pipeline.useProgram("raymarch", {
-            "u_resolution": resolution, 
-            "u_time": dt
-        });
+        const resolution = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
+        const uniforms: UniformRecord = {
+            "u_resolution": resolution,
+            "u_time": dt,
+        };
+        this._pipeline.useProgram("raymarch", uniforms);
         this._pipeline.drawTriangles();
-        // this._pipeline.useProgram("obj3d");
-        // this._pipeline.setUniform("u_resolution", resolution, UniformType.VEC2);
-        // this._pipeline.setUniform("u_time", dt, UniformType.FLOAT);
+        // this._pipeline.useProgram("obj3d", uniforms);
         // this._pipeline.drawTriangles();
-        // this._pipeline.useProgram("hud2d");
-        // this._pipeline.setUniform("u_resolution", resolution, UniformType.VEC2);
-        // this._pipeline.setUniform("u_time", dt, UniformType.FLOAT);
-        // this._pipeline.setUniform("u_mouse", [0, 0], UniformType.VEC2);
+        // this._pipeline.useProgram("hud2d", uniforms);
         // this._pipeline.drawTriangles();
         // this._gl.flush();
         // requestAnimationFrame(() => this.drawFrame());

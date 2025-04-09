@@ -1,6 +1,6 @@
-import { Camera } from "../geo/camera";
-import { Earth } from "../geo/earth";
-import { ObserverOnEarth } from "../geo/observer";
+import { Camera } from "../geo/camera_old";
+import { Earth } from "../geo/earth_old";
+import { ObserverOnEarth } from "../geo/observer_old";
 
 export class MapTile {
     constructor(public url: string, public xyz: [number, number, number]) {}
