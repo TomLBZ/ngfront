@@ -27,7 +27,7 @@ export function createBuffer(
  * @param sources Array of program sources
  * @returns Array of InlineProgramSource
  */
-export async function downloadSources(sources: Array<ProgramSource>): Promise<InlineProgramSource[]> {
+export async function downloadSources(sources: Array<ProgramSource>, verbose: boolean = false): Promise<InlineProgramSource[]> {
     const urlSoures = sources.filter(src => (src as UrlProgramSource).vertexUrl && (src as UrlProgramSource).fragmentUrl) as UrlProgramSource[];
     const inlineSources = sources.filter(src => (src as InlineProgramSource).vertex && (src as InlineProgramSource).fragment) as InlineProgramSource[];
     if (inlineSources.length === 0 && urlSoures.length === 0) {
@@ -42,6 +42,6 @@ export async function downloadSources(sources: Array<ProgramSource>): Promise<In
     });
     const downloadedSources = await Promise.all(shaderPromises);
     inlineSources.push(...downloadedSources);
-    console.log("All URL shaders downloaded.");
+    if (verbose) console.log("All URL shaders downloaded.");
     return inlineSources;
 }
