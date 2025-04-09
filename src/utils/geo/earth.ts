@@ -1,11 +1,12 @@
+import { Angles } from "../math/math";
 import { EarthSurfacePoint, GeoRadarData, RectangularCoords } from "./types";
 
 export const EER = 6378137.0; // meters, Earth equatorial radius
 export const EPR = 6356752.3142; // meters, Earth polar radius
 
 export function geodeticToECEF(lng: number, lat: number, alt: number): RectangularCoords {
-    const phi = lat * Math.PI / 180;
-    const lambda = lng * Math.PI / 180;
+    const phi = Angles.degToRad(lat);
+    const lambda = Angles.degToRad(lng);
     const cosPhi = Math.cos(phi);
     const sinPhi = Math.sin(phi);
     const a2 = EER * EER;
@@ -45,14 +46,14 @@ export function ecefToGeodetic(x: number, y: number, z: number): EarthSurfacePoi
     const z0 = (b2 * z) / aV;
     const phi = Math.atan((z + ep2 * z0) / p);
     const lambda = Math.atan2(y, x);
-    const lng = lambda * 180 / Math.PI;
-    const lat = phi * 180 / Math.PI;
+    const lng = Angles.radToDeg(lambda);
+    const lat = Angles.radToDeg(phi);
     const alt = U * (1 - b2 / aV);
     return { lng, lat, alt } as EarthSurfacePoint;
 }
 export function getECEFToENUMatrix(lng: number, lat: number) {
-    const phi = lat * Math.PI / 180;
-    const lambda = lng * Math.PI / 180;
+    const phi = Angles.degToRad(lat);
+    const lambda = Angles.degToRad(lng);
     const cosPhi = Math.cos(phi);
     const sinPhi = Math.sin(phi);
     const cosLambda = Math.cos(lambda);
@@ -64,8 +65,8 @@ export function getECEFToENUMatrix(lng: number, lat: number) {
     ];
 }
 export function getENUToECEFMatrix(lng: number, lat: number) {
-    const phi = lat * Math.PI / 180;
-    const lambda = lng * Math.PI / 180;
+    const phi = Angles.degToRad(lat);
+    const lambda = Angles.degToRad(lng);
     const cosPhi = Math.cos(phi);
     const sinPhi = Math.sin(phi);
     const cosLambda = Math.cos(lambda);
@@ -98,4 +99,14 @@ export function radarEnuToEcef(enu: RectangularCoords, radar: GeoRadarData): Rec
         y: radar.enuToEcefMatrix[3] * x + radar.enuToEcefMatrix[4] * y + radar.enuToEcefMatrix[5] * z + radar.ecefPos.y,
         z: radar.enuToEcefMatrix[6] * x + radar.enuToEcefMatrix[7] * y + radar.enuToEcefMatrix[8] * z + radar.ecefPos.z
     };
+}
+export function getRadius(lat: number): number {
+    const latRad = Angles.degToRad(lat); // convert to radians.
+    const cosLat = Math.cos(latRad);
+    const sinLat = Math.sin(latRad);
+    const a = EER * EER * cosLat;
+    const b = EPR * EPR * sinLat;
+    const c = EER * cosLat;
+    const d = EPR * sinLat;
+    return Math.sqrt((a * a + b * b) / (c * c + d * d));
 }
