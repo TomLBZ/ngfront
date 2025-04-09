@@ -67,10 +67,10 @@ export class ShaderProgram {
      * @param value Value to set
      * @param type Type of the uniform (e.g., FLOAT, VEC2, etc.)
      */
-    setUniform(name: string, value: UniformData, type: UniformType): void {
+    setUniform(name: string, value: UniformData, type: UniformType, verbose: boolean = false): void {
         const loc = this.getUniformLocation(name);
         if (loc == null) return;
-        console.log(`uniform ${UniformType[type]} ${name} = ${value}`);
+        if (verbose) console.log(`uniform ${UniformType[type]} ${name} = ${value}`);
         switch (type) {
             case UniformType.FLOAT:
                 this.gl.uniform1f(loc, value as number);
@@ -141,30 +141,30 @@ export class ShaderProgram {
      * @param name Uniform name in GLSL
      * @param value Value to set (can be an object or array)
      */
-    setStructuredUniform(name: string, value: any | any[]): void {
+    setStructuredUniform(name: string, value: any | any[], verbose: boolean = false): void {
         if (Array.isArray(value)) {
-            value.forEach((v, i) => this.setStructuredUniform(`${name}[${i}]`, v));
+            value.forEach((v, i) => this.setStructuredUniform(`${name}[${i}]`, v, verbose));
             return;
         }
         if (typeof value === "object" && value !== null) {
             for (const key of Object.keys(value)) {
-                this.setStructuredUniform(`${name}.${key}`, value[key]);
+                this.setStructuredUniform(`${name}.${key}`, value[key], verbose);
             }
             return;
         }
-        this.setUniformWithInference(name, value);
+        this.setUniformWithInference(name, value, verbose);
     }
     /**
      * Sets a uniform variable in the shader program with type inference.
      * @param name Uniform name in GLSL
      * @param value Value to set (can be a number, boolean, array, etc.)
      */
-    setUniformWithInference(name: string, value: any): void {
+    setUniformWithInference(name: string, value: any, verbose: boolean = false): void {
         const type = this.guessUniformType(value);
         if (type === undefined) {
             throw new Error(`Unable to infer uniform type for '${name}'. Use setUniform explicitly.`);
         }
-        this.setUniform(name, value as UniformData, type);
+        this.setUniform(name, value as UniformData, type, verbose);
     }
     /**
      * Infers the uniform type based on the value's structure.
@@ -212,15 +212,24 @@ export class ShaderProgram {
      * Sets multiple uniform variables in the shader program using a single call.
      * @param uniforms Object containing uniform names and values
      */
-    setUniforms(uniforms: Record<string, UniformData | any | any[]>): void {
+    setUniforms(uniforms: Record<string, UniformData>, verbose: boolean = false): void {
         for (const [name, value] of Object.entries(uniforms)) {
             const type = this.guessUniformType(value);
             if (type === undefined) {
                 console.warn(`Unable to infer uniform type for '${name}'. Using setStructuredUniform.`);
-                this.setStructuredUniform(name, value);
+                this.setStructuredUniform(name, value, verbose);
             } else {
-                this.setUniform(name, value as UniformData, type);
+                this.setUniform(name, value as UniformData, type, verbose);
             }
+        }
+    }
+    /**
+     * Sets multiple structured uniform variables in the shader program using a single call.
+     * @param uniforms Object containing uniform names and values
+     */
+    setStructuredUniforms(uniforms: Record<string, any | any[]>, verbose: boolean = false): void {
+        for (const [name, value] of Object.entries(uniforms)) {
+            this.setStructuredUniform(name, value, verbose);
         }
     }
     /** Delete the program from GPU memory. */
