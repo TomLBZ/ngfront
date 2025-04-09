@@ -23,6 +23,7 @@ export enum UniformType {
     SAMPLER2DARRAY, // NEW: texture array sampler
 }
 export type UniformData = number | boolean | number[] | boolean[] | Int32Array | Uint32Array | Float32Array;
+export type UniformRecord = Record<string, UniformData>;
 
 export enum TextureTarget {
     TEX_2D        = WebGL2RenderingContext.TEXTURE_2D,
