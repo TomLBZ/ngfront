@@ -9,6 +9,5 @@ out vec4 outColor;
 // dummy main that colors square in the center of the screen with a gradient
 void main() {
     vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);
-    vec2 uv = v_p; // Assuming a resolution of 800x600 for demonstration
-    outColor = v_p.x > 0.5 && v_p.y > 0.5 ? vec4(uv.x, uv.y, 0.0, 1.0) : transparent;
+    outColor = v_p.x < 0.5 && v_p.y < 0.5 ? vec4(v_p, sin(u_time), 1.0) : transparent;
 }

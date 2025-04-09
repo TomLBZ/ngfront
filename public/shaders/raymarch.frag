@@ -3,14 +3,12 @@ precision highp float;
 
 uniform float u_time; // Time in seconds since the program started.
 
-in vec2 v_p; // Fragment coordinate from the vertex shader.
+in vec2 v_p; // Fragment coordinate from the vertex shader. from (-1, -1) to (1, 1)
 out vec4 outColor;
 
 // dummy main that outputs a color based on the coordinates and the time using a sine function
 void main() {
-    vec2 uv = v_p; // Assuming a resolution of 800x600 for demonstration
-    float r = length(uv - vec2(0.5, 0.5)) * 2.0;
-    float g = sin(u_time + uv.x * 10.0) * 0.5 + 0.5;
-    float b = cos(u_time + uv.y * 10.0) * 0.5 + 0.5;
-    outColor = vec4(r, g, b, 1.0);
+    if (v_p.x < 0.1 && v_p.x > -0.1) outColor = vec4(1.0, 0.0, 0.0, 1.0); // red for y axis
+    else if (v_p.y < 0.1 && v_p.y > -0.1) outColor = vec4(0.0, 1.0, 0.0, 1.0); // green for x axis
+    else outColor = vec4(sin(u_time), v_p, 1.0);
 }
