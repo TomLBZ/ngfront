@@ -17,16 +17,16 @@ export class RenderPipeline {
      * @param gl WebGL2 context
      * @param sources Array of program sources (name, vertex shader, fragment shader)
      */
-    constructor(gl: WebGL2RenderingContext) {
+    constructor(gl: WebGL2RenderingContext, verbose: boolean = false) {
         this.gl = gl;
         const vao = gl.createVertexArray();
         if (!vao) throw new Error("Unable to create VAO.");
         this.vao = vao;
-        console.log("RenderPipeline created. Please initialize with init().");
+        if (verbose) console.log("RenderPipeline created. Please initialize with init().");
     }
 
-    async init(sources: Array<ProgramSource>): Promise<RenderPipeline> {
-        const srcs = await downloadSources(sources);
+    async init(sources: Array<ProgramSource>, verbose: boolean = false): Promise<RenderPipeline> {
+        const srcs = await downloadSources(sources, verbose);
         srcs.forEach(src => {
             if (this.programs.has(src.name)) throw new Error(`Duplicate program name '${src.name}'.`);
             this.programs.set(src.name, new ShaderProgram(this.gl, src.vertex, src.fragment));
@@ -35,7 +35,7 @@ export class RenderPipeline {
         // default to first program
         this.currentProgram = this.programs.values().next().value!;
         this.currentProgram.use();
-        console.log("RenderPipeline initialized with programs:", Array.from(this.programs.keys()));
+        if (verbose) console.log("RenderPipeline initialized with programs:", Array.from(this.programs.keys()));
         return this;
     }
 
@@ -45,13 +45,13 @@ export class RenderPipeline {
      * @returns The activated ShaderProgram
      * @throws Error if the program is not found
      */
-    useProgram(name: string, uniforms: Record<string, UniformData | any | any[]>): ShaderProgram {
-        console.log(`Using program '${name}'`);
+    useProgram(name: string, uniforms: Record<string, UniformData>, verbose: boolean = false): ShaderProgram {
+        if (verbose) console.log(`Using program '${name}'`);
         const prog = this.programs.get(name);
         if (!prog) throw new Error(`Program '${name}' not found.`);
         this.currentProgram = prog;
         prog.use();
-        prog.setUniforms(uniforms);
+        prog.setUniforms(uniforms, verbose);
         return prog;
     }
   
