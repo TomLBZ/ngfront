@@ -1,6 +1,6 @@
 import { Vec3 } from '../vec/vec3';
 import { Mat3 } from '../mat/mat3';
-import { Earth } from './earth';
+import { Earth } from './earth_old';
 import { Vec2 } from '../vec/vec2';
 import { Plane3D } from '../geom/plane';
 import { Line3D } from '../geom/line';

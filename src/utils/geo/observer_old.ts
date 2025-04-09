@@ -1,6 +1,6 @@
 import { Mat3 } from "../mat/mat3";
 import { Vec3 } from "../vec/vec3";
-import { Earth } from "./earth";
+import { Earth } from "./earth_old";
 
 // assumes the observer is at the origin.
 export class ObserverOnEarth {
