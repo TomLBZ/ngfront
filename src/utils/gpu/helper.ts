@@ -1,4 +1,4 @@
-import { ProgramSource, UrlProgramSource, InlineProgramSource } from "./types";
+import { ProgramSource } from "./types";
 
 /**
  * Creates a WebGL buffer and uploads data to it.
@@ -27,18 +27,22 @@ export function createBuffer(
  * @param sources Array of program sources
  * @returns Array of InlineProgramSource
  */
-export async function downloadSources(sources: Array<ProgramSource>, verbose: boolean = false): Promise<InlineProgramSource[]> {
-    const urlSoures = sources.filter(src => (src as UrlProgramSource).vertexUrl && (src as UrlProgramSource).fragmentUrl) as UrlProgramSource[];
-    const inlineSources = sources.filter(src => (src as InlineProgramSource).vertex && (src as InlineProgramSource).fragment) as InlineProgramSource[];
-    if (inlineSources.length === 0 && urlSoures.length === 0) {
+export async function downloadSources(sources: Array<ProgramSource>, verbose: boolean = false): Promise<ProgramSource[]> {
+    const urlSources: ProgramSource[] = [];
+    const inlineSources: ProgramSource[] = [];
+    sources.forEach(src => {
+        if (src.url) urlSources.push(src);
+        else inlineSources.push(src);
+    });
+    if (inlineSources.length === 0 && urlSources.length === 0) {
         throw new Error("RenderPipeline requires at least one program source.");
     }
-    const shaderPromises = urlSoures.map(async ps => {
+    const shaderPromises = urlSources.map(async s => {
         const [vertex, fragment] = await Promise.all([
-            fetch(ps.vertexUrl).then(res => res.text()),
-            fetch(ps.fragmentUrl).then(res_1 => res_1.text())
+            fetch(s.vertex).then(res => res.text()),
+            fetch(s.fragment).then(res_1 => res_1.text())
         ]);
-        return ({ name: ps.name, vertex, fragment } as InlineProgramSource);
+        return ({ name: s.name, vertex, fragment, url: false } as ProgramSource);
     });
     const downloadedSources = await Promise.all(shaderPromises);
     inlineSources.push(...downloadedSources);
