@@ -12,6 +12,7 @@ import { Component, ViewChild, OnInit, OnDestroy, AfterViewInit, ElementRef } fr
 // import { MapTiler } from "../../../utils/api/maptiler";
 // import { env } from "../../app.config";
 import { RenderPipeline, RenderHelper, UniformRecord, ProgramSource, PassSource } from "../../../utils/gpu/gpu";
+import { Queue } from "../../../utils/queue/q";
 
 @Component({
     selector: 'page-test',
@@ -22,6 +23,9 @@ export class TestPage implements AfterViewInit, OnDestroy {
     private _gl!: WebGL2RenderingContext;
     private _pipeline!: RenderPipeline;
     private _startTimeMs: number = 0;
+    private _frameTimeQ: Queue<number> = new Queue<number>(32);
+    private _lastFrameTime: number = Date.now();
+    private _lastIntFps: number = 0;
     @ViewChild('canvas', {static: true}) canvasRef!: ElementRef<HTMLCanvasElement>;
     ngAfterViewInit(): void {
         const gl: WebGL2RenderingContext = this.canvasRef.nativeElement.getContext("webgl2") as WebGL2RenderingContext;
@@ -39,7 +43,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
             p.setPasses([
                 { name: "raymarch" }, // render to texture
                 { name: "obj3d" }, // render to texture
-                // { name: "hud2d" }, // render to canvas
+                { name: "hud2d" }, // render to canvas
             ], true);
             p.setAttribute("a_position", {
                 buffer: RenderHelper.createBuffer(gl, new Float32Array([
@@ -52,6 +56,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
                 2, 1, 3 // second triangle
             ]), gl.ELEMENT_ARRAY_BUFFER), gl.UNSIGNED_SHORT, 6);
             this._startTimeMs = Date.now();
+            this._lastFrameTime = this._startTimeMs;
             this.drawFrame();
         });
     }
@@ -64,13 +69,25 @@ export class TestPage implements AfterViewInit, OnDestroy {
         const now = Date.now();
         const dt = now - this._startTimeMs;
         const resolution = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
+        const minres = Math.min(...resolution);
+        const scale = [resolution[0] / minres, resolution[1] / minres];
         const uniforms: UniformRecord = {
             "u_resolution": resolution,
             "u_time": dt,
+            "u_scale": scale,
         };
         this._pipeline.setGlobalUniforms(uniforms);
         this._pipeline.renderAll();
-        // requestAnimationFrame(() => this.drawFrame());
+        const diff = now - this._lastFrameTime;
+        this._frameTimeQ.enqueue(diff);
+        this._lastFrameTime = now;
+        const fps = 1000 / this._frameTimeQ.average();
+        const intfps = Math.round(fps);
+        if (intfps !== this._lastIntFps && this._frameTimeQ.size() === this._frameTimeQ.maxLength) {
+            this._lastIntFps = intfps;
+            if (intfps < 59) console.log(`FPS: ${fps.toFixed(2)}`);
+        }
+        requestAnimationFrame(() => this.drawFrame());
     }
 }
 
