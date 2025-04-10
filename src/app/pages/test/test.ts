@@ -42,21 +42,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
             { name: "obj3d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/obj3d.frag", url: true },
             { name: "hud2d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/hud2d.frag", url: true },
         ]).then((p: RenderPipeline) => {
-            p.setPasses([
-                { name: "raymarch" }, // render to texture
-                { name: "obj3d" }, // render to texture
-                { name: "hud2d" }, // render to canvas
-            ], true);
-            p.setAttribute("a_position", {
-                buffer: RenderHelper.createBuffer(gl, new Float32Array([
-                    -1, -1, 1, -1, -1,  1, 1,  1 // quad
-                ])),
-                size: 2, // 2 components per vertex
-            });
-            p.setIndexBuffer(RenderHelper.createBuffer(gl, new Uint16Array([
-                0, 1, 2, // first triangle
-                2, 1, 3 // second triangle
-            ]), gl.ELEMENT_ARRAY_BUFFER), gl.UNSIGNED_SHORT, 6);
+            this.setupPipeline(p);
             this._startTimeMs = Date.now();
             this._lastFrameTime = this._startTimeMs;
             this._running = true;
@@ -66,22 +52,50 @@ export class TestPage implements AfterViewInit, OnDestroy {
     ngOnDestroy(): void {
         this._running = false;
     }
+    private setupPipeline(p: RenderPipeline): void {
+        p.setPasses([
+            { name: "raymarch" }, // render to texture
+            { name: "obj3d" }, // render to texture
+            { name: "hud2d" }, // render to canvas
+        ], true);
+        p.setAttribute("a_position", {
+            buffer: RenderHelper.createBuffer(this._gl, new Float32Array([
+                -1, -1, 1, -1, -1,  1, 1,  1 // quad
+            ])),
+            size: 2, // 2 components per vertex
+        });
+        p.setIndexBuffer(RenderHelper.createBuffer(this._gl, new Uint16Array([
+            0, 1, 2, // first triangle
+            2, 1, 3 // second triangle
+        ]), this._gl.ELEMENT_ARRAY_BUFFER), this._gl.UNSIGNED_SHORT, 6);
+    }
     private drawFrame(): void {
         if (!this._pipeline) return;
-        const now = Date.now();
-        const dt = now - this._startTimeMs;
         const resolution = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
         const minres = Math.min(...resolution);
         const scale = [resolution[0] / minres, resolution[1] / minres];
-        const uniforms: UniformRecord = {
+        const globalUniforms: UniformRecord = {
             "u_resolution": resolution,
-            "u_time": dt,
             "u_scale": scale,
         };
-        this._pipeline.setGlobalUniforms(uniforms);
-        this._pipeline.renderAll();
-        const diff = now - this._lastFrameTime;
-        this._frameTimeQ.enqueue(diff);
+        const uniforms: Record<string, UniformRecord> = {
+            "raymarch": {
+                "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
+                "u_resolution": resolution,
+                "u_sundir": [0, 0, 1], // sun direction in observer frame
+                "u_epos": [0, 2e6, 0], // earth position in observer frame
+                "u_escale": 1e-6, // scale factors for earth and sun
+            },
+        };
+        this._pipeline.setGlobalUniforms(globalUniforms);
+        this._pipeline.renderAll(uniforms);
+        this.updateFps();
+        if (this._running) requestAnimationFrame(() => this.drawFrame());
+        else this._pipeline.dispose();
+    }
+    private updateFps(): void {
+        const now = Date.now();
+        this._frameTimeQ.enqueue(now - this._lastFrameTime);
         this._lastFrameTime = now;
         const fps = 1000 / this._frameTimeQ.average();
         const intfps = Math.round(fps);
@@ -89,8 +103,6 @@ export class TestPage implements AfterViewInit, OnDestroy {
             this._lastIntFps = intfps;
             this.fpsText = `FPS: ${fps.toFixed(2)}`;
         }
-        if (this._running) requestAnimationFrame(() => this.drawFrame());
-        else this._pipeline.dispose();
     }
 }
 
