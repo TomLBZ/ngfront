@@ -4,7 +4,6 @@ precision highp float;
 in vec2 v_p; // Texture coordinate from the vertex shader.
 out vec4 outColor;
 
-uniform float u_time; // Time in seconds since the program started.
 uniform vec2 u_scale; // Scale of the texture coordinates.
 uniform sampler2D u_prev; // Previous pass texture.
 
