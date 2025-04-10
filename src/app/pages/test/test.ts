@@ -11,9 +11,7 @@ import { Component, ViewChild, OnInit, OnDestroy, AfterViewInit, ElementRef } fr
 // import { KeyController } from "../../../utils/controller/keyctrl";
 // import { MapTiler } from "../../../utils/api/maptiler";
 // import { env } from "../../app.config";
-import { RenderPipeline } from "../../../utils/gpu/pipeline";
-import { createBuffer } from "../../../utils/gpu/helper";
-import { UniformRecord, UniformType } from "../../../utils/gpu/types";
+import { RenderPipeline, RenderHelper, UniformRecord, ProgramSource, PassSource } from "../../../utils/gpu/gpu";
 
 @Component({
     selector: 'page-test',
@@ -33,18 +31,23 @@ export class TestPage implements AfterViewInit, OnDestroy {
         }
         this._gl = gl;
         this._pipeline = new RenderPipeline(gl);
-        this._pipeline.init([
-            { name: "raymarch", vertexUrl: "/shaders/twotrig.vert", fragmentUrl: "/shaders/raymarch.frag" },
-            { name: "obj3d", vertexUrl: "/shaders/twotrig.vert", fragmentUrl: "/shaders/obj3d.frag" },
-            { name: "hud2d", vertexUrl: "/shaders/twotrig.vert", fragmentUrl: "/shaders/hud2d.frag" },
-        ], true).then((p: RenderPipeline) => {
+        this._pipeline.loadPrograms([
+            { name: "raymarch", vertex: "/shaders/twotrig.vert", fragment: "/shaders/raymarch.frag", url: true},
+            { name: "obj3d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/obj3d.frag", url: true },
+            { name: "hud2d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/hud2d.frag", url: true },
+        ]).then((p: RenderPipeline) => {
+            p.setPasses([
+                { name: "raymarch" }, // render to texture
+                { name: "obj3d" }, // render to texture
+                // { name: "hud2d" }, // render to canvas
+            ], true);
             p.setAttribute("a_position", {
-                buffer: createBuffer(gl, new Float32Array([
+                buffer: RenderHelper.createBuffer(gl, new Float32Array([
                     -1, -1, 1, -1, -1,  1, 1,  1 // quad
                 ])),
                 size: 2, // 2 components per vertex
             });
-            p.setIndexBuffer(createBuffer(gl, new Uint16Array([
+            p.setIndexBuffer(RenderHelper.createBuffer(gl, new Uint16Array([
                 0, 1, 2, // first triangle
                 2, 1, 3 // second triangle
             ]), gl.ELEMENT_ARRAY_BUFFER), gl.UNSIGNED_SHORT, 6);
@@ -65,13 +68,8 @@ export class TestPage implements AfterViewInit, OnDestroy {
             "u_resolution": resolution,
             "u_time": dt,
         };
-        this._pipeline.useProgram("raymarch", uniforms);
-        this._pipeline.drawTriangles();
-        // this._pipeline.useProgram("obj3d", uniforms);
-        // this._pipeline.drawTriangles();
-        // this._pipeline.useProgram("hud2d", uniforms);
-        // this._pipeline.drawTriangles();
-        // this._gl.flush();
+        this._pipeline.setGlobalUniforms(uniforms);
+        this._pipeline.renderAll();
         // requestAnimationFrame(() => this.drawFrame());
     }
 }
