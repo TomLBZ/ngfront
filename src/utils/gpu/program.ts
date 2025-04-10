@@ -88,6 +88,7 @@ export class ShaderProgram {
             case UniformType.SAMPLER2D:
             case UniformType.SAMPLERCUBE:
             case UniformType.SAMPLER2DARRAY:
+            case UniformType.SAMPLER3D:
                 this.gl.uniform1i(loc, value as number);
                 break;
             case UniformType.IVEC2:
