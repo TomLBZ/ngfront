@@ -48,6 +48,11 @@ export class RenderPipeline {
     setPasses(passes: Array<PassSource>, verbose: boolean = false): void {
         const lastPass = passes.pop(); // last pass must render to canvas, so pop it to prevent it from being added to targets
         if (!lastPass) throw new Error("RenderPipeline requires at least one pass.");
+        // clear existing targets and passes
+        this.targets.forEach(t => {t.texture.dispose(); this.gl.deleteFramebuffer(t.framebuffer);});
+        this.targets.clear();
+        this.passes.length = 0;
+        // create targets for each pass
         passes.forEach(src => {
             const w = src.width ?? this.width;
             const h = src.height ?? this.height;
