@@ -1,3 +1,6 @@
+import { ShaderProgram } from "./program";
+import { Texture } from "./texture";
+
 export enum UniformType {
     FLOAT,
     VEC2,
@@ -20,7 +23,8 @@ export enum UniformType {
     MAT4,
     SAMPLER2D,
     SAMPLERCUBE,
-    SAMPLER2DARRAY, // NEW: texture array sampler
+    SAMPLER2DARRAY,
+    SAMPLER3D,
 }
 export type UniformData = number | boolean | number[] | boolean[] | Int32Array | Uint32Array | Float32Array;
 export type UniformRecord = Record<string, UniformData>;
@@ -45,7 +49,7 @@ export interface TextureOptions {
     crossOrigin?: string | null;
 }
 
-export interface PipelineAttributeConfig {
+export interface AttributeConfig {
     /** The WebGLBuffer containing the vertex data. */
     buffer: WebGLBuffer;
     /** The number of components per vertex attribute (e.g., 2 for vec2, 3 for vec3). */
@@ -60,8 +64,30 @@ export interface PipelineAttributeConfig {
     offset?: GLintptr;
 }
   
-export interface InlineProgramSource { name: string; vertex: string; fragment: string; }
-export interface UrlProgramSource { name: string; vertexUrl: string; fragmentUrl: string; }
+export interface ProgramSource {
+    /** Program name */
+    name: string; 
+    /** Vertex shader source code / url string */
+    vertex: string; 
+    /** Fragment shader source code / url string */
+    fragment: string; 
+    /** Whether the vertex and fragment are urls to download */
+    url?: boolean; // download the shader from the url
+}
+export interface PassSource { 
+    /** Program name */
+    name: string; 
+    /** Explicit width of the texture */
+    width?: number; // width of the texture
+    /** Explicit height of the texture */
+    height?: number; // height of the texture
+}
 
-export type ProgramSource = InlineProgramSource | UrlProgramSource;
+export interface RenderTarget {
+    /** The WebGLFramebuffer object. */
+    framebuffer: WebGLFramebuffer;
+    /** The texture attached to the framebuffer. */
+    texture: Texture;
+}
 
+export type RenderFunc = (passName: string, program: ShaderProgram) => void;
