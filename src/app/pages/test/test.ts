@@ -25,7 +25,9 @@ export class TestPage implements AfterViewInit, OnDestroy {
     private _startTimeMs: number = 0;
     private _frameTimeQ: Queue<number> = new Queue<number>(32);
     private _lastFrameTime: number = Date.now();
+    private _running: boolean = false;
     private _lastIntFps: number = 0;
+    public fpsText: string = "FPS: 0.00";
     @ViewChild('canvas', {static: true}) canvasRef!: ElementRef<HTMLCanvasElement>;
     ngAfterViewInit(): void {
         const gl: WebGL2RenderingContext = this.canvasRef.nativeElement.getContext("webgl2") as WebGL2RenderingContext;
@@ -57,12 +59,12 @@ export class TestPage implements AfterViewInit, OnDestroy {
             ]), gl.ELEMENT_ARRAY_BUFFER), gl.UNSIGNED_SHORT, 6);
             this._startTimeMs = Date.now();
             this._lastFrameTime = this._startTimeMs;
+            this._running = true;
             this.drawFrame();
         });
     }
     ngOnDestroy(): void {
-        this._pipeline.dispose();
-        console.log("Pipeline destroyed");
+        this._running = false;
     }
     private drawFrame(): void {
         if (!this._pipeline) return;
@@ -85,9 +87,10 @@ export class TestPage implements AfterViewInit, OnDestroy {
         const intfps = Math.round(fps);
         if (intfps !== this._lastIntFps && this._frameTimeQ.size() === this._frameTimeQ.maxLength) {
             this._lastIntFps = intfps;
-            if (intfps < 59) console.log(`FPS: ${fps.toFixed(2)}`);
+            this.fpsText = `FPS: ${fps.toFixed(2)}`;
         }
-        requestAnimationFrame(() => this.drawFrame());
+        if (this._running) requestAnimationFrame(() => this.drawFrame());
+        else this._pipeline.dispose();
     }
 }
 
