@@ -17,6 +17,7 @@ export class Texture {
     readonly width: number;
     readonly height: number;
     readonly depth: number; // layers for array / depth for 3‑D
+    public get handle(): WebGLTexture { return this.tex; }
     /* -------------------------------------------------- static cache ---- */
     private static imageCache = new Map<string, Promise<HTMLImageElement>>();
     /* ------------------------------------------------ constructor ---- */
