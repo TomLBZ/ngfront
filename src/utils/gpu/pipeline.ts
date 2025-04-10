@@ -184,7 +184,7 @@ export class RenderPipeline {
      * Renders all passes in the pipeline.
      * @param customRenderFunc Optional custom render function for custom behaviors for each program by name.
      */
-    renderAll(uniformMap?: Map<string, UniformRecord>, customRenderFunc?: RenderFunc): void {
+    renderAll(uniformRecords?: Record<string, UniformRecord>, customRenderFunc?: RenderFunc): void {
         this.gl.canvas.width = this.width; // update canvas size
         this.gl.canvas.height = this.height; // update canvas size
         let prevTex: Texture | null = null;
@@ -194,11 +194,9 @@ export class RenderPipeline {
             // if there is a previous texture, bind & set uniform (if present)
             if(prevTex) { 
                 prevTex.bind(0); 
-                prog.setUniform("u_prev", 0, UniformType.SAMPLER2D); 
-                if (uniformMap) {
-                    const uniforms = uniformMap.get(pass.name);
-                    if (uniforms) prog.setUniforms(uniforms);
-                }
+                prog.setUniform("u_prev", 0, UniformType.SAMPLER2D);
+                const uRecord = uniformRecords?.[pass.name];
+                if (uRecord) prog.setUniforms(uniformRecords[pass.name]);
             }
             // user hook
             if(customRenderFunc) customRenderFunc(pass.name, prog);
