@@ -4,8 +4,8 @@ precision highp float;
 in vec2 v_p; // Fragment coordinate from the vertex shader. from (-1, -1) to (1, 1)
 out vec4 outColor;
 
+uniform float u_minres; // Min Viewport resolution: min side length in pixels of the view port
 uniform vec2 u_fov; // Field of view in radians
-uniform vec2 u_resolution; // Viewport resolution
 uniform vec3 u_sundir; // The direction from the camera origin to the sun
 uniform vec3 u_epos; // Earth position in camera space.
 uniform float u_escale; // Earch scale factor and sun scale factor
@@ -17,17 +17,31 @@ const float RC1     = -2.12059191e+04                   ;
 const float RC0     = 6.37813700e+06                    ;
 const float INF     = 1.0 / 0.0                         ;
 const float COS_SUN_APP_RADIUS = cos(0.5418 * 0.5);
+const float MAX_DIST = 100.0                            ;
 const int MAX_ITER  = 64                                ;
 const vec3 O3       = vec3(0.0)                ;
 const vec3 I3       = vec3(1.0)                ;   
 const vec3 SUNC     = vec3(1.0, 1.0, 0.75) ; // sun color
 
+vec4 rayNerr() {
+    vec2 p = v_p * tan(u_fov * 0.5); // p is the pixel coordinate in camera space
+    vec3 ray = vec3(p.x, 1.0, p.y); // ray direction
+    float raylen = length(ray); // length of ray
+    float halfPixCoeff = 1.0 / u_minres; // half pixel coefficient
+    vec2 nudgedpix = p + sign(p) * halfPixCoeff; // nudged coordinates by 0.5 pixel
+    float errfactor = length(p - nudgedpix) / raylen; // error factor
+    return vec4(normalize(ray), errfactor); // return normalized ray direction and error factor
+}
 float earth(vec3 p) {
     vec3 pos = p - u_epos * u_escale;
     float r = length(pos);          // length of pos vector
     float s2 = (pos.z * pos.z) / (r * r); // = sin(lat)^2
     float R = RC0 + s2 * (RC1 + s2 * (RC2 + s2 * (RC3 + s2 * RC4)));
     return r - R * u_escale;
+}
+vec3 normAt(vec3 p, float err) {
+    vec2 d = vec2(err, -err);
+    return normalize(d.xyy * earth(p + d.xyy) + d.yyx * earth(p + d.yyx) + d.yxy * earth(p + d.yxy) + d.xxx * earth(p + d.xxx));
 }
 vec2 march(vec3 rd, float eps_c) { // returns (distance, iteration)
     float t = 0.0; // distance along ray
@@ -41,15 +55,6 @@ vec2 march(vec3 rd, float eps_c) { // returns (distance, iteration)
     }
     return vec2(INF, MAX_ITER); // didn't hit earth
 }
-vec4 rayNerr() {
-    vec2 p = v_p * tan(u_fov * 0.5); // p is the pixel coordinate in camera space
-    vec3 ray = vec3(p.x, 1.0, p.y); // ray direction
-    float raylen = length(ray); // length of ray
-    float halfPixCoeff = 1.0 / min(u_resolution.x, u_resolution.y); // half pixel coefficient
-    vec2 nudgedpix = p + vec2(p.x > 0.0, p.y > 0.0) * halfPixCoeff; // nudged coordinates by 0.5 pixel
-    float errfactor = length(p - nudgedpix) / raylen; // error factor
-    return vec4(normalize(ray), errfactor); // return normalized ray direction and error factor
-}
 vec3 space(vec3 viewDir, vec3 lightSourceDir, float strength) {
     float cosAngle = dot(viewDir, lightSourceDir);
     if (cosAngle < 0.0) return O3; // no halo if light is behind the view direction
@@ -57,12 +62,8 @@ vec3 space(vec3 viewDir, vec3 lightSourceDir, float strength) {
     float haloStrength = pow(cosAngle, 1.0 / strength);
     return haloStrength * SUNC;
 }
-vec3 normAt(vec3 p, float err) {
-    vec2 d = vec2(err, -err);
-    return normalize(d.xyy * earth(p + d.xyy) + d.yyx * earth(p + d.yyx) + d.yxy * earth(p + d.yxy) + d.xxx * earth(p + d.xxx));
-}
 vec3 colorEarth(vec3 intersection, vec3 normal, int iter, float dist) { // no is the surface normal in object frame
-    return mix(normal, vec3(0.0, 1.0, 0.0), 0.5) * (1.0 - float(iter) / float(MAX_ITER)); // mix normal with green color
+    return normal * 0.5 + 0.5; // mix normal and color based on distance
 }
 vec3 c3d(vec2 m, vec3 rd, float errFactor) {
     float dist = m.x;
@@ -76,9 +77,14 @@ vec3 c3d(vec2 m, vec3 rd, float errFactor) {
     vec3 nrm = normAt(its, err); // normal in plane frame
     return colorEarth(its, nrm, iter, dist);
 }
-// dummy main that outputs a color based on the coordinates and the time using a sine function
 void main() {
     vec4 rayNerr = rayNerr();
+    float w = rayNerr.w * 2.0; // grid for debug only
+    vec2 fuv = fract(abs(v_p) + vec2(rayNerr.w));
+    if (fuv.x < w || fuv.y < w) {
+        outColor = vec4(1.0);
+        return;
+    }
     vec2 distIter = march(rayNerr.xyz, rayNerr.w); // march the ray
     vec3 color = c3d(distIter, rayNerr.xyz, rayNerr.w); // get the color from the march
     outColor = vec4(color, 1.0);

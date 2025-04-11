@@ -75,15 +75,14 @@ export class TestPage implements AfterViewInit, OnDestroy {
         const minres = Math.min(...resolution);
         const scale = [resolution[0] / minres, resolution[1] / minres];
         const globalUniforms: UniformRecord = {
-            "u_resolution": resolution,
             "u_scale": scale,
         };
         const uniforms: Record<string, UniformRecord> = {
             "raymarch": {
                 "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
-                "u_resolution": resolution,
+                "u_minres": minres, // minimum resolution
                 "u_sundir": [0, 0, 1], // sun direction in observer frame
-                "u_epos": [0, 2e6, 0], // earth position in observer frame
+                "u_epos": [0, 16371000, 0], // earth position in observer frame
                 "u_escale": 1e-6, // scale factors for earth and sun
             },
         };
