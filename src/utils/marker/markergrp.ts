@@ -1,6 +1,6 @@
 import { Cache } from "../cache/cache";
 import { Color } from "../color/color";
-import { Hash } from "../hash/hash";
+import { Hash } from "../src/math/hash";
 import { Icon } from "../icon/icon";
 import { Marker } from "./marker";
 

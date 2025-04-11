@@ -8,3 +8,5 @@ export { Mat } from './src/math/mat';
 export { Mat3 } from './src/math/mat3';
 export { Angles } from './src/math/angles';
 export { Numerics } from './src/math/numerics';
+export { Prime } from './src/math/prime';
+export { Hash } from './src/math/hash';

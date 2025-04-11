@@ -1,4 +1,4 @@
-import { Hash } from "../hash/hash";
+import { Hash } from "../src/math/hash";
 
 export class Color {
     constructor(

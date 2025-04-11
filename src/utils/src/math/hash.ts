@@ -1,9 +1,5 @@
-import { Prime } from "../prime/prime";
-
-export class HashMode {
-    public static readonly PrimeHash: number = 0;
-    public static readonly StringHash: number = 1;
-}
+import { Prime } from "./prime";
+import { HashMode } from "../../types";
 
 export class Hash {
 

@@ -1,5 +1,5 @@
 import { Color } from "../color/color";
-import { Hash } from "../hash/hash";
+import { Hash } from "../src/math/hash";
 import { IPoint } from "../point/point";
 import { Segment } from "./segment";
 

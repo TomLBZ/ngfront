@@ -1,7 +1,7 @@
 import { Bitmap } from "../bmp/bmp";
 import { SDF } from "../bmp/sdf";
 import { Color } from "../color/color";
-import { Hash } from "../hash/hash";
+import { Hash } from "../src/math/hash";
 import { Vec2 } from "../math";
 
 export class Icon {
