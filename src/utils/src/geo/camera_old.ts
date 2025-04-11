@@ -1,11 +1,10 @@
-import { Vec3 } from '../vec/vec3';
-import { Mat3 } from '../mat/mat3';
+import { Mat3 } from '../math/mat3';
 import { Earth } from './earth_old';
-import { Vec2 } from '../vec/vec2';
-import { Plane3D } from '../geom/plane';
-import { Line3D } from '../geom/line';
-import { Circle2D } from '../geom/circle';
-import { Rectangle2D } from '../geom/rect';
+import { Vec2, Vec3 } from '../../math';
+import { Plane3D } from '../../geom/plane';
+import { Line3D } from '../../geom/line';
+import { Circle2D } from '../../geom/circle';
+import { Rectangle2D } from '../../geom/rect';
 
 export class Camera {
     private _lng: number = 0;
@@ -60,7 +59,7 @@ export class Camera {
         this._X = this._Y.Cross(this._Z).Norm();
     }
     private updateMat() {
-        this._R = Mat3.fromArray([
+        this._R = new Mat3([
             this._X.x, this._Y.x, this._Z.x,
             this._X.y, this._Y.y, this._Z.y,
             this._X.z, this._Y.z, this._Z.z

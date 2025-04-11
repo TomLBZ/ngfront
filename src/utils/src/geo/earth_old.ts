@@ -1,8 +1,8 @@
-import { Circle3D } from "../geom/circle";
-import { Plane3D } from "../geom/plane";
+import { Circle3D } from "../../geom/circle";
+import { Plane3D } from "../../geom/plane";
 import { Vec3 } from "../vec/vec3";
 import { SunData } from "./types";
-import { Astro } from "./geo";
+import { Astro } from "../../geo";
 
 // assumes earth is at the origin with north pole along the z-axis and the prime meridian along the x-axis.
 export class Earth {

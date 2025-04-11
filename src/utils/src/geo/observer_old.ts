@@ -1,5 +1,4 @@
-import { Mat3 } from "../mat/mat3";
-import { Vec3 } from "../vec/vec3";
+import { Vec3, Mat3 } from "../../math";
 import { Earth } from "./earth_old";
 
 // assumes the observer is at the origin.
@@ -22,7 +21,7 @@ export class ObserverOnEarth {
     private _R!: Mat3;
     private _RT!: Mat3;
     private update() {
-        this._R = Mat3.fromArray([
+        this._R = new Mat3([
             this._X.x, this._Y.x, this._Z.x,
             this._X.y, this._Y.y, this._Z.y,
             this._X.z, this._Y.z, this._Z.z

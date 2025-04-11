@@ -1,5 +1,5 @@
-import { Angles } from "../math/math";
-import { EarthSurfacePoint, GeoRadarData, RectangularCoords } from "./types";
+import { Angles } from "../../math";
+import { GeodeticCoords, GeoRadarData, RectangularCoords } from "./types";
 
 export const EER = 6378137.0; // meters, Earth equatorial radius
 export const EPR = 6356752.3142; // meters, Earth polar radius
@@ -16,9 +16,9 @@ export function geodeticToECEF(lng: number, lat: number, alt: number): Rectangul
     const x = (N + alt) * cosPhi * Math.cos(lambda);
     const y = (N + alt) * cosPhi * Math.sin(lambda);
     const z = ((1 - e2) * N + alt) * sinPhi;
-    return {x, y, z} as RectangularCoords;
+    return [x, y, z] as RectangularCoords;
 }
-export function ecefToGeodetic(x: number, y: number, z: number): EarthSurfacePoint {
+export function ecefToGeodetic(x: number, y: number, z: number): GeodeticCoords {
     const a2 = EER * EER; // a = EER
     const b2 = EPR * EPR; // b = EPR
     const e2 = (a2 - b2) / a2;
@@ -49,7 +49,7 @@ export function ecefToGeodetic(x: number, y: number, z: number): EarthSurfacePoi
     const lng = Angles.radToDeg(lambda);
     const lat = Angles.radToDeg(phi);
     const alt = U * (1 - b2 / aV);
-    return { lng, lat, alt } as EarthSurfacePoint;
+    return [lng, lat, alt] as GeodeticCoords;
 }
 export function getECEFToENUMatrix(lng: number, lat: number) {
     const phi = Angles.degToRad(lat);
@@ -78,27 +78,30 @@ export function getENUToECEFMatrix(lng: number, lat: number) {
     ];
 }
 export function getGeoRadarData(lng: number, lat: number, alt: number): GeoRadarData {
-    const pos = { lng, lat, alt } as EarthSurfacePoint;
     const ecefPos = geodeticToECEF(lng, lat, alt);
     const enuToEcefMatrix = getENUToECEFMatrix(lng, lat);
     const ecefToEnuMatrix = getECEFToENUMatrix(lng, lat);
+    const pos = [lng, lat, alt] as GeodeticCoords;
     return { pos, ecefPos, enuToEcefMatrix, ecefToEnuMatrix } as GeoRadarData;
 }
 export function ecefToRadarEnu(ecef: RectangularCoords, radar: GeoRadarData): RectangularCoords {
-    const [x, y, z] = [ecef.x - radar.ecefPos.x, ecef.y - radar.ecefPos.y, ecef.z - radar.ecefPos.z]; // vector pointing from radar to target point
-    return {
-        x: radar.ecefToEnuMatrix[0] * x + radar.ecefToEnuMatrix[1] * y + radar.ecefToEnuMatrix[2] * z,
-        y: radar.ecefToEnuMatrix[3] * x + radar.ecefToEnuMatrix[4] * y + radar.ecefToEnuMatrix[5] * z,
-        z: radar.ecefToEnuMatrix[6] * x + radar.ecefToEnuMatrix[7] * y + radar.ecefToEnuMatrix[8] * z
-    };
+    const [px, py, pz] = ecef;
+    const [rx, ry, rz] = radar.ecefPos;
+    const [x, y, z] = [px - rx, py - ry, pz - rz]; // vector pointing from radar to target point
+    return [
+        radar.ecefToEnuMatrix[0] * x + radar.ecefToEnuMatrix[1] * y + radar.ecefToEnuMatrix[2] * z,
+        radar.ecefToEnuMatrix[3] * x + radar.ecefToEnuMatrix[4] * y + radar.ecefToEnuMatrix[5] * z,
+        radar.ecefToEnuMatrix[6] * x + radar.ecefToEnuMatrix[7] * y + radar.ecefToEnuMatrix[8] * z
+    ] as RectangularCoords;
 }
 export function radarEnuToEcef(enu: RectangularCoords, radar: GeoRadarData): RectangularCoords {
-    const {x, y, z} = enu;
-    return {
-        x: radar.enuToEcefMatrix[0] * x + radar.enuToEcefMatrix[1] * y + radar.enuToEcefMatrix[2] * z + radar.ecefPos.x,
-        y: radar.enuToEcefMatrix[3] * x + radar.enuToEcefMatrix[4] * y + radar.enuToEcefMatrix[5] * z + radar.ecefPos.y,
-        z: radar.enuToEcefMatrix[6] * x + radar.enuToEcefMatrix[7] * y + radar.enuToEcefMatrix[8] * z + radar.ecefPos.z
-    };
+    const [x, y, z] = enu;
+    const [rx, ry, rz] = radar.ecefPos;
+    return [
+        radar.enuToEcefMatrix[0] * x + radar.enuToEcefMatrix[1] * y + radar.enuToEcefMatrix[2] * z + rx,
+        radar.enuToEcefMatrix[3] * x + radar.enuToEcefMatrix[4] * y + radar.enuToEcefMatrix[5] * z + ry,
+        radar.enuToEcefMatrix[6] * x + radar.enuToEcefMatrix[7] * y + radar.enuToEcefMatrix[8] * z + rz
+    ] as RectangularCoords;
 }
 export function getRadius(lat: number): number {
     const latRad = Angles.degToRad(lat); // convert to radians.
