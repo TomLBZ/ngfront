@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { DropSelectComponent } from '../dropselect/dropselect';
-import { Pair } from '../../utils/type/types';
+import { Pair } from '../../utils/types';
 
 @Component({
     selector: 'tableview',

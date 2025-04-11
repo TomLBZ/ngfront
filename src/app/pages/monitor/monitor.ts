@@ -17,7 +17,7 @@ import { Point } from '../../../utils/point/point';
 import { Cache } from '../../../utils/cache/cache';
 import { Waypoint, Mission, Telemetry } from '../../app.interface';
 import { StructValidator } from '../../../utils/api/validate';
-import { Callback, DictN } from '../../../utils/type/types';
+import { Callback, DictN } from '../../../utils/types';
 interface LaunchSettings {
     fgEnable: boolean;
 }

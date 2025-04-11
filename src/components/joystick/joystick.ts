@@ -1,5 +1,5 @@
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
-import { Vec2 } from '../../utils/vec/vec2';
+import { Vec2 } from '../../utils/math';
 
 @Component({
     standalone: true,

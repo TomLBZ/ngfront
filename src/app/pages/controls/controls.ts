@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 import { JoystickComponent } from "../../../components/joystick/joystick";
 import { ThrottleComponent } from "../../../components/throttle/throttle";
-import { Vec2 } from "../../../utils/vec/vec2";
+import { Vec2 } from "../../../utils/math";
 
 @Component({
     selector: "page-controls",

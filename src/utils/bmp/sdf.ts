@@ -1,4 +1,4 @@
-import { Vec2 } from '../vec/vec2';
+import { Vec2 } from '../math';
 
 export type SDFunc = (p: Vec2) => number;
 

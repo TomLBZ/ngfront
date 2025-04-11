@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { Nullable, Pair } from '../../utils/type/types';
+import { Nullable, Pair } from '../../utils/types';
 
 @Component({
     selector: 'dateselect',

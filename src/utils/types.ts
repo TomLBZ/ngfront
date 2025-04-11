@@ -13,3 +13,4 @@ export type Callback = Func<any, void>;
 export type Pair<T> = [T, T];
 export type Trio<T> = [T, T, T];
 export type Quad<T> = [T, T, T, T];
+export type Constructor<T> = new (...args: any[]) => T;

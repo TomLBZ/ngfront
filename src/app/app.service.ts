@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { env } from './app.config';
 import { UniResponseType, FormDataEntry, APIResponse } from './app.interface';
-import { Callback } from '../utils/type/types';
+import { Callback } from '../utils/types';
 import { KeyController } from '../utils/controller/keyctrl';
 import { StructValidator } from '../utils/api/validate';
 

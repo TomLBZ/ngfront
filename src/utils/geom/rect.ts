@@ -1,4 +1,4 @@
-import { Vec2 } from '../vec/vec2';
+import { Vec2 } from '../math';
 import { Circle2D } from './circle';
 import { LineSeg2D } from './line';
 

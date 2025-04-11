@@ -11,7 +11,7 @@ import { Color } from "../../../utils/color/color";
 import { Path, PathStyle } from "../../../utils/path/path";
 import { AppService } from "../../app.service";
 import { APIResponse, Mission, Aircraft, Waypoint } from "../../app.interface";
-import { Callback, DictS } from "../../../utils/type/types";
+import { Callback, DictS } from "../../../utils/types";
 import { StructValidator } from "../../../utils/api/validate";
 import { Flag } from "../../../utils/flag/flag";
 

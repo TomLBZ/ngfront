@@ -1,5 +1,4 @@
-import { Vec2 } from '../vec/vec2';
-import { Vec3 } from '../vec/vec3';
+import { Vec2, Vec3 } from "../math";
 import { Plane3D } from './plane';
 import { Circle2D } from './circle';
 

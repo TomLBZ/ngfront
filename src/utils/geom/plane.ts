@@ -1,4 +1,4 @@
-import { Vec3 } from '../vec/vec3';
+import { Vec3 } from '../math';
 
 export class Plane3D {
     constructor(public n: Vec3, public d: number) {

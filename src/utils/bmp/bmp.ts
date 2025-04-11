@@ -1,4 +1,4 @@
-import { Vec2 } from "../vec/vec2";
+import { Vec2 } from "../math";
 import { SDFunc } from "./sdf";
 import { Color } from "../color/color";
 

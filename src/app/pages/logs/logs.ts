@@ -4,7 +4,7 @@ import { AppService } from "../../app.service";
 import { LogEntry, MissionMetadata } from "../../app.interface";
 import { DateSelectComponent } from "../../../components/dateselect/dateselect";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
-import { DictS, Nullable, Pair } from "../../../utils/type/types";
+import { DictS, Nullable, Pair } from "../../../utils/types";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { HttpResponse } from "@angular/common/http";
 
