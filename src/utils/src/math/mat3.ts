@@ -1,13 +1,10 @@
-import { Vec3 } from "../vec/vec3";
+import { Vec3 } from "./vec3";
 import { Mat } from "./mat";
 
 export class Mat3 extends Mat {
     constructor(arr: Array<number> = [0, 0, 0, 0, 0, 0, 0, 0, 0]) {
         super(3, 3);
         this._data = arr;
-    }
-    static override fromArray(arr: Array<number>): Mat3 {
-        return new Mat3(arr);
     }
     MulV(v: Vec3): Vec3 {
         return new Vec3(
@@ -22,13 +19,6 @@ export class Mat3 extends Mat {
             this.get(0, 1) * v.x + this.get(1, 1) * v.y + this.get(2, 1) * v.z,
             this.get(0, 2) * v.x + this.get(1, 2) * v.y + this.get(2, 2) * v.z
         );
-    }
-    override T(): Mat3 {
-        return new Mat3([
-            this.get(0, 0), this.get(1, 0), this.get(2, 0),
-            this.get(0, 1), this.get(1, 1), this.get(2, 1),
-            this.get(0, 2), this.get(1, 2), this.get(2, 2)
-        ]);
     }
     static fromEuler(roll: number, pitch: number, yaw: number): Mat3 {
         const cr = Math.cos(roll);
@@ -56,18 +46,11 @@ export class Mat3 extends Mat {
             t * x * z - s * y, t * y * z + s * x, t * z * z + c
         ]);
     }
-    static override I(): Mat3 {
+    static I(): Mat3 {
         return new Mat3([
             1, 0, 0,
             0, 1, 0,
             0, 0, 1
-        ]);
-    }
-    static override Z(): Mat3 {
-        return new Mat3([
-            0, 0, 0,
-            0, 0, 0,
-            0, 0, 0
         ]);
     }
 }
