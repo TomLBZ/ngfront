@@ -1,8 +1,8 @@
 import { Component, ViewChild, OnInit, OnDestroy } from "@angular/core";
 import { MapViewComponent } from "../../../components/mapview/mapview";
 import { MarkerEvent, MapViewEvent } from "../../../components/mapview/event";
-import { Marker } from "../../../utils/marker/marker";
-import { MarkerGroup } from "../../../utils/marker/markergrp";
+import { Marker } from "../../../utils/src/graphics/marker";
+import { MarkerGroup } from "../../../utils/src/graphics/markergrp";
 import { env } from "../../app.config";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";

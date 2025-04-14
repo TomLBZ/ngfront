@@ -1,5 +1,5 @@
 import { Hash } from "../math/hash";
-import { IPoint } from "../../graphics";
+import { IPoint } from "../../ds";
 
 export class Point implements IPoint {
     public x: number;

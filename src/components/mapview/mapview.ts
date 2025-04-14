@@ -4,7 +4,7 @@ import { MapComponent, LayerComponent, GeoJSONSourceComponent,
 import { DropSelectComponent } from '../dropselect/dropselect';
 import { Map, MapLayerMouseEvent, Point, ProjectionSpecification } from 'maplibre-gl';
 import { MarkerEvent, MapViewEvent } from './event';
-import { MarkerGroup } from '../../utils/marker/markergrp';
+import { MarkerGroup } from '../../utils/src/graphics/markergrp';
 import { Path } from '../../utils/src/graphics/path';
 import { Cache } from '../../utils/src/ds/cache';
 import { Color } from '../../utils/src/graphics/color';

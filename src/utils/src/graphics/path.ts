@@ -1,7 +1,7 @@
 import { Color } from "./color";
 import { Hash } from "../math/hash";
-import { IPoint, PathStyle } from "../../graphics";
-import { Segment } from "./segment";
+import { PathStyle } from "../../graphics";
+import { IPoint, Segment } from "../../ds";
 
 export class Path {
     public color: Color;

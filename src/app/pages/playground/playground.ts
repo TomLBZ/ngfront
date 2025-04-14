@@ -4,8 +4,8 @@ import { Component, OnInit, ViewChild } from "@angular/core";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
 import { MapViewComponent } from "../../../components/mapview/mapview";
-import { Marker } from "../../../utils/marker/marker";
-import { MarkerGroup } from "../../../utils/marker/markergrp";
+import { Marker } from "../../../utils/src/graphics/marker";
+import { MarkerGroup } from "../../../utils/src/graphics/markergrp";
 import { OutboxComponent } from "../../../components/outbox/outbox";
 // other custom imports
 import { env } from "../../app.config";
