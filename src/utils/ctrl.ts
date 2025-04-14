@@ -1,3 +1,19 @@
+import { Callback, ValidateFunc } from './types';
+
+export { KeyController } from './src/ctrl/key';
+export { Timer } from './src/ctrl/timer';
+export { RTOS } from './src/ctrl/rtos';
+export { Downloader } from './src/ctrl/downloader';
+export { WebFile } from './src/ctrl/webfile';
+
+export enum KeyControlMode {
+    STATE_ONLY = 0, // tracks the state of a key
+    EVENT_UP = 1, // triggers an event on key up
+    EVENT_DOWN = 2, // triggers an event on key down
+    EVENT_PRESS = 4, // triggers an event on key press
+    EVENT_EDGE = 3, // triggers an event on key edge (up & down)
+}
+
 export enum MissedDeadlinePolicy {
     SKIP = 'SKIP',         // If the task is overdue, skip running it altogether this cycle
     CATCH_UP = 'CATCH_UP', // If the task is overdue by N intervals, run it N+1 times (if time allows)
@@ -10,9 +26,6 @@ export interface RTOSOptions {
     timeSlicePerCycle: boolean;
     useAnimationFrame?: boolean;
 }
-
-export type RTOSTaskCallback = () => void;
-export type RTOSInterruptCheck = () => boolean;
 
 export interface RTOSTaskOptions {
     name?: string;
@@ -30,7 +43,7 @@ export interface RTOSIntervalOptions {
 export interface RTOSTask {
     id: number;
     name?: string;
-    callback: RTOSTaskCallback;
+    callback: Callback;
     // Priority-based:
     priority: number; // Higher = run first
     // EDF-based:
@@ -51,7 +64,7 @@ export interface RTOSTask {
 
 export interface RTOSInterrupt {
     id: number;
-    checkFn: RTOSInterruptCheck;
-    callback: RTOSTaskCallback;
+    checkFn: ValidateFunc;
+    callback: Callback;
     priority: number;
 }

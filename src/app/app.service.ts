@@ -4,8 +4,8 @@ import { Observable } from 'rxjs';
 import { env } from './app.config';
 import { UniResponseType, FormDataEntry, APIResponse } from './app.interface';
 import { Callback } from '../utils/types';
-import { KeyController } from '../utils/controller/keyctrl';
-import { StructValidator } from '../utils/api/validate';
+import { KeyController } from '../utils/src/ctrl/key';
+import { StructValidator } from '../utils/src/ds/validate';
 
 @Injectable({
   providedIn: 'root'
@@ -46,7 +46,7 @@ export class AppService {
         }
     }
     
-    public callAPI(op: string, next: Callback, data: any = {}, error: Callback = console.log, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
+    public callAPI<T = any, E = void>(op: string, next: Callback<T>, data: any = {}, error: Callback<E> = console.log, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
         this.uniPost(op, data, resType, ...formData).subscribe({ next, error });
     }
 

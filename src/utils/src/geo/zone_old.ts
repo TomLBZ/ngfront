@@ -1,4 +1,4 @@
-import { Cache } from "../../cache/cache";
+import { Cache } from "../ds/cache";
 import { Vec2 } from "../vec/vec2";
 
 export class GeoZones<T> {

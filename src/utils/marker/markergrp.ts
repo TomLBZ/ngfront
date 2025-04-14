@@ -1,7 +1,7 @@
-import { Cache } from "../cache/cache";
-import { Color } from "../color/color";
+import { Cache } from "../src/ds/cache";
+import { Color } from "../src/graphics/color";
 import { Hash } from "../src/math/hash";
-import { Icon } from "../icon/icon";
+import { Icon } from "../src/graphics/icon";
 import { Marker } from "./marker";
 
 export class MarkerGroup { // a marker layer

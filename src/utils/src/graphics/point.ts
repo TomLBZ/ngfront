@@ -1,12 +1,5 @@
-import { Hash } from "../src/math/hash";
-
-export interface IPoint {
-    x: number;
-    y: number;
-    hash: number;
-    distanceTo(point: IPoint): number;
-    equals(point: IPoint): boolean;
-}
+import { Hash } from "../math/hash";
+import { IPoint } from "../../graphics";
 
 export class Point implements IPoint {
     public x: number;

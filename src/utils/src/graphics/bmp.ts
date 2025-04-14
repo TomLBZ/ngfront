@@ -1,6 +1,6 @@
-import { Vec2 } from "../math";
-import { SDFunc } from "./sdf";
-import { Color } from "../color/color";
+import { Vec2 } from "../../math";
+import { SDF2D } from "../../graphics";
+import { Color } from "./color";
 
 export class Bitmap {
     data: Uint8Array;
@@ -59,7 +59,7 @@ export class Bitmap {
         }
     }
 
-    drawSDF(sdf: SDFunc, lineColor: Color, fillColor: Color, epsilon = 0.01, flipy = true) {
+    drawSDF(sdf: SDF2D, lineColor: Color, fillColor: Color, epsilon = 0.01, flipy = true) {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 const xx = 2 * x / this.width - 1; // normalize x to [-1, 1]

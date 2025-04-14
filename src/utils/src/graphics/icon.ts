@@ -1,8 +1,7 @@
-import { Bitmap } from "../bmp/bmp";
-import { SDF } from "../bmp/sdf";
-import { Color } from "../color/color";
-import { Hash } from "../src/math/hash";
-import { Vec2 } from "../math";
+import { Bitmap } from "./bmp";
+import { SDF } from "./sdf";
+import { Color } from "./color";
+import { Vec2, Hash } from "../../math";
 
 export class Icon {
     private static epsilon = 0.01;

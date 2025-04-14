@@ -1,5 +1,5 @@
 import { ShaderProgram } from "./program";
-import { AttributeConfig, PassSource, ProgramSource, RenderFunc, RenderTarget, TextureTarget, UniformData, UniformRecord, UniformType } from "./types";
+import { GLAttributeConfig, PassSource, ProgramSource, RenderFunc, RenderTarget, TextureTarget, UniformRecord, UniformType } from "../../gpu";
 import { downloadSources } from "./helper";
 import { Texture } from "./texture";
 
@@ -9,7 +9,7 @@ export class RenderPipeline {
     private readonly passes: PassSource[] = [];
     private readonly programs = new Map<string, ShaderProgram>();
     private readonly targets = new Map<string, RenderTarget>();
-    private readonly attributeConfigs = new Map<string, AttributeConfig>();
+    private readonly attributeConfigs = new Map<string, GLAttributeConfig>();
     private get canvas(): HTMLCanvasElement { return this.gl.canvas as HTMLCanvasElement; }
     private get width(): number { return this.canvas.clientWidth; }
     private get height(): number { return this.canvas.clientHeight; }
@@ -113,7 +113,7 @@ export class RenderPipeline {
      * @param name Name of the attribute
      * @param config Configuration object for the attribute
      */
-    setAttribute(name: string, config: AttributeConfig): void {
+    setAttribute(name: string, config: GLAttributeConfig): void {
         this.attributeConfigs.set(name, config);
         this.programs.forEach(p => this.applyAttributeToProgram(p, name, config));
     }
@@ -136,7 +136,7 @@ export class RenderPipeline {
      * @param name Name of the attribute
      * @param cfg Configuration object for the attribute
      */
-    private applyAttributeToProgram(program: ShaderProgram, name: string, cfg: AttributeConfig): void {
+    private applyAttributeToProgram(program: ShaderProgram, name: string, cfg: GLAttributeConfig): void {
         const { buffer, size, type = this.gl.FLOAT, normalized = false, stride = 0, offset = 0 } = cfg;
         const location = program.getAttribLocation(name);
         if (location === -1) {

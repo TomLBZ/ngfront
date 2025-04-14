@@ -10,3 +10,8 @@ export { Angles } from './src/math/angles';
 export { Numerics } from './src/math/numerics';
 export { Prime } from './src/math/prime';
 export { Hash } from './src/math/hash';
+
+export enum HashMode {
+    PrimeHash = 0,
+    StringHash = 1
+}

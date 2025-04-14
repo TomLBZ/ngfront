@@ -1,4 +1,4 @@
-import { Downloader } from "../api/downloader";
+import { Downloader } from "./downloader";
 
 export class WebFile {
     constructor(public url: string, public name: string) {}

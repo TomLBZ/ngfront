@@ -1,5 +1,5 @@
 import { Prime } from "./prime";
-import { HashMode } from "../../types";
+import { HashMode } from "../../math";
 
 export class Hash {
 

@@ -1,10 +1,6 @@
-import { Camera } from "../src/geo/camera_old";
-import { Earth } from "../src/geo/earth_old";
-import { ObserverOnEarth } from "../src/geo/observer_old";
+import { Earth } from "../geo/earth_old";
+import { MapTile } from "../../br";
 
-export class MapTile {
-    constructor(public url: string, public xyz: [number, number, number]) {}
-}
 export class MapTiler {
     public constructor(public key: string) { }
     public lnglat2xy(z: number, lng: number, lat: number): [number, number] {
@@ -32,7 +28,7 @@ export class MapTiler {
     }
     public getTileByXY(z: number, x: number, y: number): MapTile {
         const url = `https://api.maptiler.com/tiles/satellite-v2/${z}/${x}/${y}.jpg?key=${this.key}`;
-        return new MapTile(url, [x, y, z]);
+        return { url, x, y, z };
     }
     public getTileByLngLat(z: number, lng: number, lat: number): MapTile {
         const xy = this.lnglat2xy(lng, lat, z);
@@ -79,23 +75,5 @@ export class MapTiler {
             else this.singleSkirt(bgz, uex, uey, skz - bgz > 1, tiles); // push the surrounding tiles at the guard zoom
         }
         return tiles; // count = 1 + 8 * skirts + 1
-    }
-    public autoRayTiles(cam: Camera): MapTile[] {
-        // TODO: implement this:
-        // 1. Find the view pyramid's intersection with the earth surface
-        //    - Use the observer's FoV and the observer's looking direction to find the view pyramid
-        //    - Find the intersection of the view pyramid with the earth surface
-        // 2. Find the 4 corners of the view pyramid's intersection with the earth surface
-        //    - Represent in lng, lat
-        //    - Points are bounded by the distant horizon
-        //    - If some edges of the view pyramid is above the horizon, the cooresponding points are on the horizon
-        //    - If the entire view pyramid is above the horizon, the intersection is empty
-        // 3. Find the tiles that cover the view pyramid's intersection region with the earth surface
-        //    - From the furthest to the cloest, find the tiles that cover the region one by one
-        //    - Use the distances for each z-level to segment the view pyramid's intersection region into strips
-        //    - Find the tiles that cover each strip, given the known z-level (therefore tile size)
-        //    - Push the tiles into the array
-        // 4. Return the array of tiles
-        return []; // dummy return
     }
 }

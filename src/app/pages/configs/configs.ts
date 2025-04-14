@@ -3,7 +3,7 @@ import { AppService } from "../../app.service";
 import { ConfigFile, APIResponse, ConfigFileType } from "../../app.interface";
 import { HttpResponse } from "@angular/common/http";
 import { FormDataEntry } from "../../app.interface";
-import { StructValidator } from "../../../utils/api/validate";
+import { StructValidator } from "../../../utils/src/ds/validate";
 import { DictN, Callback } from "../../../utils/types";
 import { FileOpComponent } from "../../../components/fileop/fileop";
 

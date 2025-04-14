@@ -1,6 +1,6 @@
 import { Component, Input, EventEmitter, Output} from '@angular/core';
 import { ValueEditorComponent, Change } from '../value_editor/value_editor';
-import { Color } from '../../../utils/color/color';
+import { Color } from '../../../utils/src/graphics/color';
 import { Func1 } from '../../../utils/types';
 
 @Component({

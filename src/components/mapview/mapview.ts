@@ -5,9 +5,9 @@ import { DropSelectComponent } from '../dropselect/dropselect';
 import { Map, MapLayerMouseEvent, Point, ProjectionSpecification } from 'maplibre-gl';
 import { MarkerEvent, MapViewEvent } from './event';
 import { MarkerGroup } from '../../utils/marker/markergrp';
-import { Path } from '../../utils/path/path';
-import { Cache } from '../../utils/cache/cache';
-import { Color } from '../../utils/color/color';
+import { Path } from '../../utils/src/graphics/path';
+import { Cache } from '../../utils/src/ds/cache';
+import { Color } from '../../utils/src/graphics/color';
 
 @Component({
     selector: 'mapview',

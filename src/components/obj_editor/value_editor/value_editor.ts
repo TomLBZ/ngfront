@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from "@angular/core";
-import { Dates } from "../../../utils/date/dates";
-import { Color } from "../../../utils/color/color";
+import { Dates } from "../../../utils/src/ds/dates";
+import { Color } from "../../../utils/src/graphics/color";
 
 export interface Change {
     key: string;

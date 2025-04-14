@@ -1,5 +1,11 @@
-import { ShaderProgram } from "./program";
-import { Texture } from "./texture";
+import { Texture } from './src/gpu/texture';
+import { ShaderProgram } from './src/gpu/program';
+
+export { Shader } from './src/gpu/shader';;
+export { ShaderProgram } from './src/gpu/program';
+export { RenderPipeline } from './src/gpu/pipeline';
+export { Texture } from './src/gpu/texture';
+export { RenderHelper} from './src/gpu/helper';
 
 export enum UniformType {
     FLOAT,
@@ -49,7 +55,7 @@ export interface TextureOptions {
     crossOrigin?: string | null;
 }
 
-export interface AttributeConfig {
+export interface GLAttributeConfig {
     /** The WebGLBuffer containing the vertex data. */
     buffer: WebGLBuffer;
     /** The number of components per vertex attribute (e.g., 2 for vec2, 3 for vec3). */

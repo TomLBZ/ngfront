@@ -9,8 +9,8 @@ import { MarkerGroup } from "../../../utils/marker/markergrp";
 import { OutboxComponent } from "../../../components/outbox/outbox";
 // other custom imports
 import { env } from "../../app.config";
-import { Icon } from "../../../utils/icon/icon";
-import { Color } from "../../../utils/color/color";
+import { Icon } from "../../../utils/src/graphics/icon";
+import { Color } from "../../../utils/src/graphics/color";
 import { MarkerEvent } from "../../../components/mapview/event";
 
 @Component({

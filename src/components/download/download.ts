@@ -1,6 +1,6 @@
 import { Component, Input } from "@angular/core";
 import { DropSelectComponent } from "../dropselect/dropselect";
-import { WebFile } from "../../utils/file/webfile";
+import { WebFile } from "../../utils/src/ctrl/webfile";
 
 @Component({
     selector: "download",

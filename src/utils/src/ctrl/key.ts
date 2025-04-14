@@ -1,10 +1,5 @@
-export class KeyControlMode {
-    public static readonly STATE_ONLY = 0; // tracks the state of a key
-    public static readonly EVENT_UP = 1; // triggers an event on key up
-    public static readonly EVENT_DOWN = 2; // triggers an event on key down
-    public static readonly EVENT_PRESS = 4; // triggers an event on key press
-    public static readonly EVENT_EDGE = 3; // triggers an event on key edge (up & down)
-}
+import { KeyControlMode } from "../../ctrl";
+
 export class KeyController {
     private keyStates: Map<string, boolean> = new Map<string, boolean>();
     private upCallbacks: Map<string, Function> = new Map<string, Function>();

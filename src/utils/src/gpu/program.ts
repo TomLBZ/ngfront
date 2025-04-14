@@ -1,5 +1,5 @@
 import { Shader } from "./shader";
-import { UniformData, UniformType } from "./types";
+import { UniformData, UniformType } from "../../gpu";
 
 export class ShaderProgram {
     private readonly gl: WebGL2RenderingContext;

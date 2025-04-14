@@ -9,13 +9,9 @@ export type Concrete<T> = T extends NullLike ? never : T;
 export type Func1<I, O> = (i: I) => O;
 export type FuncN<I, O> = (...i: I[]) => O;
 export type Func<I, O> = Func1<I, O> | FuncN<I, O>;
-export type Callback = Func<any, void>;
+export type Callback<T = void> = Func1<T, void>;
+export type ValidateFunc<T = void> = Func1<T, boolean>;
 export type Pair<T> = [T, T];
 export type Trio<T> = [T, T, T];
 export type Quad<T> = [T, T, T, T];
 export type Constructor<T> = new (...args: any[]) => T;
-
-export enum HashMode {
-    PrimeHash = 0,
-    StringHash = 1
-}

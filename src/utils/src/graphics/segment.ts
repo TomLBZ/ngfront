@@ -1,5 +1,5 @@
-import { Hash } from "../src/math/hash";
-import { IPoint } from "../point/point";
+import { Hash } from "../math/hash";
+import { IPoint } from "../../graphics";
 
 export class Segment {
     public start: IPoint;

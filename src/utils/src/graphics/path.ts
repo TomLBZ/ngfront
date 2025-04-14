@@ -1,14 +1,7 @@
-import { Color } from "../color/color";
-import { Hash } from "../src/math/hash";
-import { IPoint } from "../point/point";
+import { Color } from "./color";
+import { Hash } from "../math/hash";
+import { IPoint, PathStyle } from "../../graphics";
 import { Segment } from "./segment";
-
-export class PathStyle {
-    public static readonly Solid = 0;
-    public static readonly Dashed = 1;
-    public static readonly Dotted = 2;
-    public static readonly DashDot = 3;
-}
 
 export class Path {
     public color: Color;

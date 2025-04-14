@@ -1,5 +1,6 @@
-import { RTOSTask, RTOSInterrupt, RTOSTaskOptions, RTOSOptions, RTOSTaskCallback, MissedDeadlinePolicy, RTOSInterruptCheck, RTOSIntervalOptions } from "./rtostypes";
-import { PriorityQueue } from "../queue/pq";
+import { RTOSTask, RTOSInterrupt, RTOSTaskOptions, RTOSOptions, MissedDeadlinePolicy, RTOSIntervalOptions } from "../../ctrl";
+import { PriorityQueue } from "../ds/pq";
+import { Callback, ValidateFunc } from "../../types";
 
 export class RTOS {
     private tasks: RTOSTask[] = [];
@@ -12,7 +13,7 @@ export class RTOS {
     private globalRRIndexCounter = 0; // a global round-robin counter to assign to tasks that tie
     constructor(private options: RTOSOptions) {}
 
-    public addTask(callback: RTOSTaskCallback, options: RTOSTaskOptions | RTOSIntervalOptions): number {
+    public addTask(callback: Callback, options: RTOSTaskOptions | RTOSIntervalOptions): number {
         const fixedInterval : boolean = (options as RTOSIntervalOptions).intervalMs !== undefined;
         const deadlineMs = fixedInterval ? 0 : (options as RTOSTaskOptions).deadlineMs;
         const intervalMs = fixedInterval ? (options as RTOSIntervalOptions).intervalMs : 0;
@@ -37,7 +38,7 @@ export class RTOS {
         this.tasks.push(task);
         return task.id;
     }
-    public addInterrupt(checkFn: RTOSInterruptCheck, callback: RTOSTaskCallback, priority: number = 1): number {
+    public addInterrupt(checkFn: ValidateFunc, callback: Callback, priority: number = 1): number {
         const intr: RTOSInterrupt = {
             id: this.nextInterruptId++,
             checkFn,

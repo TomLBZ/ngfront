@@ -1,5 +1,5 @@
 import { Hash } from "../src/math/hash";
-import { IPoint } from "../point/point";
+import { IPoint } from "../graphics";
 
 export class Marker implements IPoint { // a single marker
     private static _maxId: number = 0;

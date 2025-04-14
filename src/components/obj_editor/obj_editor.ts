@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { FieldEditorComponent } from './field_editor/field_editor';
 import { Change } from './value_editor/value_editor';
-import { Dates } from '../../utils/date/dates';
+import { Dates } from '../../utils/src/ds/dates';
 
 export class cloneable {
     public static deepCopy<T>(source: T): T {

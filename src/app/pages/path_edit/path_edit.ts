@@ -6,14 +6,14 @@ import { MarkerGroup } from "../../../utils/marker/markergrp";
 import { env } from "../../app.config";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
-import { Icon } from "../../../utils/icon/icon";
-import { Color } from "../../../utils/color/color";
-import { Path, PathStyle } from "../../../utils/path/path";
+import { Icon } from "../../../utils/src/graphics/icon";
+import { Color } from "../../../utils/src/graphics/color";
+import { Path, PathStyle } from "../../../utils/graphics";
 import { AppService } from "../../app.service";
 import { APIResponse, Mission, Aircraft, Waypoint } from "../../app.interface";
 import { Callback, DictS } from "../../../utils/types";
-import { StructValidator } from "../../../utils/api/validate";
-import { Flag } from "../../../utils/flag/flag";
+import { StructValidator } from "../../../utils/src/ds/validate";
+import { Flag } from "../../../utils/src/ds/flag";
 
 @Component({
     selector: "page-path-edit",

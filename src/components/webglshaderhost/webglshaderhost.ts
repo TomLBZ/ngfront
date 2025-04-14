@@ -4,8 +4,8 @@ import { UniformDict, UniformTexture, UniformTextureArray, UniformVec4Array,
     UniformValueLike, UniformArrayLike, UniformVecLike, 
     UniformVec2, UniformVec4, 
     isUniformValueLike, isUniformVecLike, isUniformArrayLike,
-    } from '../../utils/gpu/uniform';
-import { Downloader } from '../../utils/api/downloader';
+    } from '../../utils/src/gpu/uniform';
+import { Downloader } from '../../utils/src/ctrl/downloader';
 
 export type VertLoader = () => Array<number>;
 

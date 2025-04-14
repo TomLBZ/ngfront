@@ -11,8 +11,8 @@ import { Component, ViewChild, OnInit, OnDestroy, AfterViewInit, ElementRef } fr
 // import { KeyController } from "../../../utils/controller/keyctrl";
 // import { MapTiler } from "../../../utils/api/maptiler";
 // import { env } from "../../app.config";
-import { RenderPipeline, RenderHelper, UniformRecord, ProgramSource, PassSource } from "../../../utils/gpu/gpu";
-import { Queue } from "../../../utils/queue/q";
+import { RenderPipeline, RenderHelper, UniformRecord, ProgramSource, PassSource } from "../../../utils/gpu";
+import { Queue } from "../../../utils/src/ds/q";
 
 @Component({
     selector: 'page-test',

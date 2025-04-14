@@ -1,4 +1,4 @@
-import { TextureTarget, TextureOptions } from "./types";
+import { TextureTarget, TextureOptions } from "../../gpu";
 
 /** Mapping for cube‑map face order (+X,‑X,+Y,‑Y,+Z,‑Z). */
 const CUBE_FACES: GLenum[] = [

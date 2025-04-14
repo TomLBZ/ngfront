@@ -1,4 +1,9 @@
-import { ProgramSource } from "./types";
+import { ProgramSource } from "../../gpu";
+
+export class RenderHelper {
+    static createBuffer = createBuffer;
+    static downloadSources = downloadSources;
+}
 
 /**
  * Creates a WebGL buffer and uploads data to it.
