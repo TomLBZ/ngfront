@@ -1,8 +1,7 @@
 import { Circle3D } from "../../geom/circle";
 import { Plane3D } from "../../geom/plane";
-import { Vec3 } from "../vec/vec3";
-import { SunData } from "./types";
-import { Astro } from "../../geo";
+import { Vec3 } from "../../math";
+import { Astro, SunData } from "../../geo";
 
 // assumes earth is at the origin with north pole along the z-axis and the prime meridian along the x-axis.
 export class Earth {
@@ -75,7 +74,7 @@ export class Earth {
     }
     public static getSunPositionVector(date: Date): Vec3 {
         this.setParams(date);
-        const {x, y, z} = Astro.sunDataToSunPositionVectorEcef(this.sunData);
+        const [x, y, z] = Astro.sunDataToSunPositionVectorEcef(this.sunData);
         return new Vec3(x, y, z).Norm();
     }
 }

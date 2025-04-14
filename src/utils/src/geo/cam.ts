@@ -1,5 +1,5 @@
 import { geodeticToECEF } from "./earth";
-import { Attitude, GeodeticCoords, RectangularCoords } from "./types";
+import { Attitude, GeodeticCoords, RectangularCoords } from "../../geo";
 
 export class GeoCam { // a camera on Earth
     public posEcef: RectangularCoords;

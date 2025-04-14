@@ -1,8 +1,18 @@
 import { Angles } from "../../math";
-import { EclipticCoords, EquatorialCoords, RectangularCoords, SunData, GeodeticCoords } from "./types";
+import { EclipticCoords, EquatorialCoords, RectangularCoords, SunData, GeodeticCoords } from "../../geo";
 
-export const AU = 149597870.7e3; // meters
-export const SUNR = 695660e3; // meters
+export class Astro {
+    public static julianDayToObliquity = julianDayToObliquity;
+    public static julianDayToSunEcliptic = julianDayToSunEcliptic;
+    public static eclipticToRectangular = eclipticToRectangular;
+    public static eclipticToEquatorial = eclipticToEquatorial;
+    public static equatorialToRectangular = equatorialToRectangular;
+    public static julianDayToGMSTDegrees = julianDayToGMSTDegrees;
+    public static DateToJulianDay = DateToJulianDay;
+    public static dateToSunData = dateToSunData;
+    public static sunDataToSubSolarPoint = sunDataToSubSolarPoint;
+    public static sunDataToSunPositionVectorEcef = sunDataToSunPositionVectorEcef;
+}
 
 export function julianDayToObliquity(JD: number): number {
     const n = JD - 2451545.0; // number of days since J2000.0

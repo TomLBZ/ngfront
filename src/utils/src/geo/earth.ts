@@ -1,8 +1,16 @@
 import { Angles } from "../../math";
-import { GeodeticCoords, GeoRadarData, RectangularCoords } from "./types";
+import { GeodeticCoords, GeoRadarData, RectangularCoords, EER, EPR } from "../../geo";
 
-export const EER = 6378137.0; // meters, Earth equatorial radius
-export const EPR = 6356752.3142; // meters, Earth polar radius
+export class Earth {
+    public static geodeticToECEF = geodeticToECEF;
+    public static ecefToGeodetic = ecefToGeodetic;
+    public static getECEFToENUMatrix = getECEFToENUMatrix;
+    public static getENUToECEFMatrix = getENUToECEFMatrix;
+    public static getGeoRadarData = getGeoRadarData;
+    public static ecefToRadarEnu = ecefToRadarEnu;
+    public static radarEnuToEcef = radarEnuToEcef;
+    public static getRadius = getRadius;
+}
 
 export function geodeticToECEF(lng: number, lat: number, alt: number): RectangularCoords {
     const phi = Angles.degToRad(lat);

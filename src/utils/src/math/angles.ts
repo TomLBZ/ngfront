@@ -1,5 +1,5 @@
 import { mod } from './numerics';
-import { PI2, DEG_RAD, RAD_DEG } from './consts';
+import { PI2, DEG_RAD, RAD_DEG } from '../../math';
 
 /**
  * Static class for angle conversions and wrapping.
