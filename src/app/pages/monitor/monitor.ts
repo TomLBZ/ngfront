@@ -239,7 +239,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             }
             const oldLaunchSettings = this.launchSettings;
             this._svc.callAPI("sim/fgenable", (d: any) => {
-                if (!d.success) this.launchSettings = oldLaunchSettings;
+                if (!d.success) alert(d.msg);
             }, { fg_enable: newSettings.fgEnable }, (d: any) => {
                 alert(`Error: ${JSON.stringify(d)}`);
                 this.launchSettings = oldLaunchSettings;
