@@ -13,7 +13,7 @@ import { Component, ViewChild, OnDestroy, AfterViewInit, ElementRef } from "@ang
 // import { env } from "../../app.config";
 import { RenderPipeline, RenderHelper, UniformRecord, ProgramSource, PassSource } from "../../../utils/gpu";
 import { Queue } from "../../../utils/src/ds/q";
-import { Attitude, GeodeticCoords } from "../../../utils/geo";
+import { Attitude, GeodeticCoords, LocalCoordsType } from "../../../utils/geo";
 import { AppService } from "../../app.service";
 import { GeoCam } from "../../../utils/src/geo/cam";
 
@@ -86,9 +86,9 @@ export class TestPage implements AfterViewInit, OnDestroy {
         const minres = Math.min(...resolution);
         const scale = [resolution[0] / minres, resolution[1] / minres];
         this.controllerUpdate();
-        const cam = new GeoCam(this._geoCoords, this._attitude);
-        const epos = cam.earthPosInCamFrame;
-        // console.log(`Earth position in camera frame: [${epos[0].toFixed(2)}, ${epos[1].toFixed(2)}, ${epos[2].toFixed(2)}]`);
+        const cam = new GeoCam(this._geoCoords, this._attitude, LocalCoordsType.NED);
+        const epos = cam.ecefToCamFrame([0, 0, 0]); // earth position in camera frame
+        // console.log(`Epos: [${epos[0].toFixed(2)}, ${epos[1].toFixed(2)}, ${epos[2].toFixed(2)}]`);
         // const epos = [0, 16371000, 0]; // earth position in camera frame
         const globalUniforms: UniformRecord = {
             "u_scale": scale,
@@ -97,7 +97,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
             "raymarch": {
                 "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
                 "u_minres": minres, // minimum resolution
-                "u_sundir": [0, Math.sqrt(3) / 2, 0.5], // sun direction in observer frame
+                "u_sundir": [Math.sqrt(3) / 2, 0, 0.5], // sun direction in observer frame
                 "u_epos": epos, // earth position in observer frame
                 "u_escale": 1e-6, // scale factors for earth and sun
             },
