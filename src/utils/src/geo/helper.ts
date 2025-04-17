@@ -8,9 +8,11 @@ export class GeoHelper {
     static Div = TriTypeOp(OpType.DIV);
 }
 
-export function TriTypeOp<T extends [number, number, number]>(op: OpType) {
+export function TriTypeOp<T extends [number, number, number]>(op: OpType = OpType.NOOP): (a: T, b: T) => T {
     return (a: T, b: T): T => {
         switch (op) {
+            case OpType.NOOP:
+                return a;
             case OpType.ADD:
                 return [a[0] + b[0], a[1] + b[1], a[2] + b[2]] as T;
             case OpType.SUB:

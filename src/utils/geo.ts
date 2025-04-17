@@ -1,6 +1,5 @@
 export { Astro } from './src/geo/astro';
 export { Earth } from './src/geo/earth';
-export { GeoHelper } from './src/geo/helper';
 
 export const AU = 149597870.7e3; // meters
 export const SUNR = 695660e3; // meters
@@ -8,11 +7,13 @@ export const EER = 6378137.0; // meters, Earth equatorial radius
 export const EPR = 6356752.3142; // meters, Earth polar radius
 
 export enum OpType {
-    ADD = 0,
-    SUB = 1,
-    MUL = 2,
-    DIV = 3,
+    NOOP = 0,
+    ADD = 1,
+    SUB = 2,
+    MUL = 3,
+    DIV = 4,
 }
+export { GeoHelper } from './src/geo/helper';
 
 /**
  * Ecliptic coordinates
