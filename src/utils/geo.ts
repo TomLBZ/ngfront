@@ -7,6 +7,11 @@ export const SUNR = 695660e3; // meters
 export const EER = 6378137.0; // meters, Earth equatorial radius
 export const EPR = 6356752.3142; // meters, Earth polar radius
 
+export enum LocalCoordsType {
+    ENU = 'enu',
+    NED = 'ned'
+}
+
 /**
  * Ecliptic coordinates
  * @param lng longitude in radians
