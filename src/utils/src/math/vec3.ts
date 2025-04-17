@@ -10,7 +10,7 @@ export class Vec3 extends Vec {
     public set z(value: number) { this._data[2] = value; }
     constructor(length: number = 3, initValue: number = 0, arr: Array<number> = []) {
         if (length !== 3) throw new Error("Vec3 constructor: length must be 3");
-        if (arr.length !== 3) throw new Error("Vec3 constructor: arr must be of length 3");
+        if (arr.length > 0 && arr.length !== 3) throw new Error("Vec3 constructor: arr must be of length 3");
         super(length, initValue, arr);
     }
 
