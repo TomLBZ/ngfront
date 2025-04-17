@@ -57,7 +57,7 @@ export class GeoCam { // a camera on Earth
      * @param attitude attitude of the camera in radians
      * @returns rotation matrix
      */
-    public static getEnuToCameraMatrix(attitude: Attitude): Mat3 {
+    public static getEnuToCameraMatrix(attitude: Attitude): Mat3 { // TODO: fix matrix
         const [roll, pitch, yaw] = attitude;
         const cosRoll = Math.cos(roll);
         const sinRoll = Math.sin(roll);

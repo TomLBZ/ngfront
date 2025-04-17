@@ -1,4 +1,4 @@
-import { Component, ViewChild, OnInit, OnDestroy, AfterViewInit, ElementRef } from "@angular/core";
+import { Component, ViewChild, OnDestroy, AfterViewInit, ElementRef } from "@angular/core";
 // import { WebGLShaderHostComponent } from "../../../components/webglshaderhost/webglshaderhost";
 // import { RTOS } from "../../../utils/rtos/rtos";
 // import { AU, SUNR } from "../../../utils/geo/helper";
@@ -30,7 +30,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
     private _lastFrameTime: number = Date.now();
     private _running: boolean = false;
     private _lastIntFps: number = 0;
-    private _geodeticCoords: GeodeticCoords = [0, 0, 0]; // longitude, latitude, altitude
+    private _geoCoords: GeodeticCoords = [0, 0, 1000]; // longitude, latitude, altitude
     private _attitude: Attitude = [0, 0, 0]; // roll, pitch, yaw
     private fpsText: string = "FPS: 0.00";
     private attText: string = "Attitude: [0, 0, 0]";
@@ -86,9 +86,10 @@ export class TestPage implements AfterViewInit, OnDestroy {
         const minres = Math.min(...resolution);
         const scale = [resolution[0] / minres, resolution[1] / minres];
         this.controllerUpdate();
-        // const cam = new GeoCam(this._geodeticCoords, this._attitude);
-        // const epos = cam.earthPosInCamFrame;
-        const epos = [0, 16371000, 0]; // earth position in camera frame
+        const cam = new GeoCam(this._geoCoords, this._attitude);
+        const epos = cam.earthPosInCamFrame;
+        // console.log(`Earth position in camera frame: [${epos[0].toFixed(2)}, ${epos[1].toFixed(2)}, ${epos[2].toFixed(2)}]`);
+        // const epos = [0, 16371000, 0]; // earth position in camera frame
         const globalUniforms: UniformRecord = {
             "u_scale": scale,
         };
@@ -116,12 +117,18 @@ export class TestPage implements AfterViewInit, OnDestroy {
         if (this._svc.keyCtrl.getKeyState("q")) this._attitude[0] -= 0.01; // roll left
         if (this._svc.keyCtrl.getKeyState("e")) this._attitude[0] += 0.01; // roll right
         // update geodetic coordinates based on key presses
-        if (this._svc.keyCtrl.getKeyState("ArrowUp")) this._geodeticCoords[1] += 0.01; // move north
-        if (this._svc.keyCtrl.getKeyState("ArrowDown")) this._geodeticCoords[1] -= 0.01; // move south
-        if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geodeticCoords[0] -= 0.01; // move west
-        if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geodeticCoords[0] += 0.01; // move east
-        if (this._svc.keyCtrl.getKeyState("Shift")) this._geodeticCoords[2] -= 0.01; // move down
-        if (this._svc.keyCtrl.getKeyState(" ")) this._geodeticCoords[2] += 0.01; // move up
+        if (this._svc.keyCtrl.getKeyState("ArrowUp")) this._geoCoords[1] += 0.01; // move north
+        if (this._svc.keyCtrl.getKeyState("ArrowDown")) this._geoCoords[1] -= 0.01; // move south
+        if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geoCoords[0] -= 0.01; // move west
+        if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geoCoords[0] += 0.01; // move east
+        if (this._svc.keyCtrl.getKeyState("Shift")) this._geoCoords[2] -= 0.01; // move down
+        if (this._svc.keyCtrl.getKeyState(" ")) this._geoCoords[2] += 0.01; // move up
+    }
+    private fixedFloats(arr: number[], digits: number = 4): string[] {
+        return arr.map((v) => v.toFixed(digits));
+    }
+    private toDegs(arr: number[]): string[] {
+        return arr.map((v) => (v * 180 / Math.PI).toFixed(2) + "°");
     }
     private updateText(): void {
         const now = Date.now();
@@ -133,8 +140,8 @@ export class TestPage implements AfterViewInit, OnDestroy {
             this._lastIntFps = intfps;
             this.fpsText = `FPS: ${fps.toFixed(2)}`;
         }
-        this.coordsText = `Coords: [${this._geodeticCoords[0].toFixed(4)}, ${this._geodeticCoords[1].toFixed(4)}, ${this._geodeticCoords[2].toFixed(4)}]`;
-        this.attText = `Attitude: [${this._attitude[0].toFixed(4)}, ${this._attitude[1].toFixed(4)}, ${this._attitude[2].toFixed(4)}]`;
+        this.coordsText = `Coords: [${this.fixedFloats(this._geoCoords).join(", ")}]`;
+        this.attText = `Attitude: [${this.toDegs(this._attitude).join(", ")}]`;
     }
 }
 
