@@ -1,3 +1,4 @@
+import { RectangularCoords } from "../../geo";
 import { Vec } from "./vec";
 
 export class Vec3 extends Vec {
@@ -7,27 +8,36 @@ export class Vec3 extends Vec {
     public set x(value: number) { this._data[0] = value; }
     public set y(value: number) { this._data[1] = value; }
     public set z(value: number) { this._data[2] = value; }
-    constructor(x: number = 0, y: number = 0, z: number = 0) {
-        super(3);
-        this._data[0] = x;
-        this._data[1] = y;
-        this._data[2] = z;
+    constructor(length: number = 3, initValue: number = 0, arr: Array<number> = []) {
+        if (length !== 3) throw new Error("Vec3 constructor: length must be 3");
+        if (arr.length !== 3) throw new Error("Vec3 constructor: arr must be of length 3");
+        super(length, initValue, arr);
+    }
+
+    static New(x: number, y: number, z: number): Vec3 {
+        return new Vec3(3, 0, [x, y, z]);
+    }
+    static FromRectangularCoords(coords: RectangularCoords): Vec3 {
+        return new Vec3(3, 0, [coords[0], coords[1], coords[2]]);
+    }
+    static FromArray(arr: number[]): Vec3 {
+        return new Vec3(3, 0, arr);
     }
 
     rotateX(rad: number): Vec3 {
         const c = Math.cos(rad);
         const s = Math.sin(rad);
-        return new Vec3(this.x, this.y * c - this.z * s, this.y * s + this.z * c);
+        return Vec3.New(this.x, this.y * c - this.z * s, this.y * s + this.z * c);
     }
     rotateY(rad: number): Vec3 {
         const c = Math.cos(rad);
         const s = Math.sin(rad);
-        return new Vec3(this.x * c + this.z * s, this.y, -this.x * s + this.z * c);
+        return Vec3.New(this.x * c + this.z * s, this.y, -this.x * s + this.z * c);
     }
     rotateZ(rad: number): Vec3 {
         const c = Math.cos(rad);
         const s = Math.sin(rad);
-        return new Vec3(this.x * c - this.y * s, this.x * s + this.y * c, this.z);
+        return Vec3.New(this.x * c - this.y * s, this.x * s + this.y * c, this.z);
     }
     rotateAxis(rad: number, axis: Vec3): Vec3 {
         const c = Math.cos(rad);
@@ -45,13 +55,16 @@ export class Vec3 extends Vec {
         const x3 = x * c + x2 - w * y * s + v * z * s;
         const y3 = y * c + y2 + w * x * s - u * z * s;
         const z3 = z * c + z2 - v * x * s + u * y * s;
-        return new Vec3(x3, y3, z3);
+        return Vec3.New(x3, y3, z3);
     }
     Cross(v: Vec3): Vec3 {
-        return new Vec3(
+        return Vec3.New(
             this.y * v.z - this.z * v.y,
             this.z * v.x - this.x * v.z,
             this.x * v.y - this.y * v.x
         );
+    }
+    ToRectangularCoords(): RectangularCoords {
+        return [this.x, this.y, this.z] as RectangularCoords;
     }
 }

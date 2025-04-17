@@ -8,7 +8,7 @@ export class Rectangle2D {
         return new Rectangle2D(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
     }
     public get center(): Vec2 {
-        return new Vec2(this.x + this.w / 2, this.y + this.h / 2);
+        return Vec2.New(this.x + this.w / 2, this.y + this.h / 2);
     }
     public get left(): number {
         return this.x;
@@ -23,16 +23,16 @@ export class Rectangle2D {
         return this.y + this.h;
     }
     public get topLeft(): Vec2 {
-        return new Vec2(this.x, this.y);
+        return Vec2.New(this.x, this.y);
     }
     public get topRight(): Vec2 {
-        return new Vec2(this.x + this.w, this.y);
+        return Vec2.New(this.x + this.w, this.y);
     }
     public get bottomLeft(): Vec2 {
-        return new Vec2(this.x, this.y + this.h);
+        return Vec2.New(this.x, this.y + this.h);
     }
     public get bottomRight(): Vec2 {
-        return new Vec2(this.x + this.w, this.y + this.h);
+        return Vec2.New(this.x + this.w, this.y + this.h);
     }
     public get leftSide(): LineSeg2D {
         return new LineSeg2D(this.topLeft, this.bottomLeft);

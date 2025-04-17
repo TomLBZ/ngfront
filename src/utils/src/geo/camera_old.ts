@@ -14,10 +14,10 @@ export class Camera {
     private _roll: number = 0;
     private _yaw: number = 0;
     private _rE: number = Earth.R;
-    private _pos: Vec3 = new Vec3(0, 0, 0);
-    private _Z: Vec3 = new Vec3(0, 0, 1);
-    private _Y: Vec3 = new Vec3(0, 1, 0);
-    private _X: Vec3 = new Vec3(1, 0, 0);
+    private _pos: Vec3  = Vec3.New(0, 0, 0);
+    private _Z: Vec3    = Vec3.New(0, 0, 1);
+    private _Y: Vec3    = Vec3.New(0, 1, 0);
+    private _X: Vec3    = Vec3.New(1, 0, 0);
     private _R: Mat3 = new Mat3();
     private _RT: Mat3 = new Mat3();
     private _fov: Vec3 = new Vec3();
@@ -39,9 +39,9 @@ export class Camera {
     public get front(): Vec3 { return this._Y; }
     public get right(): Vec3 { return this._X; }
     public get cf_epos(): Vec3 { return this._RT.MulV(this._pos.Neg()); } // earth position in camera frame
-    public get cf_eX(): Vec3 { return new Vec3(this._X.x, this._Y.x, this._Z.x); } // earth's up in camera frame
-    public get cf_eY(): Vec3 { return new Vec3(this._X.y, this._Y.y, this._Z.y); } // earth's front in camera frame
-    public get cf_eZ(): Vec3 { return new Vec3(this._X.z, this._Y.z, this._Z.z); } // earth's right in camera frame
+    public get cf_eX(): Vec3 { return Vec3.New(this._X.x, this._Y.x, this._Z.x); } // earth's up in camera frame
+    public get cf_eY(): Vec3 { return Vec3.New(this._X.y, this._Y.y, this._Z.y); } // earth's front in camera frame
+    public get cf_eZ(): Vec3 { return Vec3.New(this._X.z, this._Y.z, this._Z.z); } // earth's right in camera frame
     private initAxis() {
         this._Z = this._pos.Norm();
         this._Y = Earth.getNorthAtPos(this._Z);
@@ -59,7 +59,7 @@ export class Camera {
         this._X = this._Y.Cross(this._Z).Norm();
     }
     private updateMat() {
-        this._R = new Mat3([
+        this._R = Mat3.New([
             this._X.x, this._Y.x, this._Z.x,
             this._X.y, this._Y.y, this._Z.y,
             this._X.z, this._Y.z, this._Z.z
@@ -94,7 +94,7 @@ export class Camera {
         const ytan = Math.tan(halfFovRads.y);
         const rtan = Math.sqrt(xtan * xtan + ytan * ytan);
         const rfov = Math.atan(rtan) * 2 * 180 / Math.PI;
-        this._fov = new Vec3(fov.x, fov.y, rfov);
+        this._fov = Vec3.New(fov.x, fov.y, rfov);
         const lnglatalt = pIsXYZ ? Earth.getLngLatAlt(p) : p;
         this._lng = lnglatalt.x;
         this._lat = lnglatalt.y;
@@ -117,8 +117,8 @@ export class Camera {
         const backplane_x = tr_back_intersec.Sub(tl_back_intersec).Norm();
         const backplane_y = bl_back_intersec.Sub(tl_back_intersec).Norm();
         const earth = new Circle2D(new Vec2(), Earth.R); // backplane always passes through the origin, so earth is a circle on the backplane
-        const tl_on_plane = new Vec2(tl_back_intersec.Dot(backplane_x), tl_back_intersec.Dot(backplane_y));
-        const br_on_plane = new Vec2(br_back_intersec.Dot(backplane_x), br_back_intersec.Dot(backplane_y));
+        const tl_on_plane = Vec2.New(tl_back_intersec.Dot(backplane_x), tl_back_intersec.Dot(backplane_y));
+        const br_on_plane = Vec2.New(br_back_intersec.Dot(backplane_x), br_back_intersec.Dot(backplane_y));
         const bounding_rect = Rectangle2D.fromPoints(tl_on_plane, br_on_plane);
         // clip the earth circle using the 4 corners of the frustum (in the backplane)
         // TODO: find a better way to calculate the camera footprint.

@@ -10,7 +10,7 @@ export class Earth {
     public static readonly RP: number = 6356752.3; // meters
     public static readonly C: number = 2 * Math.PI * this.R; // meters
     public static readonly Tilt: number = 23.44 * Math.PI / 180; // radians
-    public static readonly North: Vec3 = new Vec3(0, 0, 1);
+    public static readonly North: Vec3 = Vec3.New(0, 0, 1);
 
     // degrees to radians
     private static d2r(d: number): number {
@@ -39,14 +39,14 @@ export class Earth {
         const x = r * cosLat * cosLng;
         const y = r * cosLat * sinLng;
         const z = r * sinLat;
-        return new Vec3(x, y, z);
+        return Vec3.New(x, y, z);
     }
     // returns the lng and lat and alt of a point on the surface of the earth given its position vector.
     public static getLngLatAlt(p: Vec3): Vec3 {
         const r = p.Len();
         const lng = Math.atan2(p.y, p.x);
         const lat = Math.asin(p.z / r);
-        return new Vec3(lng * 180 / Math.PI, lat * 180 / Math.PI, r - this.getRadius(lat));
+        return Vec3.New(lng * 180 / Math.PI, lat * 180 / Math.PI, r - this.getRadius(lat));
     }
     // returns the north vector on a plane perpendicular to the surface of the earth at a given coordinate.
     public static getNorthAtPos(p: Vec3): Vec3 { // p is the position vector
@@ -75,6 +75,6 @@ export class Earth {
     public static getSunPositionVector(date: Date): Vec3 {
         this.setParams(date);
         const [x, y, z] = Astro.sunDataToSunPositionVectorEcef(this.sunData);
-        return new Vec3(x, y, z).Norm();
+        return Vec3.New(x, y, z).Norm();
     }
 }

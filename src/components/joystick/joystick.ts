@@ -78,7 +78,7 @@ export class JoystickComponent {
         this.y_offset = limitedY;
         this.horizontalValue = limitedX / this.radius;
         this.verticalValue = -limitedY / this.radius;
-        this.valueChanged.emit(new Vec2(this.horizontalValue, this.verticalValue));
+        this.valueChanged.emit(Vec2.New(this.horizontalValue, this.verticalValue));
     }
 
     onPointerUp(event: PointerEvent): void {

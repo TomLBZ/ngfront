@@ -11,7 +11,7 @@ import { Vec2 } from "../../../utils/math";
 })
 export class ControlsPage {
     value: number = 0.0;
-    xy: Vec2 = new Vec2(0, 0);
+    xy: Vec2 = Vec2.New(0, 0);
     sensitivity: number = 0.1;
     private num2Str(n: number, dp: number): string {
         return n.toFixed(dp);

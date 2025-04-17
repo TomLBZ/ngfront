@@ -4,8 +4,14 @@ export class Vec {
     [index: number]: number;
     protected _data: Array<number> = [];
     private _Vec: Constructor<this> = this.constructor as Constructor<this>;
-    constructor(public readonly length: number, initValue: number = 0) {
-        this._data = new Array<number>(length).fill(initValue);
+    constructor(public readonly length: number, initValue: number = 0, arr: Array<number> = []) {
+        if (arr.length === 0) this._data = new Array<number>(length).fill(initValue);
+        else {
+            if (arr.length !== length) {
+                throw new Error("Dimension Mismatch!");
+            }
+            this._data = arr.slice();
+        }
     }
     protected throwOnDimensionMismatch(length: number): void {
         if (this.length !== length) {

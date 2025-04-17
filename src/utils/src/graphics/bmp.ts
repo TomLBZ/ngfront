@@ -64,7 +64,7 @@ export class Bitmap {
             for (let x = 0; x < this.width; x++) {
                 const xx = 2 * x / this.width - 1; // normalize x to [-1, 1]
                 const yy = 2 * (flipy ? this.height - y : y) / this.height - 1; // normalize y to [-1, 1]
-                const p = new Vec2(xx, yy);
+                const p = Vec2.New(xx, yy);
                 const d = sdf(p);
                 // make the weight of the lineColor exponentially close to 1 as d approaches 0
                 const lineColorWeight = Math.exp(-d * d / epsilon);

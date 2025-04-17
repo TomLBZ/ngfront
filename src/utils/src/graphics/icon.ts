@@ -7,10 +7,10 @@ export class Icon {
     private static epsilon = 0.01;
     private static get r() { return 1 - Icon.epsilon }
     static polyPlaneVecs = [
-        new Vec2(-1, -1),
-        new Vec2(0, 1),
-        new Vec2(1, -1),
-        new Vec2(0, -0.5)
+        Vec2.New(-1, -1),
+        Vec2.New(0, 1),
+        Vec2.New(1, -1),
+        Vec2.New(0, -0.5)
     ];
     static Circle(iconSize: number, fillColor: Color, lineColor?: Color, epsilon: number = Icon.epsilon) {
         const bmp = new Bitmap(iconSize, iconSize);

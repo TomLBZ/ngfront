@@ -30,10 +30,10 @@ export class SDF {
     }
 
     static isoTriangle(p: Vec2, q: Vec2) {
-        const pp = new Vec2(Math.abs(p.x), p.y - q.y);
-        const qq = new Vec2(q.x, -q.y);
+        const pp = Vec2.New(Math.abs(p.x), p.y - q.y);
+        const qq = Vec2.New(q.x, -q.y);
         const a = pp.Sub(qq.mul(SDF.clamp(pp.Dot(qq) / qq.Dot(qq), 0, 1)));
-        const b = pp.Sub(qq.Mul(new Vec2(SDF.clamp(pp.x / qq.x, 0, 1), 1)));
+        const b = pp.Sub(qq.Mul(Vec2.New(SDF.clamp(pp.x / qq.x, 0, 1), 1)));
         const k = Math.sign(qq.y);
         const d = Math.min(a.Dot(a), b.Dot(b));
         const s = Math.max(k * (pp.x * qq.y - pp.y * qq.x), k * (pp.y - qq.y));

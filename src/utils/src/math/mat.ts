@@ -3,8 +3,14 @@ import { Constructor } from "../../types";
 export class Mat {
     protected _data: Array<number> = [];
     private _Mat: Constructor<this> = this.constructor as Constructor<this>;
-    constructor(private r: number, private c: number, initValue: number = 0) {
-        this._data = new Array<number>(r * c).fill(initValue);
+    constructor(private readonly r: number, private readonly c: number, initValue: number = 0, arr: Array<number> = []) {
+        if (arr.length === 0) this._data = new Array<number>(r * c).fill(initValue);
+        else {
+            if (arr.length !== r * c) {
+                throw new Error("Array length does not match matrix dimensions");
+            }
+            this._data = arr.slice();
+        }
     }
     protected throwOnDimensionMismatch(r: number, c: number): void {
         if (this.r !== r || this.c !== c) {
