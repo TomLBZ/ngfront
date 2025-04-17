@@ -16,7 +16,7 @@ export class LineSeg2D {
         const bp = p.Sub(this.b);
         if (ab.Dot(ap) < 0) return ap.Len();
         if (ab.Dot(bp) > 0) return bp.Len();
-        const perp_vec = new Vec2(-ab.y, ab.x).Norm();
+        const perp_vec = Vec2.New(-ab.y, ab.x).Norm();
         return perp_vec.Dot(ap);
     }
     public projectPoint(p: Vec2): Vec2 {
@@ -33,12 +33,12 @@ export class LineSeg2D {
         const a2 = line.a, b2 = line.b;
         const d1 = b1.Sub(a1), d2 = b2.Sub(a2);
         const d = d1.x * d2.y - d1.y * d2.x;
-        if (d === 0) return new Vec2(Infinity, Infinity);
+        if (d === 0) return Vec2.New(Infinity, Infinity);
         const c1 = a1.x * b1.y - a1.y * b1.x;
         const c2 = a2.x * b2.y - a2.y * b2.x;
         const x = (c1 * d2.x - c2 * d1.x) / d;
         const y = (c1 * d2.y - c2 * d1.y) / d;
-        return new Vec2(x, y);
+        return Vec2.New(x, y);
     }
     public intersectCircle(circle: Circle2D): Vec2[] {
         const p = this.a.Sub(circle.center);
@@ -61,7 +61,7 @@ export class Line2D {
         return new Line2D(p1, p2.Sub(p1));
     }
     public distanceToPoint(p: Vec2): number {
-        const perp_vec = new Vec2(-this.v.y, this.v.x);
+        const perp_vec = Vec2.New(-this.v.y, this.v.x);
         return perp_vec.Dot(p.Sub(this.p)) / perp_vec.Len();
     }
     public projectPoint(p: Vec2): Vec2 {
@@ -74,10 +74,10 @@ export class Line2D {
         const a1 = this.v.x, b1 = this.v.y, c1 = this.v.Dot(this.p);
         const a2 = line.v.x, b2 = line.v.y, c2 = line.v.Dot(line.p);
         const det = a1 * b2 - a2 * b1;
-        if (det === 0) return new Vec2(Infinity, Infinity);
+        if (det === 0) return Vec2.New(Infinity, Infinity);
         const x = (b2 * c1 - b1 * c2) / det;
         const y = (a1 * c2 - a2 * c1) / det;
-        return new Vec2(x, y);
+        return Vec2.New(x, y);
     }
     public intersectCircle(circle: Circle2D): Vec2[] {
         const p = this.p.Sub(circle.center);

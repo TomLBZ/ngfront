@@ -15,13 +15,13 @@ export class ObserverOnEarth {
     public get up(): Vec3 { return this._Z; }
     public get front(): Vec3 { return this._Y; }
     public get right(): Vec3 { return this._X; }
-    public get eX(): Vec3 { return new Vec3(this._X.x, this._Y.x, this._Z.x); } // earth's up in observer frame
-    public get eY(): Vec3 { return new Vec3(this._X.y, this._Y.y, this._Z.y); } // earth's front in observer frame
-    public get eZ(): Vec3 { return new Vec3(this._X.z, this._Y.z, this._Z.z); } // earth's right in observer
+    public get eX(): Vec3 { return Vec3.New(this._X.x, this._Y.x, this._Z.x); } // earth's up in observer frame
+    public get eY(): Vec3 { return Vec3.New(this._X.y, this._Y.y, this._Z.y); } // earth's front in observer frame
+    public get eZ(): Vec3 { return Vec3.New(this._X.z, this._Y.z, this._Z.z); } // earth's right in observer
     private _R!: Mat3;
     private _RT!: Mat3;
     private update() {
-        this._R = new Mat3([
+        this._R = Mat3.New([
             this._X.x, this._Y.x, this._Z.x,
             this._X.y, this._Y.y, this._Z.y,
             this._X.z, this._Y.z, this._Z.z
