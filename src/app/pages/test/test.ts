@@ -13,6 +13,9 @@ import { Component, ViewChild, OnInit, OnDestroy, AfterViewInit, ElementRef } fr
 // import { env } from "../../app.config";
 import { RenderPipeline, RenderHelper, UniformRecord, ProgramSource, PassSource } from "../../../utils/gpu";
 import { Queue } from "../../../utils/src/ds/q";
+import { Attitude, GeodeticCoords } from "../../../utils/geo";
+import { AppService } from "../../app.service";
+import { GeoCam } from "../../../utils/src/geo/cam";
 
 @Component({
     selector: 'page-test',
@@ -27,7 +30,15 @@ export class TestPage implements AfterViewInit, OnDestroy {
     private _lastFrameTime: number = Date.now();
     private _running: boolean = false;
     private _lastIntFps: number = 0;
-    public fpsText: string = "FPS: 0.00";
+    private _geodeticCoords: GeodeticCoords = [0, 0, 0]; // longitude, latitude, altitude
+    private _attitude: Attitude = [0, 0, 0]; // roll, pitch, yaw
+    private fpsText: string = "FPS: 0.00";
+    private attText: string = "Attitude: [0, 0, 0]";
+    private coordsText: string = "Coords: [0, 0, 0]";
+    public get Text(): string {
+        return this.fpsText + "\n" + this.attText + "\n" + this.coordsText;
+    }
+    constructor(private _svc: AppService) {}
     @ViewChild('canvas', {static: true}) canvasRef!: ElementRef<HTMLCanvasElement>;
     ngAfterViewInit(): void {
         const gl: WebGL2RenderingContext = this.canvasRef.nativeElement.getContext("webgl2") as WebGL2RenderingContext;
@@ -74,6 +85,10 @@ export class TestPage implements AfterViewInit, OnDestroy {
         const resolution = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
         const minres = Math.min(...resolution);
         const scale = [resolution[0] / minres, resolution[1] / minres];
+        this.controllerUpdate();
+        // const cam = new GeoCam(this._geodeticCoords, this._attitude);
+        // const epos = cam.earthPosInCamFrame;
+        const epos = [0, 16371000, 0]; // earth position in camera frame
         const globalUniforms: UniformRecord = {
             "u_scale": scale,
         };
@@ -82,17 +97,33 @@ export class TestPage implements AfterViewInit, OnDestroy {
                 "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
                 "u_minres": minres, // minimum resolution
                 "u_sundir": [0, Math.sqrt(3) / 2, 0.5], // sun direction in observer frame
-                "u_epos": [0, 16371000, 0], // earth position in observer frame
+                "u_epos": epos, // earth position in observer frame
                 "u_escale": 1e-6, // scale factors for earth and sun
             },
         };
         this._pipeline.setGlobalUniforms(globalUniforms);
         this._pipeline.renderAll(uniforms);
-        this.updateFps();
+        this.updateText();
         if (this._running) requestAnimationFrame(() => this.drawFrame());
         else this._pipeline.dispose();
     }
-    private updateFps(): void {
+    private controllerUpdate(): void {
+        // update attitude based on key presses
+        if (this._svc.keyCtrl.getKeyState("a")) this._attitude[2] -= 0.01; // yaw left
+        if (this._svc.keyCtrl.getKeyState("d")) this._attitude[2] += 0.01; // yaw right
+        if (this._svc.keyCtrl.getKeyState("w")) this._attitude[1] -= 0.01; // pitch up
+        if (this._svc.keyCtrl.getKeyState("s")) this._attitude[1] += 0.01; // pitch down
+        if (this._svc.keyCtrl.getKeyState("q")) this._attitude[0] -= 0.01; // roll left
+        if (this._svc.keyCtrl.getKeyState("e")) this._attitude[0] += 0.01; // roll right
+        // update geodetic coordinates based on key presses
+        if (this._svc.keyCtrl.getKeyState("ArrowUp")) this._geodeticCoords[1] += 0.01; // move north
+        if (this._svc.keyCtrl.getKeyState("ArrowDown")) this._geodeticCoords[1] -= 0.01; // move south
+        if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geodeticCoords[0] -= 0.01; // move west
+        if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geodeticCoords[0] += 0.01; // move east
+        if (this._svc.keyCtrl.getKeyState("Shift")) this._geodeticCoords[2] -= 0.01; // move down
+        if (this._svc.keyCtrl.getKeyState(" ")) this._geodeticCoords[2] += 0.01; // move up
+    }
+    private updateText(): void {
         const now = Date.now();
         this._frameTimeQ.enqueue(now - this._lastFrameTime);
         this._lastFrameTime = now;
@@ -102,6 +133,8 @@ export class TestPage implements AfterViewInit, OnDestroy {
             this._lastIntFps = intfps;
             this.fpsText = `FPS: ${fps.toFixed(2)}`;
         }
+        this.coordsText = `Coords: [${this._geodeticCoords[0].toFixed(4)}, ${this._geodeticCoords[1].toFixed(4)}, ${this._geodeticCoords[2].toFixed(4)}]`;
+        this.attText = `Attitude: [${this._attitude[0].toFixed(4)}, ${this._attitude[1].toFixed(4)}, ${this._attitude[2].toFixed(4)}]`;
     }
 }
 
