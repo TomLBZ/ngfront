@@ -76,13 +76,14 @@ export class Mat {
         }
     }
     toString(): string {
-        let s = "";
+        let s = "[";
         for (let i = 0; i < this.r; i++) {
             for (let j = 0; j < this.c; j++) {
-                s += this.get(i, j) + " ";
+                s += this.get(i, j) + ", ";
             }
-            s += "\n";
+            s = s.slice(0, -2) + ";\n";
         }
+        s = s.slice(0, -2) + "]";
         return s;
     }
     toArray(): Array<number> {
