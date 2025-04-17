@@ -48,6 +48,12 @@ export class GeoCam { // a camera on Earth
      * - The x-axis points to the right of the camera
      * - The y-axis points to the front of the camera
      * - The z-axis points to the top of the camera
+     * Before transformation, the camera axes lines up with the ENU axes.
+     * The transformation is done by rotating the ENU frame to the camera frame.
+     * The rotation is done in the following order:
+     * - yaw (rotation around the z-axis)
+     * - pitch (rotation around the x-axis)
+     * - roll (rotation around the y-axis)
      * @param attitude attitude of the camera in radians
      * @returns rotation matrix
      */
@@ -60,9 +66,9 @@ export class GeoCam { // a camera on Earth
         const cosYaw = Math.cos(yaw);
         const sinYaw = Math.sin(yaw);
         return Mat3.New([
-            -sinYaw, cosYaw * sinPitch, cosYaw * cosPitch,
-            -cosYaw * sinRoll - sinYaw * cosRoll * sinPitch, -sinYaw * sinRoll + cosYaw * cosRoll * sinPitch, cosPitch * sinRoll,
-            cosYaw * cosRoll * sinPitch - sinYaw * sinRoll, -sinYaw * cosRoll * sinPitch - cosYaw * sinRoll, cosPitch * cosRoll
+            cosYaw * cosPitch, cosYaw * sinPitch * sinRoll - sinYaw * cosRoll, cosYaw * sinPitch * cosRoll + sinYaw * sinRoll,
+            sinYaw * cosPitch, sinYaw * sinPitch * sinRoll + cosYaw * cosRoll, sinYaw * sinPitch * cosRoll - cosYaw * sinRoll,
+            -sinPitch, cosPitch * sinRoll, cosPitch * cosRoll
         ]);
     }
 }
