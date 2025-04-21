@@ -1,6 +1,11 @@
 export type UniResponseType = 'json' | 'blob'; // | 'text' | 'arraybuffer' are not supported yet
 export type FormDataEntry = { name: string, value: FormDataEntryValue };
 
+export interface AppConfig {
+    apiUrl: string;
+    wsUrl: string;
+    mapKey: string;
+}
 export interface APIResponse {
     "success": boolean;
     "msg": string;
