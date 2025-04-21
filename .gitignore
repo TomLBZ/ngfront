@@ -43,3 +43,4 @@ Thumbs.db
 
 # Secret files
 public/assets/config.json
+production/config.json
