@@ -1,0 +1,11 @@
+name: ngfront-prod
+services:
+  ngfront-prod:
+    image: ngfront-prod
+    build:
+      context: ..
+      dockerfile: production/Dockerfile
+    container_name: ngfront-prod
+    restart: always
+    ports:
+      - "14280:80"
