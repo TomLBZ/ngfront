@@ -43,4 +43,9 @@ Thumbs.db
 
 # Secret files
 public/assets/config.json
-production/config.json
+production/*
+!production/compose.yaml
+!production/Dockerfile
+!production/default.conf
+!production/README.md
+!production/config_template.json
