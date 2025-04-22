@@ -2,6 +2,7 @@ export type UniResponseType = 'json' | 'blob'; // | 'text' | 'arraybuffer' are n
 export type FormDataEntry = { name: string, value: FormDataEntryValue };
 
 export interface AppConfig {
+    production: boolean;
     apiUrl: string;
     wsUrl: string;
     mapKey: string;

@@ -6,6 +6,7 @@ import { AppConfig } from './app.interface';
 import { StructValidator } from '../utils/ds';
 
 export const env: AppConfig = {
+    production: false,
     apiUrl: "",
     wsUrl: "",
     mapKey: ""
@@ -31,6 +32,7 @@ function getConfig(jsonPath: string): Promise<AppConfig> {
 }
 
 function applyConfig(config: AppConfig): void {
+    env.production = config.production;
     env.apiUrl = config.apiUrl;
     env.wsUrl = config.wsUrl;
     env.mapKey = config.mapKey;
