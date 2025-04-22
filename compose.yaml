@@ -11,7 +11,4 @@ services:
     stdin_open: true
     volumes:
       - .:/app
-    # production command
-    # command: npm install && npm start
-    # development command, halt the container
     command: /bin/bash

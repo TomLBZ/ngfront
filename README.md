@@ -9,21 +9,26 @@ Auto-reload on code changes.
     ```bash
     git clone https://github.com/TomLBZ/ngfront.git/ && cd ngfront
     ```
-2. Create and edit the src/assets/config.ts file
+2. Create a config file and edit it
     ```bash
-    cp src/configs/config_template.ts src/assets/config.ts
-    vim src/configs/config.ts
+    cp production/config_template.json public/assets/config.json
+    vim production/config.json
     ```
-3. Toggle between development and production mode by changing the `command` field in the `compose.yaml` file
+    - For details on the config file, refer to the [Production Readme](production/README.md).
+## Development
+1. Install dependencies
     ```bash
-    vim compose.yaml
+    npm install
     ```
-4. Start the container
+2. Build the Docker image
     ```bash
     docker build -t ngfront .
+    ```
+3. Start the container
+    ```bash
     docker compose up -d
     ```
-    Development Mode Only:
+4. Start the dev server
     ```bash
     # Access the container
     docker exec -it ngfront bash
@@ -34,3 +39,14 @@ Auto-reload on code changes.
     ```bash
     curl http://localhost:14200
     ```
+6. Prepare the production build
+    ```bash
+    # Inside the container
+    ng build
+    ```
+7. Stop the container
+    ```bash
+    docker compose down
+    ```
+## Production
+See the [Production Readme](production/README.md) for details on how to run the production build.
