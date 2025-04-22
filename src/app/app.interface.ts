@@ -7,6 +7,14 @@ export interface AppConfig {
     wsUrl: string;
     mapKey: string;
 }
+export interface UniPostStruct {
+    op: string;
+    data?: any;
+}
+export interface HttpOptions {
+    responseType?: string,
+    observe?: string
+}
 export interface APIResponse {
     "success": boolean;
     "msg": string;
@@ -54,15 +62,18 @@ export interface Telemetry {
     throttle: number;
 }
 export interface ConfigFileType {
-    id?: number;
     file_type: string;
     airframe_type: number;
 }
 export interface ConfigFile {
     id: number;
     name: string;
-    description: string;
     type: ConfigFileType;
+}
+export interface LogMetadataQuery {
+    date?: string;
+    name?: string;
+    time?: string;
 }
 export interface LogEntry {
     ac_id: number;
@@ -81,4 +92,8 @@ export interface MissionMetadata {
     takeoff_completion_time: string;
     lead_mission_start_time: string;
     lead_mission_completed_time: string;
+}
+export interface MissionSettings {
+    selected_files: Array<ConfigFile>;
+    fg_enable: boolean;
 }
