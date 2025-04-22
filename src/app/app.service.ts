@@ -2,18 +2,23 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { env } from './app.config';
-import { UniResponseType, FormDataEntry, APIResponse } from './app.interface';
+import { UniResponseType, FormDataEntry, APIResponse, HttpOptions } from './app.interface';
 import { Callback } from '../utils/types';
 import { KeyController } from '../utils/src/ctrl/key';
 import { StructValidator } from '../utils/src/ds/validate';
+import { AeroBridge } from './app.br';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppService {
     private readonly apiUrl = env.apiUrl;
+    private readonly production = env.production;
     public readonly keyCtrl = new KeyController();
-    constructor(private http: HttpClient) {}
+    private readonly br: AeroBridge;
+    constructor(private http: HttpClient) {
+        this.br = new AeroBridge(this.apiUrl, this.http);
+    }
 
     private uniPost(op: string, payload: any, responseType: UniResponseType, ...formData: FormDataEntry[]): Observable<any> {
         const options: any = {};
@@ -46,8 +51,45 @@ export class AppService {
         }
     }
     
-    public callAPI<T = any, E = void>(op: string, next: Callback<T>, data: any = {}, error: Callback<E> = console.log, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
+    public callAPI<T = any, E = void | any>(op: string, next: Callback<T>, data: any = {}, error: Callback<E> = console.log, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
+        if (this.production) this.callAPIDirect(op, next, data, error, resType, ...formData);
+        else this.callAPIBridged(op, next, data, error, resType, ...formData);
+    }
+
+    public callAPIBridged<T = any, E = void | any>(op: string, next: Callback<T>, data: any = {}, error: Callback<E> = console.log, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
         this.uniPost(op, data, resType, ...formData).subscribe({ next, error });
+    }
+
+    private generatePayload(data: any, ...formData: FormDataEntry[]): FormData {
+        const formDataObj = new FormData();
+        const fileObj: any = {}; // {filename: File}
+        for (const fd of formData) {
+            if (fd.value instanceof File) fileObj[fd.value.name] = fd.value;
+        }
+        const fileCount = Object.keys(fileObj).length;
+        if (fileCount > 1) {
+            for (const k in fileObj) {
+                formDataObj.append('files', fileObj[k], k); // append multiple files as 'files'
+            }
+        } else if (fileCount > 0) {
+            const k = Object.keys(fileObj)[0];
+            formDataObj.append('file', fileObj[k], k); // append single file as 'file'
+        }
+        for (const key in data) {
+            if (data[key] instanceof File) formDataObj.append(key, data[key], key);
+            else formDataObj.append(key, JSON.stringify(data[key]));
+        }
+        return formDataObj;
+    }
+
+    public callAPIDirect<T = any, E = void | any>(op: string, next: Callback<T>, data: any = {}, error: Callback<E> = console.log, resType: UniResponseType = 'json', ...formData: FormDataEntry[]): void {
+        const opt: HttpOptions = resType === 'blob' ? {
+            responseType: resType,
+            observe: 'response'
+        } : {} as HttpOptions;
+        const payload: any = formData.length === 0 ? data 
+            : this.generatePayload(data, ...formData);
+        this.br.uniPost({op: op, data: payload}, opt).then(next, error);
     }
 
     public isValidAPIResponse(d: any): d is APIResponse {

@@ -3,9 +3,9 @@ import { AppService } from "../../app.service";
 import { ConfigFile, APIResponse, ConfigFileType } from "../../app.interface";
 import { HttpResponse } from "@angular/common/http";
 import { FormDataEntry } from "../../app.interface";
-import { StructValidator } from "../../../utils/src/ds/validate";
-import { DictN, Callback } from "../../../utils/types";
 import { FileOpComponent } from "../../../components/fileop/fileop";
+import { Callback, DictN } from "../../../utils/types";
+import { StructValidator } from "../../../utils/ds";
 
 @Component({
     selector: 'page-configs',
@@ -42,13 +42,6 @@ export class ConfigsPage implements OnInit, OnDestroy {
         const atype = num === this.F ? 0 : (num === this.D_JSB || num === this.D_PAP ? 0 : 1);
         return { file_type: ftype, airframe_type: atype };
     }
-    private cfgFileToType(cfg: ConfigFile): ConfigFileType {
-        return {
-            id: cfg.id,
-            file_type: cfg.type.file_type,
-            airframe_type: cfg.type.airframe_type
-        } as ConfigFileType;
-    }
     private numberToDefaultName(num: number): string {
         const ext = num === this.F ? "" : ".xml";
         const name = this.numToName(num);
@@ -71,12 +64,10 @@ export class ConfigsPage implements OnInit, OnDestroy {
                     (dd.data.simulation_files_config as Array<ConfigFile>).forEach((cfg: ConfigFile) => this.fileDict[this.typeToNumber(cfg.type)].push(cfg));
                     for (const key in this.fileDict) {
                         const k: number = parseInt(key);
-                        const type: ConfigFileType = this.numberToType(k);
                         const file: ConfigFile = {
                             id: -1,
                             name: this.numberToDefaultName(k),
-                            description: "",
-                            type: type
+                            type: this.numberToType(k)
                         }
                         this.fileDict[k].unshift(file);
                     }
@@ -103,7 +94,7 @@ export class ConfigsPage implements OnInit, OnDestroy {
                     a.remove();
                 } else alert("Download failed: Invalid Blob Type!\n" + d.body.type);
             } else alert("Download failed: Empty Data Response!");
-        }, this.cfgFileToType(items[0]), console.error, 'blob');
+        }, items[0], console.error, 'blob');
     }
     onFileOpUploadClicked(numType: number) {
         const input = document.createElement('input');
@@ -134,9 +125,7 @@ export class ConfigsPage implements OnInit, OnDestroy {
             alert("The default configuration is a reference for download only, it cannot be deleted!");
             return;
         }
-        const cfgType = this.cfgFileToType(items[0]);
-        if (cfgType.airframe_type === null || cfgType.airframe_type === undefined) cfgType.airframe_type = 0;
-        this._svc.callAPI("files/delete", this._res2str, cfgType);
+        this._svc.callAPI("files/delete", this._res2str, items[0]);
         const type = this.typeToNumber(items[0].type);
         this.fileDict[type] = this.fileDict[type].filter((cfg: ConfigFile) => cfg.id !== items[0].id);
     }
