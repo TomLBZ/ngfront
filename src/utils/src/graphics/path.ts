@@ -38,7 +38,9 @@ export class Path {
         return segments;
     }
     public get hash(): number {
-        return Hash.hash([this.id, this.color.hash, this.style, this.weight, this.closed ? 1 : 0, this._points.length]);
+        const ptsHash: number = Hash.hash(this._points.map(p => p.hash));
+        const propsHash: number = Hash.hash([this.color.hash, this.style, this.weight, this.closed ? 1 : 0, this._points.length]);
+        return Hash.hash([this.id, ptsHash, propsHash]);
     }
     constructor(id: number) {
         this.id = id;

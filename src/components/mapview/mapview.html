@@ -9,7 +9,7 @@
         (mapMouseDown)="onMapMouseDown($event)"
         (mapMouseUp)="onMapMouseUp($event)"
     >
-        @for (path of paths; track path.hash + $index) {
+        @for (path of paths; track path.id) {
             @let pathID = "path" + path.id.toString();
             <mgl-geojson-source [id]="pathID">
                 @for (segment of path.segments; track segment.hash) {
