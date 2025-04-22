@@ -2,13 +2,11 @@ name: ngfront-prod
 services:
   ngfront-prod:
     image: ngfront-prod
-    build:
-      context: ..
-      dockerfile: production/Dockerfile
+    build: .
     container_name: ngfront-prod
     restart: always
     volumes:
-      - ./config.json:/usr/share/nginx/html/assets/config.json:ro
       - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./config.json:/usr/share/nginx/html/assets/config.json:ro
     ports:
       - "14280:80"
