@@ -39,7 +39,6 @@ export class MonitorPage implements OnInit, OnDestroy {
     private readonly _wpGrp: MarkerGroup = new MarkerGroup(Icon.Circle(16, Color.Magenta));
     private readonly _mpath: Path = new Path(-1);
     private readonly _ppaths: Array<Path> = [];
-    private readonly _planePtsCache: Cache<Array<Point>> = new Cache<Array<Point>>();
     private readonly _colorsCache: Cache<Color> = new Cache<Color>();
     private readonly _leadColor: Color = Color.Red;
     private readonly _rtos: RTOS = new RTOS({
@@ -99,7 +98,6 @@ export class MonitorPage implements OnInit, OnDestroy {
         this._visibleTelemetryIndices.length = 0; // clear all visible telemetries
         this._telemetries.length = 0; // clear all telemetries
         this._planeMgrp.clearMarkers(); // clear all plane markers
-        this._planePtsCache.clear(); // clear all cached path points
         this._ppaths.splice(0, this._ppaths.length); // clear all plane paths
         this.runtimeSettings = { traces: 100, lead_id: 0 }; // reset runtime settings
         this.selectedMission = undefined; // reset selected mission
@@ -117,32 +115,24 @@ export class MonitorPage implements OnInit, OnDestroy {
             this._telemetries.push(v);
         });
         if (this._telemetries.length === 0) return;
-        this._ppaths.splice(0, this._ppaths.length); // clear old plane paths
         this._telemetries.forEach((t: Telemetry) => {
             const m = new Marker(t.lat, t.lon, t.id);
             m.alt = t.alt;
             m.hdg = t.hdg;
             this._planeMgrp.updateMarker(m);
-            if (!this._planePtsCache.has(t.id)) {
-                this._planePtsCache.set(t.id, []);
-            }
-            const path = new Path(t.id);
-            const points = this._planePtsCache.get(t.id);
-            const last = points.length > 0 ? points[points.length - 1] : undefined;
-            const newp = new Point(t.lon, t.lat);
-            if (last === undefined || !last.equals(newp)) points.push(newp); // add new point if it's different from the last
-            if (points.length > this.runtimeSettings.traces) points.splice(0, points.length - this.runtimeSettings.traces); // remove oldest points
-            if (t.id === this.selectedMission?.lead_id) {
-                this._colorsCache.set(t.id, this._leadColor);
-                this._planeMgrp.setColor(t.id, this._leadColor); // set lead plane Border
-            } else {
-                this._planeMgrp.setColor(t.id, Color.Transparent); // reset old lead plane Border
-                if (!this._colorsCache.has(t.id) || this._colorsCache.get(t.id) === this._leadColor) this._colorsCache.set(t.id, Color.Random());
-            }
-            path.color = this._colorsCache.get(t.id);
+            if (!this._colorsCache.has(t.id)) this._colorsCache.set(t.id, Color.Random());
+            const isLeader: boolean = t.id === this.selectedMission?.lead_id;
+            this._planeMgrp.setColor(t.id, isLeader ? this._leadColor : Color.Transparent); // set plane Border
+            const pathIdx = this._ppaths.findIndex((p: Path) => p.id === t.id);
+            const path = pathIdx >= 0 ? this._ppaths[pathIdx] : new Path(t.id);
+            path.color = isLeader ? this._leadColor : this._colorsCache.get(t.id);
             path.weight = 1;
-            path.setPoints(points);
-            this._ppaths.push(path);
+            const newp = new Point(t.lon, t.lat);
+            const isNew = path.last === undefined || !path.last.equals(newp); // check if new point is different from the last
+            if (isNew) path.addPoint(newp); // add new point if it's different from the last
+            if (path.length > this.runtimeSettings.traces) path.shift(); // remove oldest points
+            if (pathIdx < 0) this._ppaths.push(path); // add new path
+            else this._ppaths.splice(pathIdx, 1, path); // remove old path and add new path
         });
     }
     private stopTelemetry() {
