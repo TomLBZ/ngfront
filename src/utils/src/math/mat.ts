@@ -75,11 +75,11 @@ export class Mat {
             this.set(i, idx, arr[i]);
         }
     }
-    toString(): string {
+    toString(digits: number = 2): string {
         let s = "[";
         for (let i = 0; i < this.r; i++) {
             for (let j = 0; j < this.c; j++) {
-                s += this.get(i, j) + ", ";
+                s += this.get(i, j).toFixed(digits) + ", ";
             }
             s = s.slice(0, -2) + ";\n";
         }

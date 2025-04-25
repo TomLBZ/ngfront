@@ -216,7 +216,7 @@ export class Vec {
         }
         return v;
     }
-    toString(): string {
-        return `(${this._data.map((v) => v.toFixed(2)).join(", ")})`;
+    toString(digits: number = 2): string {
+        return `(${this._data.map((v) => v.toFixed(digits)).join(", ")})`;
     }
 }
