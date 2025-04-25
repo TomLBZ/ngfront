@@ -60,11 +60,10 @@ export class GeoCam { // a camera on Earth
     }
     private static buildLocalFrameQuat(posEcef: Vec3, type: CoordsFrameType): Quaternion {
         if (type === CoordsFrameType.ECEF) return Quaternion.I;
-        const up    = posEcef.Norm();                                   // radial up
-        let   north = up.Cross(Vec3.New(0, 0, 1));                      // rough
-        if (north.Len() < 1e-12) north = Vec3.New(0, 1, 0).Cross(up);   // polar fix
-        north = north.Cross(up).Norm();
-        const east  = north.Cross(up).Norm();
+        const up    = posEcef.Norm();           // local up vector in ecef frame: radially outward
+        const n     = Vec3.New(0, 0, 1);        // global north vector in ecef frame
+        const east  = n.Cross(up).Norm();       // local east vector in ecef frame
+        const north = up.Cross(east).Norm();    // local north vector in ecef frame
         let x: Vec3, y: Vec3, z: Vec3;
         if (type === CoordsFrameType.ENU) {
             x = east;  y = north;  z = up;           // ENU
