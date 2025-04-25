@@ -7,9 +7,10 @@ export const SUNR = 695660e3; // meters
 export const EER = 6378137.0; // meters, Earth equatorial radius
 export const EPR = 6356752.3142; // meters, Earth polar radius
 
-export enum LocalCoordsType {
+export enum CoordsFrameType {
     ENU = 'enu',
-    NED = 'ned'
+    NED = 'ned',
+    ECEF = 'ecef'
 }
 
 /**
