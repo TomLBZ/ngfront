@@ -48,18 +48,24 @@ export class Mat3 extends Mat {
             (a * e - b * d) / det
         ]);
     }
-    static fromEuler(roll: number, pitch: number, yaw: number): Mat3 {
+    static fromEuler(roll: number, pitch: number, yaw: number, reverseOrder: boolean = false): Mat3 {
         const cr = Math.cos(roll);
         const sr = Math.sin(roll);
         const cp = Math.cos(pitch);
         const sp = Math.sin(pitch);
         const cy = Math.cos(yaw);
         const sy = Math.sin(yaw);
-        return Mat3.New([
-            cp * cy, sr * sp * cy - cr * sy, cr * sp * cy + sr * sy,
-            cp * sy, sr * sp * sy + cr * cy, cr * sp * sy - sr * cy,
-            -sp, sr * cp, cr * cp
-        ]);
+        return reverseOrder ? 
+            Mat3.New([ // apply yaw first, then pitch, then roll
+                cp * cr, sy * sp * cr - cy * sr, cy * sp * cr + sy * sr,
+                cp * sr, sy * sp * sr + cy * cr, cy * sp * sr - sy * cr,
+                -sp, sy * cp, cy * cp
+            ]) :
+            Mat3.New([ // apply roll first, then pitch, then yaw
+                cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr,
+                sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr,
+                -sp, cp * sr, cp * cr
+            ]);
     }
     static fromAxisAngle(axis: Vec3, angle: number): Mat3 {
         const c = Math.cos(angle);
