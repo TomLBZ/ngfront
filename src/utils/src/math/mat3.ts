@@ -80,6 +80,22 @@ export class Mat3 extends Mat {
             t * x * z - s * y, t * y * z + s * x, t * z * z + c
         ]);
     }
+    static FromRows(rows: Array<Vec3>): Mat3 {
+        if (rows.length !== 3) throw new Error("Array length must be 3 for Mat3");
+        return Mat3.New([
+            rows[0].x, rows[0].y, rows[0].z,
+            rows[1].x, rows[1].y, rows[1].z,
+            rows[2].x, rows[2].y, rows[2].z
+        ]);
+    }
+    static FromCols(cols: Array<Vec3>): Mat3 {
+        if (cols.length !== 3) throw new Error("Array length must be 3 for Mat3");
+        return Mat3.New([
+            cols[0].x, cols[1].x, cols[2].x,
+            cols[0].y, cols[1].y, cols[2].y,
+            cols[0].z, cols[1].z, cols[2].z
+        ]);
+    }
     static I(): Mat3 {
         return Mat3.New([
             1, 0, 0,
