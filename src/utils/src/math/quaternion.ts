@@ -53,11 +53,13 @@ export class Quaternion {
     }
     /**
      * Initializes a quaternion from a rotation matrix.
-     * @param m Rotation matrix
+     * @param m Rotation matrix, row major by default unless colMajor is true.
+     * @param colMajor If true, the matrix is in column-major order.
      * @see https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles#From_rotation_matrix
      * @returns Quaternion
      */
-    public static FromMat3(m: Mat3): Quaternion {
+    public static FromMat3(m: Mat3, colMajor: boolean = false): Quaternion {
+        m = colMajor ? m.T() : m; // explicitly transpose if needed
         const trace = m.get(0, 0) + m.get(1, 1) + m.get(2, 2);
         let s = 0;
         let q = Quaternion.I;
