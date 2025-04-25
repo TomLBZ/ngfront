@@ -13,7 +13,7 @@ import { Component, ViewChild, OnDestroy, AfterViewInit, ElementRef } from "@ang
 // import { env } from "../../app.config";
 import { RenderPipeline, RenderHelper, UniformRecord, ProgramSource, PassSource } from "../../../utils/gpu";
 import { Queue } from "../../../utils/src/ds/q";
-import { Attitude, GeodeticCoords, LocalCoordsType } from "../../../utils/geo";
+import { Attitude, GeodeticCoords, CoordsFrameType } from "../../../utils/geo";
 import { AppService } from "../../app.service";
 import { GeoCam } from "../../../utils/src/geo/cam";
 
@@ -86,7 +86,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
         const minres = Math.min(...resolution);
         const scale = [resolution[0] / minres, resolution[1] / minres];
         this.controllerUpdate();
-        const cam = new GeoCam(this._geoCoords, this._attitude, LocalCoordsType.NED);
+        const cam = new GeoCam(this._geoCoords, this._attitude, CoordsFrameType.NED);
         const epos = cam.ecefToCamFrame([0, 0, 0]); // earth position in camera frame
         // console.log(`Epos: [${epos[0].toFixed(2)}, ${epos[1].toFixed(2)}, ${epos[2].toFixed(2)}]`);
         // const epos = [0, 16371000, 0]; // earth position in camera frame
