@@ -8,6 +8,7 @@ export { Angles } from './src/math/angles';
 export { Numerics } from './src/math/numerics';
 export { Prime } from './src/math/prime';
 export { Hash } from './src/math/hash';
+export { Quaternion } from './src/math/quaternion';
 
 export enum HashMode {
     PrimeHash = 0,
