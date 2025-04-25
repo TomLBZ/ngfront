@@ -72,7 +72,7 @@ export class GeoCam { // a camera on Earth
             x = north; y = east;   z = up.Neg();     // NED
         }
         /* ---- convert basis → quaternion (one Mat3, then discard) */
-        const tmp = Mat3.New([x.x, y.x, z.x, x.y, y.y, z.y, x.z, y.z, z.z]); // transient only
+        const tmp = Mat3.FromRows([x, y, z]); // PF axes in ECEF in row order as Quaternion.FromMat3 expects a row matrix
         return Quaternion.FromMat3(tmp).Norm();     // ECEF→PF
     }
     private static buildAttitudeQuat(qEcefToPf: Quaternion, attitude: Attitude): Quaternion {
