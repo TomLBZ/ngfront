@@ -1,5 +1,5 @@
 import { Angles } from "../../math";
-import { GeodeticCoords, GeoRadarData, RectangularCoords, EER, EPR } from "../../geo";
+import { GeodeticCoords, GeoRadarData, CartesianCoords3D, EER, EPR } from "../../geo";
 
 export class Earth {
     public static geodeticToECEF = geodeticToECEF;
@@ -12,7 +12,7 @@ export class Earth {
     public static getRadius = getRadius;
 }
 
-export function geodeticToECEF(lng: number, lat: number, alt: number): RectangularCoords {
+export function geodeticToECEF(lng: number, lat: number, alt: number): CartesianCoords3D {
     const phi = Angles.degToRad(lat);
     const lambda = Angles.degToRad(lng);
     const cosPhi = Math.cos(phi);
@@ -24,7 +24,7 @@ export function geodeticToECEF(lng: number, lat: number, alt: number): Rectangul
     const x = (N + alt) * cosPhi * Math.cos(lambda);
     const y = (N + alt) * cosPhi * Math.sin(lambda);
     const z = ((1 - e2) * N + alt) * sinPhi;
-    return [x, y, z] as RectangularCoords;
+    return [x, y, z] as CartesianCoords3D;
 }
 export function ecefToGeodetic(x: number, y: number, z: number): GeodeticCoords {
     const a2 = EER * EER; // a = EER
@@ -92,7 +92,7 @@ export function getGeoRadarData(lng: number, lat: number, alt: number): GeoRadar
     const pos = [lng, lat, alt] as GeodeticCoords;
     return { pos, ecefPos, enuToEcefMatrix, ecefToEnuMatrix } as GeoRadarData;
 }
-export function ecefToRadarEnu(ecef: RectangularCoords, radar: GeoRadarData): RectangularCoords {
+export function ecefToRadarEnu(ecef: CartesianCoords3D, radar: GeoRadarData): CartesianCoords3D {
     const [px, py, pz] = ecef;
     const [rx, ry, rz] = radar.ecefPos;
     const [x, y, z] = [px - rx, py - ry, pz - rz]; // vector pointing from radar to target point
@@ -100,16 +100,16 @@ export function ecefToRadarEnu(ecef: RectangularCoords, radar: GeoRadarData): Re
         radar.ecefToEnuMatrix[0] * x + radar.ecefToEnuMatrix[1] * y + radar.ecefToEnuMatrix[2] * z,
         radar.ecefToEnuMatrix[3] * x + radar.ecefToEnuMatrix[4] * y + radar.ecefToEnuMatrix[5] * z,
         radar.ecefToEnuMatrix[6] * x + radar.ecefToEnuMatrix[7] * y + radar.ecefToEnuMatrix[8] * z
-    ] as RectangularCoords;
+    ] as CartesianCoords3D;
 }
-export function radarEnuToEcef(enu: RectangularCoords, radar: GeoRadarData): RectangularCoords {
+export function radarEnuToEcef(enu: CartesianCoords3D, radar: GeoRadarData): CartesianCoords3D {
     const [x, y, z] = enu;
     const [rx, ry, rz] = radar.ecefPos;
     return [
         radar.enuToEcefMatrix[0] * x + radar.enuToEcefMatrix[1] * y + radar.enuToEcefMatrix[2] * z + rx,
         radar.enuToEcefMatrix[3] * x + radar.enuToEcefMatrix[4] * y + radar.enuToEcefMatrix[5] * z + ry,
         radar.enuToEcefMatrix[6] * x + radar.enuToEcefMatrix[7] * y + radar.enuToEcefMatrix[8] * z + rz
-    ] as RectangularCoords;
+    ] as CartesianCoords3D;
 }
 export function getRadius(lat: number): number {
     const latRad = Angles.degToRad(lat); // convert to radians.

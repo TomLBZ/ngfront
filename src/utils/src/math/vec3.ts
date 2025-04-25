@@ -1,4 +1,4 @@
-import { RectangularCoords } from "../../geo";
+import { CartesianCoords3D } from "../../geo";
 import { Vec } from "./vec";
 
 export class Vec3 extends Vec {
@@ -17,7 +17,7 @@ export class Vec3 extends Vec {
     static New(x: number, y: number, z: number): Vec3 {
         return new Vec3(3, 0, [x, y, z]);
     }
-    static FromRectangularCoords(coords: RectangularCoords): Vec3 {
+    static FromRectangularCoords(coords: CartesianCoords3D): Vec3 {
         return new Vec3(3, 0, [coords[0], coords[1], coords[2]]);
     }
     static FromArray(arr: number[]): Vec3 {
@@ -64,7 +64,7 @@ export class Vec3 extends Vec {
             this.x * v.y - this.y * v.x
         );
     }
-    ToRectangularCoords(): RectangularCoords {
-        return [this.x, this.y, this.z] as RectangularCoords;
+    ToRectangularCoords(): CartesianCoords3D {
+        return [this.x, this.y, this.z] as CartesianCoords3D;
     }
 }

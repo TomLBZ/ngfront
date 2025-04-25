@@ -1,5 +1,5 @@
 import { Angles } from "../../math";
-import { EclipticCoords, EquatorialCoords, RectangularCoords, SunData, GeodeticCoords } from "../../geo";
+import { EclipticCoords, EquatorialCoords, CartesianCoords3D, SunData, GeodeticCoords } from "../../geo";
 
 export class Astro {
     public static julianDayToObliquity = julianDayToObliquity;
@@ -31,7 +31,7 @@ export function julianDayToSunEcliptic(JD: number): EclipticCoords {
     const lngRad = Angles.degToRad(Angles.wrapDeg(lambda)); // ecliptic longitude in radians
     return [lngRad, 0, R] as EclipticCoords; // latitude of the sun is 0 for the ecliptic plane
 }
-export function eclipticToRectangular(eclipticCoords: EclipticCoords): RectangularCoords {
+export function eclipticToRectangular(eclipticCoords: EclipticCoords): CartesianCoords3D {
     const [lambda, beta, R] = eclipticCoords; // unpack ecliptic coordinates
     const cosBeta = Math.cos(beta);
     const sinBeta = Math.sin(beta);
@@ -40,7 +40,7 @@ export function eclipticToRectangular(eclipticCoords: EclipticCoords): Rectangul
     const x = R * cosBeta * cosLambda; // x coordinate
     const y = R * cosBeta * sinLambda; // y coordinate
     const z = R * sinBeta; // z coordinate
-    return [x, y, z] as RectangularCoords; // rectangular coordinates
+    return [x, y, z] as CartesianCoords3D; // rectangular coordinates
 }
 export function eclipticToEquatorial(eclipticCoords: EclipticCoords, epsilon: number): EquatorialCoords {
     const [lambda, , R] = eclipticCoords; // unpack ecliptic coordinates
@@ -52,7 +52,7 @@ export function eclipticToEquatorial(eclipticCoords: EclipticCoords, epsilon: nu
     const delta = Math.asin(sinEps * sinLambda); // declination
     return [alpha, delta, R] as EquatorialCoords; // equatorial coordinates
 }
-export function equatorialToRectangular(equatorialCoords: EquatorialCoords): RectangularCoords {
+export function equatorialToRectangular(equatorialCoords: EquatorialCoords): CartesianCoords3D {
     const [alpha, delta, R] = equatorialCoords; // unpack equatorial coordinates
     const cosDelta = Math.cos(delta);
     const sinDelta = Math.sin(delta);
@@ -61,7 +61,7 @@ export function equatorialToRectangular(equatorialCoords: EquatorialCoords): Rec
     const x = R * cosDelta * cosAlpha; // x coordinate
     const y = R * cosDelta * sinAlpha; // y coordinate
     const z = R * sinDelta; // z coordinate
-    return [x, y, z] as RectangularCoords; // rectangular coordinates
+    return [x, y, z] as CartesianCoords3D; // rectangular coordinates
 }
 export function julianDayToGMSTDegrees(JD: number): number {
     const T = (JD - 2451545.0) / 36525.0; // number of Julian centuries since J2000.0
@@ -102,10 +102,10 @@ export function sunDataToSubSolarPoint(sunData: SunData): GeodeticCoords {
     const GHA = Angles.wrapDeg(sunData.gmst - alphaDeg); // Greenwich Hour Angle
     return [deltaDeg, Angles.wrapDeg180(-GHA), 0] as GeodeticCoords; // altitude is 0 for the surface point
 }
-export function sunDataToSunPositionVectorEcef(sunData: SunData): RectangularCoords {
+export function sunDataToSunPositionVectorEcef(sunData: SunData): CartesianCoords3D {
     const [x, y, z] = equatorialToRectangular(sunData.equatorial);
     const gmstRad = Angles.degToRad(sunData.gmst);
     const cosT = Math.cos(-gmstRad);
     const sinT = Math.sin(-gmstRad);
-    return [cosT * x - sinT * y, sinT * x + cosT * y, z] as RectangularCoords; // rectangular coordinates in ECEF
+    return [cosT * x - sinT * y, sinT * x + cosT * y, z] as CartesianCoords3D; // rectangular coordinates in ECEF
 }

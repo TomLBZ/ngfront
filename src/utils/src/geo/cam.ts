@@ -1,5 +1,5 @@
 import { geodeticToECEF } from "./earth";
-import { Attitude, GeodeticCoords, RectangularCoords, GeoHelper, CoordsFrameType } from "../../geo";
+import { Attitude, GeodeticCoords, CartesianCoords3D, GeoHelper, CoordsFrameType } from "../../geo";
 import { Mat3, Quaternion, Vec3 } from "../../math";
 
 export class GeoCam { // a camera on Earth
@@ -33,8 +33,8 @@ export class GeoCam { // a camera on Earth
             this.update();
         }
     }
-    private _posEcef : RectangularCoords = [0, 0, 0]; // ECEF coordinates of the camera
-    public get posEcef() : RectangularCoords { return this._posEcef; }
+    private _posEcef : CartesianCoords3D = [0, 0, 0]; // ECEF coordinates of the camera
+    public get posEcef() : CartesianCoords3D { return this._posEcef; }
     private _qEcefToCf: Quaternion = Quaternion.I; // quaternion representing the rotation from ECEF frame to camera frame
     private _qCfToEcef: Quaternion = Quaternion.I; // quaternion representing the rotation from camera frame to ECEF frame
     constructor(posGeodetic: GeodeticCoords, attitude: Attitude, coordsType: CoordsFrameType = CoordsFrameType.ENU) {
@@ -50,11 +50,11 @@ export class GeoCam { // a camera on Earth
         this._qEcefToCf = qPfToCam.Mul(qEcefToPf).Norm();       // (Cam←PF)·(PF←ECEF)
         this._qCfToEcef = this._qEcefToCf.Inv();                // cached inverse
     }
-    public ecefToCamFrame(pEcef: RectangularCoords): RectangularCoords {
+    public ecefToCamFrame(pEcef: CartesianCoords3D): CartesianCoords3D {
         const local: Vec3 = Vec3.New(...GeoHelper.Minus(pEcef, this.posEcef)); // local position in fixed frame
         return this._qEcefToCf.RotateV(local).ToRectangularCoords(); // local position in camera frame
     }
-    public camFrameToEcef(pCf: RectangularCoords): RectangularCoords {
+    public camFrameToEcef(pCf: CartesianCoords3D): CartesianCoords3D {
         const local: Vec3 = this._qCfToEcef.RotateV(Vec3.New(...pCf)); // local position in fixed frame
         return GeoHelper.Plus(local.ToRectangularCoords(), this.posEcef); // local position in ECEF
     }

@@ -1,4 +1,4 @@
-import { RectangularCoords } from "../../geo";
+import { CartesianCoords3D } from "../../geo";
 import { Mat3 } from "./mat3";
 import { Vec3 } from "./vec3";
 
@@ -210,7 +210,7 @@ export class Quaternion {
         const res = this.Mul(qv).Mul(this.Inv());
         return Vec3.New(res.x, res.y, res.z);
     }
-    public RotateC(rc: RectangularCoords): RectangularCoords {
+    public RotateC(rc: CartesianCoords3D): CartesianCoords3D {
         const qv = new Quaternion(rc[0], rc[1], rc[2], 0);
         const res = this.Mul(qv).Mul(this.Inv());
         return [res.x, res.y, res.z];

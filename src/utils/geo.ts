@@ -30,12 +30,12 @@ export type EclipticCoords = [lng: number, lat: number, R: number];
 export type EquatorialCoords = [asc: number, dec: number, R: number];
 
 /**
- * Rectangular coordinates
+ * 3D Cartesian coordinates
  * @param x x coordinate
  * @param y y coordinate
  * @param z z coordinate
  */
-export type RectangularCoords = [x: number, y: number, z: number];
+export type CartesianCoords3D = [x: number, y: number, z: number];
 
 /**
  * Geodetic coordinates with height above the ellipsoid surface
@@ -63,7 +63,7 @@ export interface GeoRadarData {
     /** position of the radar */
     pos: GeodeticCoords;
     /** ECEF position of the radar */
-    ecefPos: RectangularCoords;
+    ecefPos: CartesianCoords3D;
     /** ENU to ECEF matrix */
     enuToEcefMatrix: number[];
     /** ECEF to ENU matrix */
