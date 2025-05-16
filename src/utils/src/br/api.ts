@@ -6,9 +6,10 @@ export class ApiBridge {
     protected readonly funcMap: DictS<Func<any, Promise<any>>> = {};
     protected httpOptions: HttpOptions = {};
     constructor(protected readonly url: string, protected readonly http: HttpClient) {}
-    protected get(url: string): Promise<any> {
+    protected get(url: string, data: any = undefined): Promise<any> {
+        const paramsStr = data !== undefined ? `?${new URLSearchParams(data).toString()}` : '';
         return new Promise((resolve, reject) => {
-            this.http.get(url, this.httpOptions as any).subscribe({
+            this.http.get(url + paramsStr, this.httpOptions as any).subscribe({
                 next: (data) => resolve(data),
                 error: (error) => reject(error)
             });
