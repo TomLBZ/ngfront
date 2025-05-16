@@ -10,7 +10,48 @@
             [localStylePath]="'mapstyles'"
         ></mapview>   
         <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_tint bold ft_huge centcont justcent">
-            [Manual Flight] In Next Phase
+            @if (telemetryEnabled && launchSettings.joystick_enable) {
+                <span>Throttle</span>
+                <slider
+                    [minValue]="0"
+                    [maxValue]="9600"
+                    [value]="joystick.throttle"
+                    [isDraggable]="true"
+                    [isEmphasized]="false"
+                    (valueChanged)="onThrottleChanged($event)"
+                ></slider>
+                <span>Pitch</span>
+                <slider
+                    [minValue]="-9600"
+                    [maxValue]="9600"
+                    [value]="joystick.pitch"
+                    [isDraggable]="true"
+                    [isEmphasized]="false"
+                    (valueChanged)="onPitchChanged($event)"
+                ></slider>
+                <span>Roll</span>
+                <slider
+                    [minValue]="-9600"
+                    [maxValue]="9600"
+                    [value]="joystick.roll"
+                    [isDraggable]="true"
+                    [isEmphasized]="false"
+                    (valueChanged)="onRollChanged($event)"
+                ></slider>
+            }
+            @else {
+                @if (launchSettings.joystick_enable) {
+                    <div class="flexc p_full bold c_tint ft_huge centcont justcent">
+                        <span>[Joystick]</span>
+                        <span>Not Running</span>
+                    </div>
+                } @else {
+                    <div class="flexc p_full bold c_tint ft_huge centcont justcent">
+                        <span>[Joystick]</span>
+                        <span>Disabled</span>
+                    </div>
+                }
+            }
         </div>
     </div>
     <div class="flexc px_maxw200 px_w200">
