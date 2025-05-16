@@ -37,6 +37,7 @@ export class MapViewComponent {
         "outdoor-v2", "satellite", "streets-v2", "toner-v2", "topo-v2", "winter-v2"
     ];
     @Input() projection: string = 'globe';
+    @Input() localStylePath: string = '';
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectSelectionChanged = new EventEmitter<MarkerEvent>();
     @Output() objectClicked = new EventEmitter<MarkerEvent>();
@@ -54,7 +55,9 @@ export class MapViewComponent {
     onMapLoad(map: Map) { this.map = map; }
     private _cachedStyles: Cache<any> = new Cache<any>();
     private _getStyle(style: string) {
-        const url = `https://api.maptiler.com/maps/${style}/style.json?key=${this.apiKey}`;
+        const url = this.localStylePath !== '' ? 
+            `${this.localStylePath}/${style}.json` : 
+            `https://api.maptiler.com/maps/${style}/style.json?key=${this.apiKey}`;
         const xhr = new XMLHttpRequest();
         xhr.open('GET', url, false);
         xhr.send();
