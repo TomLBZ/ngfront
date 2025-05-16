@@ -10,8 +10,8 @@ export class SliderComponent {
     @Input() minValue = 0;
     @Input() isVertical = false;
     @Input() isDraggable = false;
-    @Input() showText = false;
-    @Input() showLabel = false;
+    @Input() showText = true;
+    @Input() showLabel = true;
     @Input() isPercentage = false;
     @Input() isReversed = false;
     @Input() lengthStr = '200px';
