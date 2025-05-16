@@ -33,6 +33,8 @@ export interface Mission {
     lead_id: number;
     lead_path: Array<Waypoint>;
     follower_ids: Array<number>;
+    mission_status: string;
+    lead_mission_type: string;
 }
 export interface StartPos {
     lat: number;
@@ -96,4 +98,9 @@ export interface MissionMetadata {
 export interface MissionSettings {
     selected_files: Array<ConfigFile>;
     fg_enable: boolean;
+}
+export interface Joystick {
+    roll: number;
+    pitch: number;
+    throttle: number;
 }
