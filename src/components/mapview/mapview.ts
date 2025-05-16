@@ -56,7 +56,7 @@ export class MapViewComponent {
     private _cachedStyles: Cache<any> = new Cache<any>();
     private _getStyle(style: string) {
         const url = this.localStylePath !== '' ? 
-            `${this.localStylePath}/${style}.json` : 
+            `${this.localStylePath}/${style}/style.json` : 
             `https://api.maptiler.com/maps/${style}/style.json?key=${this.apiKey}`;
         const xhr = new XMLHttpRequest();
         xhr.open('GET', url, false);
