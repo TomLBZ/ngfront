@@ -7,6 +7,7 @@ import { Callback } from '../utils/types';
 import { KeyController } from '../utils/src/ctrl/key';
 import { StructValidator } from '../utils/src/ds/validate';
 import { AeroBridge } from './app.br';
+import { KeyControlMode } from '../utils/ctrl';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,7 @@ import { AeroBridge } from './app.br';
 export class AppService {
     private readonly apiUrl = env.apiUrl;
     private readonly production = env.production;
-    public readonly keyCtrl = new KeyController();
+    public readonly keyCtrl = new KeyController(KeyControlMode.EVENT_PRESS);
     private readonly br: AeroBridge;
     constructor(private http: HttpClient) {
         this.br = new AeroBridge(this.apiUrl, this.http);
