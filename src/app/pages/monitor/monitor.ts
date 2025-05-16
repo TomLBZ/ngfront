@@ -6,10 +6,10 @@ import { MapViewComponent } from '../../../components/mapview/mapview';
 import { OutboxComponent } from '../../../components/outbox/outbox';
 import { env } from '../../app.config';
 import { RTOS } from '../../../utils/src/ctrl/rtos';
-import { MissedDeadlinePolicy } from '../../../utils/ctrl';
+import { KeyControlMode, MissedDeadlinePolicy } from '../../../utils/ctrl';
 import { AppService } from '../../app.service';
 import { DropSelectComponent } from '../../../components/dropselect/dropselect';
-import { APIResponse } from '../../app.interface';
+import { APIResponse, Joystick } from '../../app.interface';
 import { Marker } from '../../../utils/src/graphics/marker';
 import { ObjEditorComponent } from '../../../components/obj_editor/obj_editor';
 import { Path, PathStyle } from '../../../utils/graphics';
@@ -18,8 +18,10 @@ import { Cache } from '../../../utils/src/ds/cache';
 import { Waypoint, Mission, Telemetry } from '../../app.interface';
 import { StructValidator } from '../../../utils/src/ds/validate';
 import { Callback, DictN } from '../../../utils/types';
+import { SliderComponent } from '../../../components/slider/slider';
 interface LaunchSettings {
-    fgEnable: boolean;
+    fg_enable: boolean;
+    joystick_enable: boolean;
 }
 interface RuntimeSettings {
     traces: number;
@@ -28,8 +30,7 @@ interface RuntimeSettings {
 @Component({
     selector: 'page-monitor',
     imports: [
-        MapViewComponent, OutboxComponent, 
-        DropSelectComponent, ObjEditorComponent
+        MapViewComponent, OutboxComponent, DropSelectComponent, ObjEditorComponent, SliderComponent
     ],
     templateUrl: 'monitor.html'
 })
@@ -83,11 +84,12 @@ export class MonitorPage implements OnInit, OnDestroy {
     public readonly idRepr: Function = (o: any) => `ID: ${o.id}`;
     public readonly nameRepr: Function = (o: any) => o.name;
     public missions: Array<Mission> = [];
-    public launchSettings: LaunchSettings = { fgEnable: false };
+    public launchSettings: LaunchSettings = { fg_enable: false, joystick_enable: false };
     public runtimeSettings: RuntimeSettings = { traces: 100, lead_id: 0 };
     public selectedMission?: Mission = undefined;
     public resetNeeded: boolean = false;
     public waiting: boolean = false;
+    public joystick: Joystick = { roll: 500, pitch: 1000, throttle: 5000 };
     private isValidMission(m: any): boolean {
         return StructValidator.hasNonEmptyFields(m, ["id", "name", "description", "lead_id", "lead_path", "follower_ids"]);
     }
@@ -177,10 +179,44 @@ export class MonitorPage implements OnInit, OnDestroy {
                 } else { // update selected mission data
                     this.selectedMission.lead_id = m.lead_id;
                     this.runtimeSettings.lead_id = m.lead_id;
+                    this.launchSettings.joystick_enable = m.lead_mission_type === "JOYSTICK";
+                    this.launchSettings = { ...this.launchSettings }; // trigger change detection
                     if (this.websocket === undefined) this.startTelemetry();
                 }
             }, undefined, this.void);
         }, undefined, this.void);
+    }
+    private updateJoystick() {
+        this._svc.callAPI("sim/joystick", (d: any) => {
+            if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Failed to update joystick: Invalid Response!");
+            else if (!(d as APIResponse).success) alert(`Failed to update joystick!\n${d.msg}`);
+        }, { id: this.selectedMission!.lead_id, joystick: this.joystick }, this.alert);
+    }
+    private keyUpdated(key: string) {
+        if (!this.launchSettings.joystick_enable) return; // skip when joystick is disabled
+        switch (key) {
+            case "w":
+                this.joystick.throttle = Math.min(this.joystick.throttle + 100, 9600);
+                break;
+            case "s":
+                this.joystick.throttle = Math.max(this.joystick.throttle - 100, 0);
+                break;
+            case "a":
+                this.joystick.roll = Math.max(this.joystick.roll - 100, -9600);
+                break;
+            case "d":
+                this.joystick.roll = Math.min(this.joystick.roll + 100, 9600);
+                break;
+            case "q":
+                this.joystick.pitch = Math.max(this.joystick.pitch - 100, -9600);
+                break;
+            case "e":
+                this.joystick.pitch = Math.min(this.joystick.pitch + 100, 9600);
+                break;
+            default:
+                return; // skip when key is not valid
+        }
+        this.updateJoystick();
     }
     constructor(svc: AppService) {
         this._svc = svc;
@@ -193,6 +229,12 @@ export class MonitorPage implements OnInit, OnDestroy {
             intervalMs: 1000, // fetches states per one second
             missedPolicy: MissedDeadlinePolicy.RUN_ONCE,
         });
+        this._svc.keyCtrl.setKeyCallback("w", () => this.keyUpdated("w"), KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.setKeyCallback("s", () => this.keyUpdated("s"), KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.setKeyCallback("a", () => this.keyUpdated("a"), KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.setKeyCallback("d", () => this.keyUpdated("d"), KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.setKeyCallback("q", () => this.keyUpdated("q"), KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.setKeyCallback("e", () => this.keyUpdated("e"), KeyControlMode.EVENT_PRESS);
     }
     ngOnInit(): void {
         this._rtos.start();
@@ -223,17 +265,10 @@ export class MonitorPage implements OnInit, OnDestroy {
         this.runtimeSettings = { traces: this.runtimeSettings.traces, lead_id: m.lead_id }; // set runtime settings
     }
     onLaunchSettingsChanged(newSettings: LaunchSettings) {
-        if (newSettings.fgEnable !== this.launchSettings.fgEnable) {
-            if (newSettings.fgEnable) {
+        if (newSettings.fg_enable !== this.launchSettings.fg_enable) {
+            if (newSettings.fg_enable) {
                 alert("Enabling FlightGear makes launching a mission takes very long, please be patient. We recommend disabling this option.");
             }
-            const oldLaunchSettings = this.launchSettings;
-            this._svc.callAPI("sim/fgenable", (d: any) => {
-                if (!d.success) alert(d.msg);
-            }, { fg_enable: newSettings.fgEnable }, (d: any) => {
-                alert(`Error: ${JSON.stringify(d)}`);
-                this.launchSettings = oldLaunchSettings;
-            });
         }
         this.launchSettings = newSettings;
     }
@@ -261,10 +296,10 @@ export class MonitorPage implements OnInit, OnDestroy {
                 alert(`Failed to launch mission, please stop simulator immediately and retry: ${d.msg}`);
                 this.resetNeeded = true; // reset needed when simulator is offline
             }
-        }, this.selectedMission!.id, this.alert);
+        }, { id: this.selectedMission!.id, params: this.launchSettings }, this.alert);
     }
     onSigLoss(resumable: boolean) {
-        if (resumable) this._svc.callAPI("mission/start", () => alert("Signal resumed"), this.selectedMission!.id, alert);
+        if (resumable) this._svc.callAPI("mission/start", () => alert("Signal resumed"), { id: this.selectedMission!.id, params: this.launchSettings }, alert);
         else this._svc.callAPI("mission/stop", () => alert("Signal blocked"), undefined, alert);
     }
     onStop() {
@@ -283,5 +318,26 @@ export class MonitorPage implements OnInit, OnDestroy {
             else if (!(d as APIResponse).success) alert(`Failed to reset simulator!\nPlease go to Configurations and apply correct files.\n${d.msg}`);
             else this.resetNeeded = false; // reset not needed
         }, undefined, this.alert);
+    }
+    onThrottleChanged(newThrottle: number) {
+        newThrottle = Math.floor(newThrottle);
+        if (newThrottle !== this.joystick.throttle) {
+            this.joystick.throttle = newThrottle;
+            this.updateJoystick();
+        }
+    }
+    onPitchChanged(newPitch: number) {
+        newPitch = Math.floor(newPitch);
+        if (newPitch !== this.joystick.pitch) {
+            this.joystick.pitch = newPitch;
+            this.updateJoystick();
+        }
+    }
+    onRollChanged(newRoll: number) {
+        newRoll = Math.floor(newRoll);
+        if (newRoll !== this.joystick.roll) {
+            this.joystick.roll = newRoll;
+            this.updateJoystick();
+        }
     }
 }
