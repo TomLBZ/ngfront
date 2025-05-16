@@ -13,9 +13,9 @@ export class AeroBridge extends ApiBridge {
         "mission/create": (data?: any) => this.postMissionConfiguration(data),
         "mission/update": (data?: any) => this.putMissionConfiguration(data),
         "mission/delete": (data?: any) => this.deleteMissionConfiguration(data),
-        "sim/fgenable": (data?: any) => this.putMissionSettings(data),
         "sim/stop": (data?: any) => this.getStopSimulation(data),
         "sim/reset": (data?: any) => this.getResetSimulationConfigFiles(data),
+        "sim/joystick": (data?: any) => this.postAircraftJoystick(data),
         "aircraft/all": (data?: any) => this.getAircraftConfigurations(data),
         "aircraft/create": (data?: any) => this.postAircraftConfiguration(data),
         "aircraft/update": (data?: any) => this.putAircraftConfiguration(data),
@@ -42,8 +42,8 @@ export class AeroBridge extends ApiBridge {
     private getMissionConfigurations(_: any): Promise<any> {
         return this.get(`${this.url}/mission_configurations`);
     }
-    private getLaunchMission(id: number): Promise<any> {
-        return this.get(`${this.url}/launch_mission/${id}`);
+    private getLaunchMission(data: any): Promise<any> {
+        return this.get(`${this.url}/launch_mission/${data.id}`, data.params);
     }
     private getStopMission(_: any): Promise<any> {
         return this.get(`${this.url}/stop_mission`);
@@ -128,5 +128,8 @@ export class AeroBridge extends ApiBridge {
     }
     private postUploadNewSimulationFile(data: any): Promise<any> {
         return this.post(`${this.url}/upload_new_simulation_file`, data);
+    }
+    private postAircraftJoystick(data: any): Promise<any> {
+        return this.post(`${this.url}/plane${data.id}/joystick`, { "data": data.joystick });
     }
 }
