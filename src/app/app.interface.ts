@@ -78,6 +78,13 @@ export interface LogMetadataQuery {
     time?: string;
     id?: number;
 }
+export interface ReplayData {
+    date: string;
+    name: string;
+    time: string;
+    fg_enable: boolean;
+    delay: number;
+}
 export interface LogEntry {
     ac_id: number;
     alt: number;
