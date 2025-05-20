@@ -4,7 +4,7 @@
     "name": "Topo",
     "sources": {
         "contours": {
-            "url": "https://api.maptiler.com/tiles/contours-v2/tiles.json?key=QOCNp1pWErFc8sgXrGwI",
+            "url": "tiles/contours-v2/tiles.json",
             "type": "vector"
         },
         "maptiler_attribution": {
@@ -12,11 +12,11 @@
             "type": "vector"
         },
         "maptiler_planet": {
-            "url": "https://api.maptiler.com/tiles/v3/tiles.json?key=QOCNp1pWErFc8sgXrGwI",
+            "url": "tiles/v3/tiles.json",
             "type": "vector"
         },
         "terrain_rgb": {
-            "url": "https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=QOCNp1pWErFc8sgXrGwI",
+            "url": "tiles/terrain-rgb-v2/tiles.json",
             "type": "raster-dem"
         }
     },
@@ -5974,8 +5974,8 @@
     "metadata": {
         "maptiler:copyright": "You are licensed to use the style or its derivate for serving map tiles exclusively with MapTiler Server or MapTiler Cloud and in accordance with their licenses and terms. If you plan to use the style in a different way, contact us at sales@maptiler.com."
     },
-    "glyphs": "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=QOCNp1pWErFc8sgXrGwI",
-    "sprite": "https://api.maptiler.com/maps/topo-v2/sprite",
+    "glyphs": "fonts/{fontstack}/{range}.pbf?key=QOCNp1pWErFc8sgXrGwI",
+    "sprite": "maps/topo-v2/sprite",
     "bearing": 0,
     "pitch": 0,
     "center": [

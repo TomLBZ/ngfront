@@ -4,11 +4,11 @@
     "name": "Satellite",
     "sources": {
         "maptiler_planet": {
-            "url": "https://api.maptiler.com/tiles/v3/tiles.json?key=QOCNp1pWErFc8sgXrGwI",
+            "url": "tiles/v3/tiles.json",
             "type": "vector"
         },
         "satellite": {
-            "url": "https://api.maptiler.com/tiles/satellite-v2/tiles.json?key=QOCNp1pWErFc8sgXrGwI",
+            "url": "tiles/satellite-v2/tiles.json",
             "type": "raster"
         }
     },
@@ -1134,8 +1134,8 @@
     "metadata": {
         "maptiler:copyright": "You are licensed to use the style or its derivate for serving map tiles exclusively with MapTiler Server or MapTiler Cloud and in accordance with their licenses and terms. If you plan to use the style in a different way, contact us at sales@maptiler.com."
     },
-    "glyphs": "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=QOCNp1pWErFc8sgXrGwI",
-    "sprite": "https://api.maptiler.com/maps/satellite/sprite",
+    "glyphs": "fonts/{fontstack}/{range}.pbf",
+    "sprite": "maps/satellite/sprite",
     "bearing": 0,
     "pitch": 0,
     "center": [
