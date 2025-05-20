@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { TableViewComponent } from "../../../components/tableview/tableview";
 import { AppService } from "../../app.service";
-import { LogEntry, MissionMetadata } from "../../app.interface";
+import { LogEntry, LogMetadataQuery, MissionMetadata } from "../../app.interface";
 import { DateSelectComponent } from "../../../components/dateselect/dateselect";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
 import { DictS, Nullable, Pair } from "../../../utils/types";
@@ -20,8 +20,10 @@ export class LogsPage implements OnInit {
     public missionTimes: Array<string> = [];
     public missionNames: Array<string> = [];
     public missionDates: Array<string> = [];
+    public aircraftIds: Array<number> = [];
     public downloading: boolean = false;
     public readonly missionTimesRepr: (s: string) => string = s => s.replace(/_/g, ':');
+    public readonly aircraftIdsRepr: (n: number) => string = n => n !== 0 ? `ID = ${n}` : "All";
     public get nameSelectable(): boolean { return this._selectedDateStr.length > 0; }
     public get timeSelectable(): boolean { return this._selectedMissionName.length > 0 && this.nameSelectable; }
     public get logsFetchable(): boolean { return this._selectedMissionTime.length > 0 && this.timeSelectable && !this.downloading; }
@@ -31,6 +33,7 @@ export class LogsPage implements OnInit {
     private _selectedDateStr: string = "";
     private _selectedMissionName: string = "";
     private _selectedMissionTime: string = "";
+    private _selectedAircraftId: number = 0;
     constructor(svc: AppService) {
         this._svc = svc;
     }
@@ -44,6 +47,8 @@ export class LogsPage implements OnInit {
 
     private resetTimes(fetch: boolean = true) {
         this.missionTimes = [];
+        this.missionMetaData = {};
+        this.previewLogList = [];
         this._selectedMissionTime = "";
         if (fetch) this.fetchMissionTimes();
     }
@@ -99,11 +104,14 @@ export class LogsPage implements OnInit {
             const metadata = d.data.meta_data as MissionMetadata;
             for (const key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
-                    const value: string = (metadata as any)[key] as string;
+                    const rawValue: any = (metadata as any)[key];
+                    const isArray = Array.isArray(rawValue) || ArrayBuffer.isView(rawValue);
+                    const value: string = isArray ? `[${(rawValue as any[]).join(", ")}]` : rawValue;
                     if (key.includes("time")) this.missionMetaData[key] = new Date(value).toLocaleString();
                     else this.missionMetaData[key] = value;
                 }
             }
+            this.aircraftIds = [0, metadata.lead_id, ...metadata.follower_ids].sort();
         }, { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime }, this.void);
     }
     private downloadMissionLogs() {
@@ -130,7 +138,7 @@ export class LogsPage implements OnInit {
             } else alert("Download failed: Empty Data Response!");
             this.downloading = false;
         }, 
-        { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime }, 
+        { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime, id: this._selectedAircraftId } as LogMetadataQuery, 
         () => this.downloading = false, "blob");
     }
     private deleteMissionLogs(date: string = "", name: string = "", time: string = "") {
@@ -150,23 +158,32 @@ export class LogsPage implements OnInit {
     onDateRangeChanged(dates: Pair<Nullable<Date>>) {
         const [start, end] = dates;
         if (!start) return; // no start date
-        this.resetNames(false);
         const date = new Date(start);
         const [year, month, day] = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
         const yyyy = year.toString().padStart(4, "0");
         const mm = month.toString().padStart(2, "0");
         const dd = day.toString().padStart(2, "0");
-        this._selectedDateStr = `${yyyy}_${mm}_${dd}`;
+        const dstr = `${yyyy}_${mm}_${dd}`;
+        if (this._selectedDateStr === dstr) return; // skip when same
+        this.resetNames(false);
+        this._selectedDateStr = dstr;
         this.fetchMissionNames();
     }
     onMissionNameSelected(mName: string) {
+        if (mName === this._selectedMissionName) return; // skip when same
         this.resetTimes(false);
         this._selectedMissionName = mName;
         this.fetchMissionTimes();
     }
     onMissionTimeSelected(mTime: string) {
+        if (mTime === this._selectedMissionTime) return; // skip when same
         this._selectedMissionTime = mTime;
         this.fetchMissionMetadata();
+    }
+    onAircraftIdSelected(aId: number) {
+        if (aId === this._selectedAircraftId) return; // skip when same
+        this.previewLogList = [];
+        this._selectedAircraftId = aId;
     }
     onViewMissionLogs() {
         if (this.downloading) return; // skip when loading

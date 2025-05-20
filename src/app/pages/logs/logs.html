@@ -39,6 +39,15 @@
                         [hoverMode]="true"
                         (selectionChanged)="onMissionTimeSelected($event)"
                     ></dropselect>
+                    <dropselect class="pad5v disablehost"
+                        [class.disabled]="!logsFetchable"
+                        [items]="aircraftIds"
+                        [title]="'Aircrafts'"
+                        [representation]="aircraftIdsRepr"
+                        [titleAbove]="false"
+                        [hoverMode]="true"
+                        (selectionChanged)="onAircraftIdSelected($event)"
+                    ></dropselect>
                 </div>
                 <obj-editor class="flex grow ft_smal px_maxh120"
                     [objToEdit]="missionMetaData"
