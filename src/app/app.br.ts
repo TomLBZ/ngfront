@@ -1,6 +1,6 @@
 import { ApiBridge } from "../utils/br";
 import { DictS, Func } from "../utils/types";
-import { Aircraft, ConfigFile, LogMetadataQuery, Mission, MissionSettings } from "./app.interface";
+import { Aircraft, ConfigFile, LogMetadataQuery, Mission, MissionSettings, ReplayData } from "./app.interface";
 
 export class AeroBridge extends ApiBridge {
     protected override readonly funcMap: DictS<Func<any, Promise<any>>> = {
@@ -88,8 +88,9 @@ export class AeroBridge extends ApiBridge {
         const params = { ac_id: data.id ? data.id : 0 };
         return this.get(`${this.url}/download_mission_log/${data.date}/${data.name}/${data.time}`, params);
     }
-    private getReplayMissionLog(data: LogMetadataQuery): Promise<any> {
-        return this.get(`${this.url}/replay_mission_log/${data.date}/${data.name}/${data.time}`);
+    private getReplayMissionLog(data: ReplayData): Promise<any> {
+        const params = { fg_enable: data.fg_enable, delay: data.delay };
+        return this.get(`${this.url}/replay_mission_log/${data.date}/${data.name}/${data.time}`, params);
     }
     // PUTs
     private putMissionConfiguration(data: Mission): Promise<any> {
