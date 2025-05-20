@@ -43,6 +43,9 @@ Thumbs.db
 
 # Secret files
 public/assets/config.json
+public/fonts
+public/tiles/*/*
+!public/tiles/*/tiles.json
 production/*
 !production/compose.yaml
 !production/Dockerfile
