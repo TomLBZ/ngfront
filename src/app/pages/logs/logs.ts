@@ -8,6 +8,11 @@ import { DictS, Nullable, Pair } from "../../../utils/types";
 import { ObjEditorComponent } from "../../../components/obj_editor/obj_editor";
 import { HttpResponse } from "@angular/common/http";
 
+interface ReplaySettings {
+    fg_enable: boolean;
+    delay: number;
+}
+
 @Component({
     selector: "page-logs",
     standalone: true,
@@ -22,6 +27,8 @@ export class LogsPage implements OnInit {
     public missionDates: Array<string> = [];
     public aircraftIds: Array<number> = [];
     public downloading: boolean = false;
+    public replayStarting: boolean = false;
+    public replaySettings: ReplaySettings = { fg_enable: false, delay: 6.5 };
     public readonly missionTimesRepr: (s: string) => string = s => s.replace(/_/g, ':');
     public readonly aircraftIdsRepr: (n: number) => string = n => n !== 0 ? `ID = ${n}` : "All";
     public get nameSelectable(): boolean { return this._selectedDateStr.length > 0; }
@@ -196,16 +203,26 @@ export class LogsPage implements OnInit {
         else if (mode === 1) this.deleteMissionLogs(this._selectedDateStr, this._selectedMissionName);
         else if (mode === 2) this.deleteMissionLogs(this._selectedDateStr);
     }
+    onReplaySettingsChanged(settings: ReplaySettings) {
+        this.replaySettings = settings;
+    }
     onReplayMissionLogs() {
-        alert("Feature not available in Plase 1\nPlease wait for the next phase!");
-        return;
+        const repData = {
+            date: this._selectedDateStr,
+            name: this._selectedMissionName,
+            time: this._selectedMissionTime,
+            fg_enable: this.replaySettings.fg_enable,
+            delay: this.replaySettings.delay
+        } as ReplaySettings;
+        this.replayStarting = true;
         this._svc.callAPI("logs/replay", (d: any) => {
-            console.log(d);
+            this.replayStarting = false;
             if (!this._svc.isValidAPIResponse(d)) return; // invalid data
-            if (!d.success) return; // skip when failed
-            console.log(d.data);
-            if (!d.data || !d.data.hasOwnProperty("mission_log")) return; // invalid data
-            this.previewLogList = d.data.mission_log as Array<LogEntry>;
-        }, { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime }, this.void);
+            if (!d.success) {
+                alert(`Replay failed: ${d.msg}`);
+                return; // skip when failed
+            }
+            this._svc.navigateTo("../monitor");
+        }, repData, this.void);
     }
 }

@@ -20,7 +20,7 @@
                 [allowedDateStrs]="missionDates"
                 (dateRangeChanged)="onDateRangeChanged($event)"
             ></dateselect>
-            <div class="flexc grow pad5rht">
+            <div class="flexc pad5rht grow">
                 <div class="flex justends">
                     <dropselect class="pad5v disablehost"
                         [class.disabled]="!nameSelectable"
@@ -64,7 +64,23 @@
                     <button class="mar5btm pad5v px_minw80" [disabled]="!logsFetchable" (click)="onDeleteMissionLogs(0)">Delete Run</button>
                     <button class="mar5btm pad5v px_minw80" [disabled]="!timeSelectable || downloading" (click)="onDeleteMissionLogs(1)">Delete Mission</button>
                     <button class="mar5btm pad5v px_minw80" [disabled]="!nameSelectable || downloading" (click)="onDeleteMissionLogs(2)">Delete Date</button>
-                    <button class="mar5btm pad5v px_minw80" [disabled]="!logsFetchable" (click)="onReplayMissionLogs()">Replay Logs</button>
+                </div>
+            </div>
+            <div class="flexc px_minw200 px_maxw200 bdc_tint bd_sng bd_r5 mar5">
+                <obj-editor class="flex grow pad5"
+                    [objToEdit]="replaySettings"
+                    [readOnly]="!logsFetchable"
+                    [objName]="'Replay Settings'"
+                    [autoApply]="true"
+                    [textEnabled]="false"
+                    (applied)="onReplaySettingsChanged($event)"
+                ></obj-editor>
+                <div class="flex justcent">
+                    <button class="mar5btm pad5v px_minw80" [disabled]="!logsFetchable" (click)="onReplayMissionLogs()">
+                        @if (replayStarting) {
+                            <span class="spinner centcont"></span>
+                        } @else {Replay Logs}
+                    </button>                    
                 </div>
             </div>
         </div>
