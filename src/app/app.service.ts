@@ -104,4 +104,9 @@ export class AppService {
         }
         return true;
     }
+
+    public navigateTo(path: string): void {
+        // path looks like '/path' or '../path'
+        window.location.href = path;
+    }
 }
