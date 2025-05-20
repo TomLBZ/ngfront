@@ -76,6 +76,7 @@ export interface LogMetadataQuery {
     date?: string;
     name?: string;
     time?: string;
+    id?: number;
 }
 export interface LogEntry {
     ac_id: number;
@@ -89,6 +90,9 @@ export interface LogEntry {
     yaw: number;
 }
 export interface MissionMetadata {
+    mission_id: number;
+    lead_id: number;
+    follower_ids: Array<number>;
     mission_start_time: string;
     takeoff_start_time: string;
     takeoff_completion_time: string;
