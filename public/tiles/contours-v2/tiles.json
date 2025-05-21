@@ -121,6 +121,6 @@
     12523442.714243278
   ],
   "tiles": [
-    "https://api.maptiler.com/tiles/contours-v2/{z}/{x}/{y}.pbf?key=QOCNp1pWErFc8sgXrGwI"
+    "tiles/contours-v2/{z}/{x}/{y}.pbf"
   ]
 }
