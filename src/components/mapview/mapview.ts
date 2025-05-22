@@ -28,6 +28,8 @@ export class MapViewComponent {
     @Input() paths: Array<Path> = [];
     @Input() apiKey: string = '';
     @Input() zoom: number = 12;
+    @Input() minZoom: number = 0;
+    @Input() maxZoom: number = 22;
     @Input() centerLat: number = 1.364917;
     @Input() centerLng: number = 103.822872;
     @Input() fadeDuration: number = 0;

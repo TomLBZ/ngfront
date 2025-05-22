@@ -2,6 +2,8 @@
     <mgl-map class="p_full"
         [style]="initialStyle"
         [zoom]="[zoom]"
+        [maxZoom]="maxZoom"
+        [minZoom]="minZoom"
         [center]="[centerLng, centerLat]"
         [fadeDuration]="fadeDuration"
         (mapLoad)="onMapLoad($event)"
