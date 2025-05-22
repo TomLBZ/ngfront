@@ -29,6 +29,6 @@
     20037508.3427892
   ],
   "tiles": [
-    "https://api.maptiler.com/tiles/terrain-rgb-v2/{z}/{x}/{y}.webp?key=QOCNp1pWErFc8sgXrGwI"
+    "tiles/terrain-rgb-v2/{z}/{x}/{y}.webp"
   ]
 }
