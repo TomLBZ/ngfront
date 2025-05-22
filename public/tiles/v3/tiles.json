@@ -1615,6 +1615,6 @@
     20037508.342789244
   ],
   "tiles": [
-    "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=QOCNp1pWErFc8sgXrGwI"
+    "tiles/v3/{z}/{x}/{y}.pbf"
   ]
 }
