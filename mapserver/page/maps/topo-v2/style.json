@@ -682,7 +682,6 @@
                 "text-allow-overlap": false,
                 "text-field": "{height}",
                 "text-font": [
-                    "Roboto Regular",
                     "Noto Sans Regular"
                 ],
                 "text-ignore-placement": false,
@@ -746,7 +745,6 @@
                 "text-allow-overlap": false,
                 "text-field": "{height}",
                 "text-font": [
-                    "Roboto Regular",
                     "Noto Sans Regular"
                 ],
                 "text-ignore-placement": false,
@@ -3363,7 +3361,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Condensed Italic",
                     "Noto Sans Italic"
                 ],
                 "text-ignore-placement": false,
@@ -3590,7 +3587,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Condensed Italic",
                     "Noto Sans Italic"
                 ],
                 "text-letter-spacing": 0.1,
@@ -3641,7 +3637,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Regular",
                     "Noto Sans Regular"
                 ],
                 "text-max-width": 5,
@@ -3673,7 +3668,6 @@
                 "symbol-placement": "point",
                 "text-field": "{name:en}",
                 "text-font": [
-                    "Roboto Condensed Italic",
                     "Noto Sans Italic"
                 ],
                 "text-max-width": 5,
@@ -3765,7 +3759,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Condensed Italic",
                     "Noto Sans Italic"
                 ],
                 "text-max-width": 5,
@@ -3856,7 +3849,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Condensed Italic",
                     "Noto Sans Italic"
                 ],
                 "text-max-width": 5,
@@ -3916,7 +3908,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Regular",
                     "Noto Sans Regular"
                 ],
                 "text-ignore-placement": false,
@@ -4040,7 +4031,6 @@
                     " ft"
                 ],
                 "text-font": [
-                    "Roboto Condensed Regular",
                     "Noto Sans Regular"
                 ],
                 "text-max-width": {
@@ -4218,7 +4208,6 @@
                     " m"
                 ],
                 "text-font": [
-                    "Roboto Condensed Regular",
                     "Noto Sans Regular"
                 ],
                 "text-max-width": {
@@ -4396,7 +4385,6 @@
                     " ft"
                 ],
                 "text-font": [
-                    "Roboto Condensed Regular",
                     "Noto Sans Regular"
                 ],
                 "text-max-width": {
@@ -4574,7 +4562,6 @@
                     " m"
                 ],
                 "text-font": [
-                    "Roboto Condensed Regular",
                     "Noto Sans Regular"
                 ],
                 "text-max-width": {
@@ -4694,7 +4681,6 @@
                 "text-anchor": "center",
                 "text-field": "{name}",
                 "text-font": [
-                    "Roboto Regular",
                     "Noto Sans Regular"
                 ],
                 "text-letter-spacing": [
@@ -4898,7 +4884,6 @@
                 "text-anchor": "center",
                 "text-field": "{name}",
                 "text-font": [
-                    "Roboto Regular",
                     "Noto Sans Regular"
                 ],
                 "text-letter-spacing": 0,
@@ -5075,7 +5060,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Regular",
                     "Noto Sans Regular"
                 ],
                 "text-line-height": 1,
@@ -5189,7 +5173,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Condensed Italic",
                     "Noto Sans Italic"
                 ],
                 "text-ignore-placement": false,
@@ -5316,7 +5299,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Regular",
                     "Noto Sans Regular"
                 ],
                 "text-max-width": 8,
@@ -5430,7 +5412,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Regular",
                     "Noto Sans Regular"
                 ],
                 "text-letter-spacing": 0.1,
@@ -5615,8 +5596,7 @@
                 "text-anchor": "bottom",
                 "text-field": "{name:en}",
                 "text-font": [
-                    "Roboto Medium",
-                    "Noto Sans Regular"
+                    "Noto Sans Bold"
                 ],
                 "text-line-height": 0.8,
                 "text-max-width": 9,
@@ -5738,7 +5718,6 @@
                     ]
                 ],
                 "text-font": [
-                    "Roboto Condensed Italic",
                     "Noto Sans Italic"
                 ],
                 "text-ignore-placement": false,
@@ -5816,8 +5795,7 @@
                 "text-allow-overlap": false,
                 "text-field": "{name:en}",
                 "text-font": [
-                    "Roboto Medium",
-                    "Noto Sans Regular"
+                    "Noto Sans Bold"
                 ],
                 "text-letter-spacing": 0.07,
                 "text-max-width": {
@@ -5964,8 +5942,7 @@
             "layout": {
                 "text-field": "{name:en}",
                 "text-font": [
-                    "Roboto Medium",
-                    "Noto Sans Regular"
+                    "Noto Sans Bold"
                 ],
                 "text-justify": "center",
                 "text-size": {
@@ -6000,7 +5977,7 @@
     "metadata": {
         "maptiler:copyright": "You are licensed to use the style or its derivate for serving map tiles exclusively with MapTiler Server or MapTiler Cloud and in accordance with their licenses and terms. If you plan to use the style in a different way, contact us at sales@maptiler.com."
     },
-  "glyphs": "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=QOCNp1pWErFc8sgXrGwI",
+    "glyphs": "${url}/fonts/{fontstack}/{range}.pbf",
     "sprite": "${url}/sprites/sprite",
     "bearing": 0,
     "pitch": 0,
