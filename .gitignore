@@ -52,3 +52,7 @@ production/*
 !production/default.conf
 !production/README.md
 !production/config_template.json
+
+# Mapserver Resources
+mapserver/page/*
+!mapserver/page/index.html
