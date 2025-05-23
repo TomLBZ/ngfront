@@ -121,6 +121,6 @@
     12523442.714243278
   ],
   "tiles": [
-    "http://localhost:14200/tiles/contours-v2/{z}/{x}/{y}.pbf"
+    "tiles/contours-v2/{z}/{x}/{y}.pbf"
   ]
 }

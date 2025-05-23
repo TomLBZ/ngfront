@@ -29,6 +29,6 @@
     20037508.3427892
   ],
   "tiles": [
-    "http://localhost:14200/tiles/terrain-rgb-v2/{z}/{x}/{y}.webp"
+    "tiles/terrain-rgb-v2/{z}/{x}/{y}.webp"
   ]
 }

@@ -36,6 +36,6 @@
     20037508.342789244
   ],
   "tiles": [
-    "http://localhost:14200/tiles/satellite-v2/{z}/{x}/{y}.jpg"
+    "tiles/satellite-v2/{z}/{x}/{y}.jpg"
   ]
 }

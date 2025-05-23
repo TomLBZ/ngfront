@@ -1615,6 +1615,6 @@
     20037508.342789244
   ],
   "tiles": [
-    "http://localhost:14200/tiles/v3/{z}/{x}/{y}.pbf"
+    "tiles/v3/{z}/{x}/{y}.pbf"
   ]
 }
