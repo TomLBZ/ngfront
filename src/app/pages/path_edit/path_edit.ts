@@ -48,6 +48,7 @@ export class PathEditPage implements OnInit, OnDestroy {
     public readonly apiKey = env.mapKey;
     public readonly mapUrlBase = env.mapUrlBase;
     public readonly localMapUrlBase = env.localMapUrlBase;
+    public readonly production = env.production;
     public readonly missions: Array<Mission> = [this._newMission];
     public readonly missionsRepr = (m: Mission) => m.name.length > 0 ? m.name : "[New Mission]";
     public readonly wpGroup: MarkerGroup = new MarkerGroup(Icon.Circle(this._iconSize, this._wpColor), true, false, this._iconScale);

@@ -85,6 +85,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public readonly apiKey: string = env.mapKey;
     public readonly mapUrlBase: string = env.mapUrlBase;
     public readonly localMapUrlBase: string = env.localMapUrlBase;
+    public readonly production: boolean = env.production;
     public missions: Array<Mission> = [];
     public launchSettings: LaunchSettings = { fg_enable: false, joystick_enable: false };
     public runtimeSettings: RuntimeSettings = { traces: 100, lead_id: 0 };
