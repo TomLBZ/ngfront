@@ -4,12 +4,32 @@
     "name": "Satellite Hybrid",
     "sources": {
         "maptiler_planet": {
-            "url": "tiles/v3/tiles.json",
-            "type": "vector"
+            "type": "vector",
+            "tiles": [
+                "${url}/tiles/v3/{z}/{x}/{y}.pbf"
+            ],
+            "bounds": [
+                -180,
+                -85.0511287798066,
+                180,
+                85.0511287798066
+            ],
+            "minzoom": 0,
+            "maxzoom": 15
         },
         "satellite": {
-            "url": "tiles/satellite-v2/tiles.json",
-            "type": "raster"
+            "type": "raster",
+            "tiles": [
+                "${url}/tiles/satellite-v2/{z}/{x}/{y}.jpg"
+            ],
+            "bounds": [
+                -180,
+                -85.0511287798066,
+                180,
+                85.0511287798066
+            ],
+            "minzoom": 0,
+            "maxzoom": 22
         }
     },
     "layers": [
@@ -1134,8 +1154,8 @@
     "metadata": {
         "maptiler:copyright": "You are licensed to use the style or its derivate for serving map tiles exclusively with MapTiler Server or MapTiler Cloud and in accordance with their licenses and terms. If you plan to use the style in a different way, contact us at sales@maptiler.com."
     },
-    "glyphs": "fonts/{fontstack}/{range}.pbf",
-    "sprite": "maps/hybrid/sprite",
+    "glyphs": "${url}/fonts/{fontstack}/{range}.pbf",
+    "sprite": "${url}/maps/hybrid/sprite",
     "bearing": 0,
     "pitch": 0,
     "center": [

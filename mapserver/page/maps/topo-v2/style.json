@@ -4,20 +4,46 @@
     "name": "Topo",
     "sources": {
         "contours": {
-            "url": "tiles/contours-v2/tiles.json",
-            "type": "vector"
-        },
-        "maptiler_attribution": {
-            "attribution": "<a href=\"https://www.maptiler.com/copyright/\" target=\"_blank\">&copy; MapTiler</a> <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap contributors</a>",
-            "type": "vector"
+            "type": "vector",
+            "tiles": [
+                "${url}/tiles/contours-v2/{z}/{x}/{y}.pbf"
+            ],
+            "bounds": [
+                -180,
+                -66.513,
+                180,
+                74.01954331150226
+            ],
+            "minzoom": 9,
+            "maxzoom": 14
         },
         "maptiler_planet": {
-            "url": "tiles/v3/tiles.json",
-            "type": "vector"
+            "type": "vector",
+            "tiles": [
+                "${url}/tiles/v3/{z}/{x}/{y}.pbf"
+            ],
+            "bounds": [
+                -180,
+                -85.0511287798066,
+                180,
+                85.0511287798066
+            ],
+            "minzoom": 0,
+            "maxzoom": 15
         },
         "terrain_rgb": {
-            "url": "tiles/terrain-rgb-v2/tiles.json",
-            "type": "raster-dem"
+            "type": "raster-dem",
+            "tiles": [
+                "${url}/tiles/terrain-rgb-v2/{z}/{x}/{y}.webp"
+            ],
+            "bounds": [
+                -179.9999999999996,
+                -85.05112877980656,
+                179.9999999999996,
+                85.05112877980656
+            ],
+            "minzoom": 0,
+            "maxzoom": 14
         }
     },
     "layers": [
@@ -5974,8 +6000,8 @@
     "metadata": {
         "maptiler:copyright": "You are licensed to use the style or its derivate for serving map tiles exclusively with MapTiler Server or MapTiler Cloud and in accordance with their licenses and terms. If you plan to use the style in a different way, contact us at sales@maptiler.com."
     },
-    "glyphs": "http://localhost:14200/fonts/{fontstack}/{range}.pbf",
-    "sprite": "http://localhost:14200/maps/topo-v2/sprite",
+    "glyphs": "${url}/fonts/{fontstack}/{range}.pbf",
+    "sprite": "${url}/maps/topo-v2/sprite",
     "bearing": 0,
     "pitch": 0,
     "center": [
