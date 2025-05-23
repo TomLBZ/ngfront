@@ -52,6 +52,4 @@ production/*
 
 # Mapserver Resources
 mapserver/page/fonts
-mapserver/page/tiles/*/*
-!mapserver/page/tiles/*/tiles.json
-!mapserver/page/index.html
+mapserver/page/tiles
