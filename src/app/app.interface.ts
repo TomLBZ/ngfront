@@ -6,6 +6,8 @@ export interface AppConfig {
     apiUrl: string;
     wsUrl: string;
     mapKey: string;
+    mapUrlBase: string;
+    localMapUrlBase: string;
 }
 export interface UniPostStruct {
     op: string;

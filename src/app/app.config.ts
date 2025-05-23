@@ -9,7 +9,9 @@ export const env: AppConfig = {
     production: false,
     apiUrl: "",
     wsUrl: "",
-    mapKey: ""
+    mapKey: "",
+    mapUrlBase: "",
+    localMapUrlBase: ""
 };
 
 function getConfig(jsonPath: string): Promise<AppConfig> {
@@ -32,11 +34,14 @@ function getConfig(jsonPath: string): Promise<AppConfig> {
 }
 
 function applyConfig(config: AppConfig): void {
-    env.production = config.production;
-    env.apiUrl = config.apiUrl;
-    env.wsUrl = config.wsUrl;
-    env.mapKey = config.mapKey;
-    if (StructValidator.hasNonEmptyFields(config, ['apiUrl', 'wsUrl', 'mapKey'])) {
+    const expectedKeys = ['production', 'apiUrl', 'wsUrl', 'mapKey', 'mapUrlBase', 'localMapUrlBase'];
+    if (StructValidator.hasNonEmptyFields(config, expectedKeys)) {
+        env.production = config.production;
+        env.apiUrl = config.apiUrl;
+        env.wsUrl = config.wsUrl;
+        env.mapKey = config.mapKey;
+        env.mapUrlBase = config.mapUrlBase;
+        env.localMapUrlBase = config.localMapUrlBase;
         console.log('Config applied successfully:', config);
     } else {
         console.error('Config validation failed:', config);
