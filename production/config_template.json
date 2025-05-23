@@ -2,5 +2,7 @@
     "production": true,
     "apiUrl": "http://localhost:18000",
     "wsUrl": "ws://localhost:19000/ws",
-    "mapKey": "get_your_own_OpIi9ZULNHzrESv6T2vL"
+    "mapKey": "get_your_own_OpIi9ZULNHzrESv6T2vL",
+    "mapUrlBase": "https://api.maptiler.com",
+    "localMapUrlBase": "http://localhost:14285"
 }
