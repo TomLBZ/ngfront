@@ -7,6 +7,8 @@
             [mapStyles]="['topo-v2', 'satellite']"
             [mapStyle]="'topo-v2'"
             [localMode]="true"
+            [mapUrlBase]="mapUrlBase"
+            [localMapUrlBase]="localMapUrlBase"
             [maxZoom]="16"
             (mapMouseDown)="onMapMouseDown($event)"
             (objectMouseDown)="onObjectMouseDown($event)"

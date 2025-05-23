@@ -77,12 +77,14 @@ export class MonitorPage implements OnInit, OnDestroy {
     public get telemetryEnabled(): boolean { return this._health.sim && this._health.mstatus !== "EXITED" && this.selectedMission !== undefined; }
     public get markerGroups(): Array<MarkerGroup> { return [this._wpGrp, this._planeMgrp]; }
     public get paths(): Array<Path> { return [this._mpath, ...this._ppaths]; }
-    public get apiKey(): string { return env.mapKey; }
     public get allPlaneIds(): Array<number> { return this.selectedMission !== undefined ? [this.selectedMission.lead_id, ...this.selectedMission.follower_ids] : [0]; }
     public get telemetryNames(): Array<string> { return this._telemetries.map((t: Telemetry) => `ID: ${t.id}`); }
     public get visibleTelemetries(): Array<Telemetry> { return this._visibleTelemetryIndices.map((i: number) => this._telemetries[i]); }
     public readonly idRepr: Function = (o: any) => `ID: ${o.id}`;
     public readonly nameRepr: Function = (o: any) => o.name;
+    public readonly apiKey: string = env.mapKey;
+    public readonly mapUrlBase: string = env.mapUrlBase;
+    public readonly localMapUrlBase: string = env.localMapUrlBase;
     public missions: Array<Mission> = [];
     public launchSettings: LaunchSettings = { fg_enable: false, joystick_enable: false };
     public runtimeSettings: RuntimeSettings = { traces: 100, lead_id: 0 };
