@@ -85,6 +85,7 @@ export class MapViewComponent {
         const styleObj: MapStyleJson = JSON.parse(xhr.responseText);
         if (this.localMode) {
             for (const key in styleObj.sources) {
+                if (styleObj.sources[key].tiles === undefined) continue;
                 styleObj.sources[key].tiles = styleObj.sources[key].tiles.map(t => t.replace(/\$\{url\}/g, urlBase));
             }
             styleObj.glyphs = styleObj.glyphs.replace(/\$\{url\}/g, urlBase);
