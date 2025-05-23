@@ -9,6 +9,23 @@ import { Path } from '../../utils/src/graphics/path';
 import { Cache } from '../../utils/src/ds/cache';
 import { Color } from '../../utils/src/graphics/color';
 
+interface TileJson {
+    url?: string; // for non-local mode: can get json from online resources
+    type: string;
+    tiles: Array<string>; // for local mode: tiles are defined in json
+    bounds: Array<number>;
+    minzoom: number;
+    maxzoom: number;
+}
+
+interface MapStyleJson {
+    sources: {
+        [key: string]: TileJson;
+    };
+    glyphs: string;
+    sprite: string;
+}
+
 @Component({
     selector: 'mapview',
     standalone: true,
@@ -40,6 +57,8 @@ export class MapViewComponent {
     ];
     @Input() projection: string = 'globe';
     @Input() localMode: boolean = false;
+    @Input() mapUrlBase: string = "https://api.maptiler.com";
+    @Input() localMapUrlBase: string = "https://localhost:8080";
     @Output() layerModeChanged = new EventEmitter<string>();
     @Output() objectSelectionChanged = new EventEmitter<MarkerEvent>();
     @Output() objectClicked = new EventEmitter<MarkerEvent>();
@@ -57,13 +76,21 @@ export class MapViewComponent {
     onMapLoad(map: Map) { this.map = map; }
     private _cachedStyles: Cache<any> = new Cache<any>();
     private _getStyle(style: string) {
-        const url = this.localMode ? 
-            `maps/${style}/style.json` : 
-            `https://api.maptiler.com/maps/${style}/style.json?key=${this.apiKey}`;
+        const urlBase = this.localMode ? this.localMapUrlBase : this.mapUrlBase;
+        const urlSuffix = this.localMode ? "" : `?key=${this.apiKey}`;
+        const url = `${urlBase}/maps/${style}/style.json${urlSuffix}`;
         const xhr = new XMLHttpRequest();
         xhr.open('GET', url, false);
         xhr.send();
-        return JSON.parse(xhr.responseText);
+        const styleObj: MapStyleJson = JSON.parse(xhr.responseText);
+        if (this.localMode) {
+            for (const key in styleObj.sources) {
+                styleObj.sources[key].tiles = styleObj.sources[key].tiles.map(t => t.replace(/\$\{url\}/g, urlBase));
+            }
+            styleObj.glyphs = styleObj.glyphs.replace(/\$\{url\}/g, urlBase);
+            styleObj.sprite = styleObj.sprite.replace(/\$\{url\}/g, urlBase);
+        }
+        return styleObj as any;
     }
     private get style() {
         const idx = this.mapStyles.indexOf(this.mapStyle);
