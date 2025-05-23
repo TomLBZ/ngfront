@@ -43,9 +43,6 @@ Thumbs.db
 
 # Secret files
 public/assets/config.json
-public/fonts
-public/tiles/*/*
-!public/tiles/*/tiles.json
 production/*
 !production/compose.yaml
 !production/Dockerfile
@@ -54,5 +51,7 @@ production/*
 !production/config_template.json
 
 # Mapserver Resources
-mapserver/page/*
+mapserver/page/fonts
+mapserver/page/tiles/*/*
+!mapserver/page/tiles/*/tiles.json
 !mapserver/page/index.html
