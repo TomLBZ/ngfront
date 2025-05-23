@@ -1,0 +1,13 @@
+name: ngfront-mapserver
+services:
+  ngfront-mapserver:
+    image: ngfront-mapserver
+    build: .
+    container_name: ngfront-mapserver
+    restart: always
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./page/maps:/usr/share/nginx/html/maps:ro
+      - ./page/tiles:/usr/share/nginx/html/tiles:ro
+    ports:
+      - "14285:80"
