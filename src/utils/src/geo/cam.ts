@@ -76,12 +76,11 @@ export class GeoCam { // a camera on Earth
     }
     private static buildAttitudeQuat(attitude: Attitude, type: CoordsFrameType): Quaternion {
         const [roll, pitch, yaw] = attitude; // attitude angles in radians
-        const xPF = Vec3.New(1, 0, 0); // PF X axis in camera frame
-        const yPF = Vec3.New(0, 1, 0); // PF Y axis in camera frame
-        const zPF = Vec3.New(0, 0, 1); // PF Z axis in camera frame
+        const xPF = Vec3.New(1, 0, 0); // PF X axis
+        const yPF = Vec3.New(0, 1, 0); // PF Y axis
+        const zPF = type === CoordsFrameType.ENU ? Vec3.New(0, 0, 1) : Vec3.New(0, 0, -1); // PF Z axis UP
         /* ---- intrinsic yaw (ψ) about current Z ---------------- */
-        const zBody = type === CoordsFrameType.ENU ? zPF : zPF.Neg(); // Z axis in camera frame
-        let q: Quaternion = (yaw !== 0) ? Quaternion.FromAxisAngle(zBody, yaw) : Quaternion.I;
+        let q: Quaternion = (yaw !== 0) ? Quaternion.FromAxisAngle(zPF, yaw) : Quaternion.I;
         /* ---- pitch (θ) about *new* Y -------------------------- */
         if (pitch !== 0) {
             const yAfterYaw = q.RotateV(yPF);                       // axis after ψ
