@@ -24,7 +24,7 @@ const vec3 SUNC     = vec3(1.0, 1.0, 0.75) ; // sun color
 
 vec4 rayNerr() {
     vec2 p = v_p * tan(u_fov * 0.5); // p is the pixel coordinate in camera space
-    vec3 ray = vec3(1.0, p.x, -p.y); // ray direction
+    vec3 ray = vec3(1.0, -p.x, p.y); // ray direction
     float raylen = length(ray); // length of ray
     float halfPixCoeff = 1.0 / u_minres; // half pixel coefficient
     vec2 nudgedpix = p + sign(p) * halfPixCoeff; // nudged coordinates by 0.5 pixel
