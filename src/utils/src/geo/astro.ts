@@ -1,5 +1,5 @@
 import { Angles } from "../../math";
-import { EclipticCoords, EquatorialCoords, CartesianCoords3D, SunData, GeodeticCoords } from "../../geo";
+import { EclipticCoords, EquatorialCoords, CartesianCoords3D, SunData, GeodeticCoords, GeoHelper } from "../../geo";
 
 export class Astro {
     public static julianDayToObliquity = julianDayToObliquity;
@@ -107,5 +107,5 @@ export function sunDataToSunPositionVectorEcef(sunData: SunData): CartesianCoord
     const gmstRad = Angles.degToRad(sunData.gmst);
     const cosT = Math.cos(-gmstRad);
     const sinT = Math.sin(-gmstRad);
-    return [cosT * x - sinT * y, sinT * x + cosT * y, z] as CartesianCoords3D; // rectangular coordinates in ECEF
+    return GeoHelper.Normalize([cosT * x - sinT * y, sinT * x + cosT * y, z]) as CartesianCoords3D; // rectangular coordinates in ECEF
 }
