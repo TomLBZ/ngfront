@@ -157,7 +157,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (isNew) path.addPoint(newp); // add new point if it's different from the last
             if (path.length > this.runtimeSettings.traces) path.shift(); // remove oldest points
             if (pathIdx < 0) this._ppaths.push(path); // add new path
-            else this._ppaths.splice(pathIdx, 1, path); // remove old path and add new path
+            // else this._ppaths.splice(pathIdx, 1, path); // remove old path and add new path
             if (isLeader) {
                 this._geoCoords = [t.lon, t.lat, t.alt]; // update geo coords
                 this._attitude = [t.roll, t.pitch, t.yaw]; // update attitude
@@ -212,7 +212,7 @@ export class MonitorPage implements OnInit, OnDestroy {
                 }
             }, undefined, this.void);
         }, undefined, this.void);
-        if (this._gl === undefined) {
+        if (!this._glRunning) {
             const gl = this.tryLoadGL();
             if (gl) this.onGlLoaded(gl);
         }
@@ -268,6 +268,11 @@ export class MonitorPage implements OnInit, OnDestroy {
     }
     private drawFrame(): void {
         if (this._pipeline) {
+            if (this.canvasRef === undefined || this.canvasRef.nativeElement === undefined) { // canvas crashed
+                this._glRunning = false; // canvas not ready
+                this._pipeline.dispose();
+                return; // skip rendering
+            }
             const resolution = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
             const minres = Math.min(...resolution);
             const scale = [resolution[0] / minres, resolution[1] / minres];
@@ -331,6 +336,10 @@ export class MonitorPage implements OnInit, OnDestroy {
     }
     private tryLoadGL(): WebGL2RenderingContext | undefined {
         if (this.canvasRef === undefined || this.canvasRef === null) {
+            return undefined; // canvas not ready
+        }
+        // check if canvasRef has a key called nativeElement
+        if (this.canvasRef.hasOwnProperty('nativeElement') === false) {
             return undefined; // canvas not ready
         }
         if (this.canvasRef.nativeElement === undefined || this.canvasRef.nativeElement === null) {
