@@ -363,18 +363,24 @@ export class MonitorPage implements OnInit, OnDestroy {
             intervalMs: 1000, // fetches states per one second
             missedPolicy: MissedDeadlinePolicy.RUN_ONCE,
         });
+    }
+    @ViewChild('canvasgl', {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
+    ngOnInit(): void {
         this._svc.keyCtrl.setKeyCallback("w", () => this.keyUpdated("w"), KeyControlMode.EVENT_PRESS);
         this._svc.keyCtrl.setKeyCallback("s", () => this.keyUpdated("s"), KeyControlMode.EVENT_PRESS);
         this._svc.keyCtrl.setKeyCallback("a", () => this.keyUpdated("a"), KeyControlMode.EVENT_PRESS);
         this._svc.keyCtrl.setKeyCallback("d", () => this.keyUpdated("d"), KeyControlMode.EVENT_PRESS);
         this._svc.keyCtrl.setKeyCallback("q", () => this.keyUpdated("q"), KeyControlMode.EVENT_PRESS);
         this._svc.keyCtrl.setKeyCallback("e", () => this.keyUpdated("e"), KeyControlMode.EVENT_PRESS);
-    }
-    @ViewChild('canvasgl', {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
-    ngOnInit(): void {
         this._rtos.start();
     }
     ngOnDestroy(): void {
+        this._svc.keyCtrl.removeKeyCallback("w", KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.removeKeyCallback("s", KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.removeKeyCallback("a", KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.removeKeyCallback("d", KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.removeKeyCallback("q", KeyControlMode.EVENT_PRESS);
+        this._svc.keyCtrl.removeKeyCallback("e", KeyControlMode.EVENT_PRESS);
         this._rtos.stop();
         this.stopTelemetry();
         console.log("RTOS stopped");
