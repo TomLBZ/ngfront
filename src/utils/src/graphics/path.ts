@@ -32,13 +32,22 @@ export class Path {
         const segments = new Array<Segment>();
         const pts: Array<IPoint> = this.points;
         if (pts.length < 2) return segments;
+        let startIndex: number = 0;
+        let endIndex: number = 1;
         for (let i = 0; i < pts.length - 1; i++) {
-            segments.push(new Segment(pts[i], pts[i + 1]));
+            startIndex = i;
+            while (endIndex < pts.length && pts[endIndex].equals(pts[startIndex])) {
+                endIndex++;
+            }
+            if (endIndex === pts.length) break; // reached the end of the points array
+            segments.push(new Segment(pts[startIndex], pts[endIndex]));
+            startIndex = endIndex;
+            endIndex = startIndex + 1;
         }
         return segments;
     }
     public get hash(): number {
-        const ptsHash: number = Hash.hash(this._points.map(p => p.hash));
+        const ptsHash: number = Hash.hash(this._points.map((p, i) => Hash.hash([p.x, p.y, i])));
         const propsHash: number = Hash.hash([this.color.hash, this.style, this.weight, this.closed ? 1 : 0, this._points.length]);
         return Hash.hash([this.id, ptsHash, propsHash]);
     }
