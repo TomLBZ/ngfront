@@ -86,10 +86,9 @@ export class TestPage implements AfterViewInit, OnDestroy {
         const minres = Math.min(...resolution);
         const scale = [resolution[0] / minres, resolution[1] / minres];
         this.controllerUpdate();
-        const cam = new GeoCam(this._geoCoords, this._attitude, CoordsFrameType.NED);
+        const cam = new GeoCam(this._geoCoords, this._attitude, CoordsFrameType.ENU);
         const epos = cam.ecefToCamFrame([0, 0, 0]); // earth position in camera frame
-        // console.log(`Epos: [${epos[0].toFixed(2)}, ${epos[1].toFixed(2)}, ${epos[2].toFixed(2)}]`);
-        // const epos = [0, 16371000, 0]; // earth position in camera frame
+        // const epos = [0, -16371000, 0]; // earth position in camera frame
         const globalUniforms: UniformRecord = {
             "u_scale": scale,
         };
@@ -117,12 +116,12 @@ export class TestPage implements AfterViewInit, OnDestroy {
         if (this._svc.keyCtrl.getKeyState("q")) this._attitude[0] -= 0.01; // roll left
         if (this._svc.keyCtrl.getKeyState("e")) this._attitude[0] += 0.01; // roll right
         // update geodetic coordinates based on key presses
-        if (this._svc.keyCtrl.getKeyState("ArrowUp")) this._geoCoords[1] += 0.01; // move north
-        if (this._svc.keyCtrl.getKeyState("ArrowDown")) this._geoCoords[1] -= 0.01; // move south
-        if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geoCoords[0] -= 0.01; // move west
-        if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geoCoords[0] += 0.01; // move east
-        if (this._svc.keyCtrl.getKeyState("Shift")) this._geoCoords[2] -= 0.01; // move down
-        if (this._svc.keyCtrl.getKeyState(" ")) this._geoCoords[2] += 0.01; // move up
+        if (this._svc.keyCtrl.getKeyState("ArrowUp")) this._geoCoords[1] += 0.1; // move north
+        if (this._svc.keyCtrl.getKeyState("ArrowDown")) this._geoCoords[1] -= 0.1; // move south
+        if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geoCoords[0] -= 0.1; // move west
+        if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geoCoords[0] += 0.1; // move east
+        if (this._svc.keyCtrl.getKeyState("Shift")) this._geoCoords[2] -= 0.1; // move down
+        if (this._svc.keyCtrl.getKeyState(" ")) this._geoCoords[2] += 0.1; // move up
     }
     private fixedFloats(arr: number[], digits: number = 4): string[] {
         return arr.map((v) => v.toFixed(digits));
