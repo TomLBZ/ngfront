@@ -157,6 +157,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (isNew) path.addPoint(newp); // add new point if it's different from the last
             if (path.length > this.runtimeSettings.traces) path.shift(); // remove oldest points
             if (pathIdx < 0) this._ppaths.push(path); // add new path
+            else this._ppaths[pathIdx] = path; // update existing path
             // else this._ppaths.splice(pathIdx, 1, path); // remove old path and add new path
             if (isLeader) {
                 this._geoCoords = [t.lon, t.lat, t.alt]; // update geo coords
