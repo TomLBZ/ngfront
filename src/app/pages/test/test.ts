@@ -100,17 +100,17 @@ export class TestPage implements AfterViewInit, OnDestroy {
     }
     private controllerUpdate(): void {
         // update attitude based on key presses
-        if (this._svc.keyCtrl.getKeyState("a")) this._attitude[2] -= 0.01; // yaw left
-        if (this._svc.keyCtrl.getKeyState("d")) this._attitude[2] += 0.01; // yaw right
+        if (this._svc.keyCtrl.getKeyState("q")) this._attitude[2] += 0.01; // yaw left
+        if (this._svc.keyCtrl.getKeyState("e")) this._attitude[2] -= 0.01; // yaw right
         if (this._svc.keyCtrl.getKeyState("w")) this._attitude[1] += 0.01; // pitch up
         if (this._svc.keyCtrl.getKeyState("s")) this._attitude[1] -= 0.01; // pitch down
-        if (this._svc.keyCtrl.getKeyState("q")) this._attitude[0] -= 0.01; // roll left
-        if (this._svc.keyCtrl.getKeyState("e")) this._attitude[0] += 0.01; // roll right
+        if (this._svc.keyCtrl.getKeyState("a")) this._attitude[0] -= 0.01; // roll left
+        if (this._svc.keyCtrl.getKeyState("d")) this._attitude[0] += 0.01; // roll right
         // update geodetic coordinates based on key presses
         if (this._svc.keyCtrl.getKeyState("ArrowUp")) this._geoCoords[1] += 0.1; // move north
         if (this._svc.keyCtrl.getKeyState("ArrowDown")) this._geoCoords[1] -= 0.1; // move south
-        if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geoCoords[0] -= 0.1; // move west
-        if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geoCoords[0] += 0.1; // move east
+        if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geoCoords[0] += 0.1; // move west
+        if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geoCoords[0] -= 0.1; // move east
         if (this._svc.keyCtrl.getKeyState("Shift")) this._geoCoords[2] -= 1000; // move down
         if (this._svc.keyCtrl.getKeyState(" ")) this._geoCoords[2] += 1000; // move up
     }
