@@ -46,7 +46,7 @@ export class GeoCam { // a camera on Earth
     private update() {
         this._posEcef = geodeticToECEF(...this._posGeodetic); // update ECEF coordinates
         const qEcefToPf = GeoCam.buildLocalFrameQuat(Vec3.New(...this._posEcef), this._coordsType); // quaternion representing the rotation from ECEF frame to local tangent frame
-        const qPfToCam = GeoCam.buildAttitudeQuat(qEcefToPf, this._attitude); // quaternion representing the rotation from local tangent frame to camera frame
+        const qPfToCam = GeoCam.buildAttitudeQuat(this._attitude, this._coordsType); // quaternion representing the rotation from local tangent frame to camera frame
         this._qEcefToCf = qPfToCam.Mul(qEcefToPf).Norm();       // (Cam←PF)·(PF←ECEF)
         this._qCfToEcef = this._qEcefToCf.Inv();                // cached inverse
     }
@@ -74,14 +74,14 @@ export class GeoCam { // a camera on Earth
         const tmp = Mat3.FromRows([x, y, z]); // PF axes in ECEF in row order as Quaternion.FromMat3 expects a row matrix
         return Quaternion.FromMat3(tmp).Norm();     // ECEF→PF
     }
-    private static buildAttitudeQuat(qEcefToPf: Quaternion, attitude: Attitude): Quaternion {
+    private static buildAttitudeQuat(attitude: Attitude, type: CoordsFrameType): Quaternion {
         const [roll, pitch, yaw] = attitude; // attitude angles in radians
-        /* PF axes expressed in **ECEF**, obtained by rotating the global X,Y,Z with qEcefToPf^{-1} (PF←ECEF)⟂ => PF axes in ECEF */
-        const xPF = qEcefToPf.Inv().RotateV(Vec3.New(1, 0, 0));
-        const yPF = qEcefToPf.Inv().RotateV(Vec3.New(0, 1, 0));
-        const zPF = qEcefToPf.Inv().RotateV(Vec3.New(0, 0, 1));
+        const xPF = Vec3.New(1, 0, 0); // PF X axis in camera frame
+        const yPF = Vec3.New(0, 1, 0); // PF Y axis in camera frame
+        const zPF = Vec3.New(0, 0, 1); // PF Z axis in camera frame
         /* ---- intrinsic yaw (ψ) about current Z ---------------- */
-        let q: Quaternion = (yaw !== 0) ? Quaternion.FromAxisAngle(zPF, yaw) : Quaternion.I;
+        const zBody = type === CoordsFrameType.ENU ? zPF : zPF.Neg(); // Z axis in camera frame
+        let q: Quaternion = (yaw !== 0) ? Quaternion.FromAxisAngle(zBody, yaw) : Quaternion.I;
         /* ---- pitch (θ) about *new* Y -------------------------- */
         if (pitch !== 0) {
             const yAfterYaw = q.RotateV(yPF);                       // axis after ψ
