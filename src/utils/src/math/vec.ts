@@ -23,6 +23,15 @@ export class Vec {
             throw new Error("Index out of bounds");
         }
     }
+    equals(v: this): boolean {
+        this.throwOnDimensionMismatch(v.length);
+        for (let i = 0; i < this.length; i++) {
+            if (this[i] !== v[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
     fill(value: number): void {
         for (let i = 0; i < this.length; i++) {
             this._data[i] = value;
