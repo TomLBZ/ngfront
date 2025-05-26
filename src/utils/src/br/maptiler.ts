@@ -1,4 +1,4 @@
-import { Earth } from "../geo/earth_old";
+import { Earth } from "../../geo";
 import { MapTile } from "../../br";
 
 export class MapTiler {
