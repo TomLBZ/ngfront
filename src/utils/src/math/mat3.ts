@@ -96,7 +96,7 @@ export class Mat3 extends Mat {
             cols[0].z, cols[1].z, cols[2].z
         ]);
     }
-    static I(): Mat3 {
+    static get I(): Mat3 {
         return Mat3.New([
             1, 0, 0,
             0, 1, 0,
