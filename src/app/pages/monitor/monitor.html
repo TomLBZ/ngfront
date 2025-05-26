@@ -14,33 +14,46 @@
         ></mapview>   
         <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_tint bold ft_huge centcont justcent">
             @if (telemetryEnabled && launchSettings.joystick_enable) {
-                <span>Throttle</span>
-                <slider
-                    [minValue]="0"
-                    [maxValue]="9600"
-                    [value]="joystick.throttle"
-                    [isDraggable]="true"
-                    [isEmphasized]="false"
-                    (valueChanged)="onThrottleChanged($event)"
-                ></slider>
-                <span>Pitch</span>
-                <slider
-                    [minValue]="-9600"
-                    [maxValue]="9600"
-                    [value]="joystick.pitch"
-                    [isDraggable]="true"
-                    [isEmphasized]="false"
-                    (valueChanged)="onPitchChanged($event)"
-                ></slider>
-                <span>Roll</span>
-                <slider
-                    [minValue]="-9600"
-                    [maxValue]="9600"
-                    [value]="joystick.roll"
-                    [isDraggable]="true"
-                    [isEmphasized]="false"
-                    (valueChanged)="onRollChanged($event)"
-                ></slider>
+                <div class="flexr">
+                    <div class="flexc">
+                        <span>Throttle</span>
+                        <slider
+                            [minValue]="0"
+                            [maxValue]="9600"
+                            [value]="joystick.throttle"
+                            [isDraggable]="true"
+                            [isEmphasized]="false"
+                            (valueChanged)="onThrottleChanged($event)"
+                        ></slider>
+                        <span>Pitch</span>
+                        <slider
+                            [minValue]="-9600"
+                            [maxValue]="9600"
+                            [value]="joystick.pitch"
+                            [isDraggable]="true"
+                            [isEmphasized]="false"
+                            (valueChanged)="onPitchChanged($event)"
+                        ></slider>
+                        <span>Roll</span>
+                        <slider
+                            [minValue]="-9600"
+                            [maxValue]="9600"
+                            [value]="joystick.roll"
+                            [isDraggable]="true"
+                            [isEmphasized]="false"
+                            (valueChanged)="onRollChanged($event)"
+                        ></slider>
+                    </div>
+                    <div>
+                        <div class="p_full pos_rel">
+                            <div class="bgc_ltint pad5 mar5 bd_r5 pos_abs top0 rht0 z1 sh5_tint txt_prewrap">{{ Text }}</div>    
+                            <canvas
+                                #canvas
+                                class="p_full"
+                            ></canvas>
+                        </div>
+                    </div>
+                </div>
             }
             @else {
                 @if (launchSettings.joystick_enable) {

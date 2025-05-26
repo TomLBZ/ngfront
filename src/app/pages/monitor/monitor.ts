@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { MarkerGroup } from '../../../utils/src/graphics/markergrp';
 import { Icon } from '../../../utils/src/graphics/icon';
 import { Color } from '../../../utils/src/graphics/color';
@@ -19,6 +19,10 @@ import { Waypoint, Mission, Telemetry } from '../../app.interface';
 import { StructValidator } from '../../../utils/src/ds/validate';
 import { Callback, DictN } from '../../../utils/types';
 import { SliderComponent } from '../../../components/slider/slider';
+import { RenderHelper, RenderPipeline, UniformRecord } from '../../../utils/gpu';
+import { Queue } from '../../../utils/ds';
+import { Attitude, CoordsFrameType, GeodeticCoords } from '../../../utils/geo';
+import { GeoCam } from '../../../utils/src/geo/cam';
 interface LaunchSettings {
     fg_enable: boolean;
     joystick_enable: boolean;
@@ -34,7 +38,7 @@ interface RuntimeSettings {
     ],
     templateUrl: 'monitor.html'
 })
-export class MonitorPage implements OnInit, OnDestroy {
+export class MonitorPage implements OnInit, OnDestroy, AfterViewInit {
     private readonly _svc: AppService;
     private readonly _planeMgrp: MarkerGroup = new MarkerGroup(Icon.Poly(16, Icon.polyPlaneVecs, Color.Blue));
     private readonly _wpGrp: MarkerGroup = new MarkerGroup(Icon.Circle(16, Color.Magenta));
@@ -59,6 +63,21 @@ export class MonitorPage implements OnInit, OnDestroy {
     private websocket?: WebSocket;
     private void: Callback = () => {};
     private alert: Callback = (e: any) => { this.waiting = false; alert(e); };
+    private _gl!: WebGL2RenderingContext;
+    private _pipeline!: RenderPipeline;
+    private _startTimeMs: number = 0;
+    private _frameTimeQ: Queue<number> = new Queue<number>(32);
+    private _lastFrameTime: number = Date.now();
+    private _glRunning: boolean = false;
+    private _lastIntFps: number = 0;
+    private _geoCoords: GeodeticCoords = [0, 0, 1000]; // longitude, latitude, altitude
+    private _attitude: Attitude = [0, 0, 0]; // roll, pitch, yaw
+    private fpsText: string = "FPS: 0.00";
+    private attText: string = "Attitude: [0, 0, 0]";
+    private coordsText: string = "Coords: [0, 0, 0]";
+    public get Text(): string {
+        return this.fpsText + "\n" + this.attText + "\n" + this.coordsText;
+    }
     public get healthStr(): string {
         const header = "=== System Health ===\n";
         const br = `Bridge: ${this._health.br ? "Online" : "Offline"}\n`;
@@ -138,6 +157,10 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (path.length > this.runtimeSettings.traces) path.shift(); // remove oldest points
             if (pathIdx < 0) this._ppaths.push(path); // add new path
             else this._ppaths.splice(pathIdx, 1, path); // remove old path and add new path
+            if (isLeader) {
+                this._geoCoords = [t.lon, t.lat, t.alt]; // update geo coords
+                this._attitude = [t.roll, t.pitch, t.yaw]; // update attitude
+            }
         });
     }
     private stopTelemetry() {
@@ -221,6 +244,68 @@ export class MonitorPage implements OnInit, OnDestroy {
         }
         this.updateJoystick();
     }
+    private setupPipeline(p: RenderPipeline): void {
+        p.setPasses([
+            { name: "raymarch" }, // render to texture
+            { name: "obj3d" }, // render to texture
+            { name: "hud2d" }, // render to canvas
+        ], true);
+        p.setAttribute("a_position", {
+            buffer: RenderHelper.createBuffer(this._gl, new Float32Array([
+                -1, -1, 1, -1, -1,  1, 1,  1 // quad
+            ])),
+            size: 2, // 2 components per vertex
+        });
+        p.setIndexBuffer(RenderHelper.createBuffer(this._gl, new Uint16Array([
+            0, 1, 2, // first triangle
+            2, 1, 3 // second triangle
+        ]), this._gl.ELEMENT_ARRAY_BUFFER), this._gl.UNSIGNED_SHORT, 6);
+    }
+    private drawFrame(): void {
+        if (!this._pipeline) return;
+        const resolution = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
+        const minres = Math.min(...resolution);
+        const scale = [resolution[0] / minres, resolution[1] / minres];
+        const cam = new GeoCam(this._geoCoords, this._attitude, CoordsFrameType.ENU);
+        const epos = cam.ecefToCamFrame([0, 0, 0]); // earth position in camera frame
+        // const epos = [0, -16371000, 0]; // earth position in camera frame
+        const globalUniforms: UniformRecord = {
+            "u_scale": scale,
+        };
+        const uniforms: Record<string, UniformRecord> = {
+            "raymarch": {
+                "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
+                "u_minres": minres, // minimum resolution
+                "u_sundir": [Math.sqrt(3) / 2, 0, 0.5], // sun direction in observer frame
+                "u_epos": epos, // earth position in observer frame
+                "u_escale": 1e-6, // scale factors for earth and sun
+            },
+        };
+        this._pipeline.setGlobalUniforms(globalUniforms);
+        this._pipeline.renderAll(uniforms);
+        this.updateText();
+        if (this._glRunning) requestAnimationFrame(() => this.drawFrame());
+        else this._pipeline.dispose();
+    }
+    private fixedFloats(arr: number[], digits: number = 4): string[] {
+        return arr.map((v) => v.toFixed(digits));
+    }
+    private toDegs(arr: number[]): string[] {
+        return arr.map((v) => (v * 180 / Math.PI).toFixed(2) + "°");
+    }
+    private updateText(): void {
+        const now = Date.now();
+        this._frameTimeQ.enqueue(now - this._lastFrameTime);
+        this._lastFrameTime = now;
+        const fps = 1000 / this._frameTimeQ.average();
+        const intfps = Math.round(fps);
+        if (intfps !== this._lastIntFps && this._frameTimeQ.size() === this._frameTimeQ.maxLength) {
+            this._lastIntFps = intfps;
+            this.fpsText = `FPS: ${fps.toFixed(2)}`;
+        }
+        this.coordsText = `Coords: [${this.fixedFloats(this._geoCoords).join(", ")}]`;
+        this.attText = `Attitude: [${this.toDegs(this._attitude).join(", ")}]`;
+    }
     constructor(svc: AppService) {
         this._svc = svc;
         this._mpath = new Path(-1);
@@ -239,6 +324,27 @@ export class MonitorPage implements OnInit, OnDestroy {
         this._svc.keyCtrl.setKeyCallback("q", () => this.keyUpdated("q"), KeyControlMode.EVENT_PRESS);
         this._svc.keyCtrl.setKeyCallback("e", () => this.keyUpdated("e"), KeyControlMode.EVENT_PRESS);
     }
+    @ViewChild('canvas', {static: true}) canvasRef!: ElementRef<HTMLCanvasElement>;
+    ngAfterViewInit(): void {
+        const gl: WebGL2RenderingContext = this.canvasRef.nativeElement.getContext("webgl2") as WebGL2RenderingContext;
+        if (!gl) {
+            console.error("WebGL2 not supported");
+            return;
+        }
+        this._gl = gl;
+        this._pipeline = new RenderPipeline(gl);
+        this._pipeline.loadPrograms([
+            { name: "raymarch", vertex: "/shaders/twotrig.vert", fragment: "/shaders/raymarch.frag", url: true},
+            { name: "obj3d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/obj3d.frag", url: true },
+            { name: "hud2d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/hud2d.frag", url: true },
+        ]).then((p: RenderPipeline) => {
+            this.setupPipeline(p);
+            this._startTimeMs = Date.now();
+            this._lastFrameTime = this._startTimeMs;
+            this._glRunning = true;
+            this.drawFrame();
+        });
+    }
     ngOnInit(): void {
         this._rtos.start();
     }
@@ -247,6 +353,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         this.stopTelemetry();
         console.log("RTOS stopped");
         console.log(this._rtos.stats);
+        this._glRunning = false;
     }
     onPlaneSelected(indices: Array<number>) {
         this._visibleTelemetryIndices.length = 0; // clear all visible telemetries
