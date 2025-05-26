@@ -21,8 +21,9 @@ import { Callback, DictN } from '../../../utils/types';
 import { SliderComponent } from '../../../components/slider/slider';
 import { RenderHelper, RenderPipeline, UniformRecord } from '../../../utils/gpu';
 import { Queue } from '../../../utils/ds';
-import { Attitude, CoordsFrameType, GeodeticCoords } from '../../../utils/geo';
+import { Attitude, CoordsFrameType, GeodeticCoords, GeoHelper } from '../../../utils/geo';
 import { GeoCam } from '../../../utils/src/geo/cam';
+import { dateToSunData, sunDataToSunPositionVectorEcef } from '../../../utils/src/geo/astro';
 interface LaunchSettings {
     fg_enable: boolean;
     joystick_enable: boolean;
@@ -38,7 +39,7 @@ interface RuntimeSettings {
     ],
     templateUrl: 'monitor.html'
 })
-export class MonitorPage implements OnInit, OnDestroy, AfterViewInit {
+export class MonitorPage implements OnInit, OnDestroy {
     private readonly _svc: AppService;
     private readonly _planeMgrp: MarkerGroup = new MarkerGroup(Icon.Poly(16, Icon.polyPlaneVecs, Color.Blue));
     private readonly _wpGrp: MarkerGroup = new MarkerGroup(Icon.Circle(16, Color.Magenta));
@@ -211,6 +212,10 @@ export class MonitorPage implements OnInit, OnDestroy, AfterViewInit {
                 }
             }, undefined, this.void);
         }, undefined, this.void);
+        if (this._gl === undefined) {
+            const gl = this.tryLoadGL();
+            if (gl) this.onGlLoaded(gl);
+        }
     }
     private updateJoystick() {
         this._svc.callAPI("sim/joystick", (d: any) => {
@@ -262,28 +267,31 @@ export class MonitorPage implements OnInit, OnDestroy, AfterViewInit {
         ]), this._gl.ELEMENT_ARRAY_BUFFER), this._gl.UNSIGNED_SHORT, 6);
     }
     private drawFrame(): void {
-        if (!this._pipeline) return;
-        const resolution = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
-        const minres = Math.min(...resolution);
-        const scale = [resolution[0] / minres, resolution[1] / minres];
-        const cam = new GeoCam(this._geoCoords, this._attitude, CoordsFrameType.ENU);
-        const epos = cam.ecefToCamFrame([0, 0, 0]); // earth position in camera frame
-        // const epos = [0, -16371000, 0]; // earth position in camera frame
-        const globalUniforms: UniformRecord = {
-            "u_scale": scale,
-        };
-        const uniforms: Record<string, UniformRecord> = {
-            "raymarch": {
-                "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
-                "u_minres": minres, // minimum resolution
-                "u_sundir": [Math.sqrt(3) / 2, 0, 0.5], // sun direction in observer frame
-                "u_epos": epos, // earth position in observer frame
-                "u_escale": 1e-6, // scale factors for earth and sun
-            },
-        };
-        this._pipeline.setGlobalUniforms(globalUniforms);
-        this._pipeline.renderAll(uniforms);
-        this.updateText();
+        if (this._pipeline) {
+            const resolution = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
+            const minres = Math.min(...resolution);
+            const scale = [resolution[0] / minres, resolution[1] / minres];
+            const cam = new GeoCam(this._geoCoords, this._attitude, CoordsFrameType.ENU);
+            const epos = cam.ecefToCamFrame([0, 0, 0]); // earth position in camera frame
+            const sunData = dateToSunData(new Date(Date.now()));
+            const sunVec = sunDataToSunPositionVectorEcef(sunData);
+            const sundir = GeoHelper.Normalize(cam.ecefToCamFrame(sunVec, false)); // sun direction in camera frame
+            const globalUniforms: UniformRecord = {
+                "u_scale": scale,
+            };
+            const uniforms: Record<string, UniformRecord> = {
+                "raymarch": {
+                    "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
+                    "u_minres": minres, // minimum resolution
+                    "u_sundir": sundir, // sun direction in observer frame
+                    "u_epos": epos, // earth position in observer frame
+                    "u_escale": 1e-6, // scale factors for earth and sun
+                },
+            };
+            this._pipeline.setGlobalUniforms(globalUniforms);
+            this._pipeline.renderAll(uniforms);
+            this.updateText();
+        }
         if (this._glRunning) requestAnimationFrame(() => this.drawFrame());
         else this._pipeline.dispose();
     }
@@ -306,6 +314,35 @@ export class MonitorPage implements OnInit, OnDestroy, AfterViewInit {
         this.coordsText = `Coords: [${this.fixedFloats(this._geoCoords).join(", ")}]`;
         this.attText = `Attitude: [${this.toDegs(this._attitude).join(", ")}]`;
     }
+    private onGlLoaded(gl: WebGL2RenderingContext): void {
+        this._gl = gl;
+        this._pipeline = new RenderPipeline(gl);
+        this._pipeline.loadPrograms([
+            { name: "raymarch", vertex: "/shaders/twotrig.vert", fragment: "/shaders/raymarch.frag", url: true},
+            { name: "obj3d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/obj3d.frag", url: true },
+            { name: "hud2d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/hud2d.frag", url: true },
+        ]).then((p: RenderPipeline) => {
+            this.setupPipeline(p);
+            this._startTimeMs = Date.now();
+            this._lastFrameTime = this._startTimeMs;
+            this._glRunning = true;
+            this.drawFrame();
+        });
+    }
+    private tryLoadGL(): WebGL2RenderingContext | undefined {
+        if (this.canvasRef === undefined || this.canvasRef === null) {
+            return undefined; // canvas not ready
+        }
+        if (this.canvasRef.nativeElement === undefined || this.canvasRef.nativeElement === null) {
+            return undefined; // canvas not ready
+        }
+        const gl: WebGL2RenderingContext = this.canvasRef.nativeElement.getContext("webgl2") as WebGL2RenderingContext;
+        if (!gl) {
+            console.error("WebGL2 not supported");
+            return undefined; // WebGL2 not supported
+        }
+        return gl; // WebGL2 supported
+    }
     constructor(svc: AppService) {
         this._svc = svc;
         this._mpath = new Path(-1);
@@ -324,27 +361,7 @@ export class MonitorPage implements OnInit, OnDestroy, AfterViewInit {
         this._svc.keyCtrl.setKeyCallback("q", () => this.keyUpdated("q"), KeyControlMode.EVENT_PRESS);
         this._svc.keyCtrl.setKeyCallback("e", () => this.keyUpdated("e"), KeyControlMode.EVENT_PRESS);
     }
-    @ViewChild('canvas', {static: true}) canvasRef!: ElementRef<HTMLCanvasElement>;
-    ngAfterViewInit(): void {
-        const gl: WebGL2RenderingContext = this.canvasRef.nativeElement.getContext("webgl2") as WebGL2RenderingContext;
-        if (!gl) {
-            console.error("WebGL2 not supported");
-            return;
-        }
-        this._gl = gl;
-        this._pipeline = new RenderPipeline(gl);
-        this._pipeline.loadPrograms([
-            { name: "raymarch", vertex: "/shaders/twotrig.vert", fragment: "/shaders/raymarch.frag", url: true},
-            { name: "obj3d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/obj3d.frag", url: true },
-            { name: "hud2d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/hud2d.frag", url: true },
-        ]).then((p: RenderPipeline) => {
-            this.setupPipeline(p);
-            this._startTimeMs = Date.now();
-            this._lastFrameTime = this._startTimeMs;
-            this._glRunning = true;
-            this.drawFrame();
-        });
-    }
+    @ViewChild('canvasgl', {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
     ngOnInit(): void {
         this._rtos.start();
     }
