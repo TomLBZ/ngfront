@@ -50,13 +50,13 @@ export class GeoCam { // a camera on Earth
         this._qEcefToCf = qPfToCam.Mul(qEcefToPf).Norm();       // (Cam←PF)·(PF←ECEF)
         this._qCfToEcef = this._qEcefToCf.Inv();                // cached inverse
     }
-    public ecefToCamFrame(pEcef: CartesianCoords3D): CartesianCoords3D {
-        const local: Vec3 = Vec3.New(...GeoHelper.Minus(pEcef, this.posEcef)); // local position in fixed frame
+    public ecefToCamFrame(pEcef: CartesianCoords3D, isPos: boolean = true): CartesianCoords3D {
+        const local: Vec3 = isPos ? Vec3.New(...GeoHelper.Minus(pEcef, this.posEcef)) : Vec3.New(...pEcef); // local position in fixed frame
         return this._qEcefToCf.RotateV(local).ToRectangularCoords(); // local position in camera frame
     }
-    public camFrameToEcef(pCf: CartesianCoords3D): CartesianCoords3D {
+    public camFrameToEcef(pCf: CartesianCoords3D, isPos: boolean = true): CartesianCoords3D {
         const local: Vec3 = this._qCfToEcef.RotateV(Vec3.New(...pCf)); // local position in fixed frame
-        return GeoHelper.Plus(local.ToRectangularCoords(), this.posEcef); // local position in ECEF
+        return isPos ? GeoHelper.Plus(local.ToRectangularCoords(), this.posEcef) : local.ToRectangularCoords(); // local position in ECEF
     }
     private static buildLocalFrameQuat(posEcef: Vec3, type: CoordsFrameType): Quaternion {
         if (type === CoordsFrameType.ECEF) return Quaternion.I;
