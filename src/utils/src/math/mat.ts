@@ -22,6 +22,13 @@ export class Mat {
             throw new Error("Index out of bounds");
         }
     }
+    equals(m: this): boolean {
+        if (this.r !== m.r || this.c !== m.c) return false;
+        for (let i = 0; i < this.r * this.c; i++) {
+            if (this._data[i] !== m._data[i]) return false;
+        }
+        return true;
+    }
     fill(value: number): void {
         for (let i = 0; i < this.r * this.c; i++) {
             this._data[i] = value;
