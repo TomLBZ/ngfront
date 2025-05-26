@@ -84,13 +84,14 @@ export class GeoCam { // a camera on Earth
         /* ---- pitch (θ) about *new* Y -------------------------- */
         if (pitch !== 0) {
             const yAfterYaw = q.RotateV(yPF);                       // axis after ψ
-            const qPitch    = Quaternion.FromAxisAngle(yAfterYaw, pitch);
+            const p = type === CoordsFrameType.ENU ? pitch : -pitch; // pitch is negative in NED
+            const qPitch    = Quaternion.FromAxisAngle(yAfterYaw, p);
             q = qPitch.Mul(q);                                      // θ after ψ
         }
         /* ---- roll (φ) about *new* X --------------------------- */
         if (roll !== 0) {
             const xAfter = q.RotateV(xPF);                          // axis after ψ,θ
-            const qRoll  = Quaternion.FromAxisAngle(xAfter, roll);
+            const qRoll  = Quaternion.FromAxisAngle(xAfter, -roll);
             q = qRoll.Mul(q);                                       // φ after θ,ψ
         }
         return q.Norm();   // PF→Cam
