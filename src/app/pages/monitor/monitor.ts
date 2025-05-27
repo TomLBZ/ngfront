@@ -123,7 +123,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         this._visibleTelemetryIndices.length = 0; // clear all visible telemetries
         this._telemetries.length = 0; // clear all telemetries
         this._planeMgrp.clearMarkers(); // clear all plane markers
-        this._ppaths.splice(0, this._ppaths.length); // clear all plane paths
+        this._ppaths.forEach((p: Path) => p.clear()); // clear all plane paths
         this.runtimeSettings = { traces: 100, lead_id: 0 }; // reset runtime settings
         this.selectedMission = undefined; // reset selected mission
         this._wpGrp.clearMarkers(); // clear all waypoints
@@ -158,7 +158,6 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (path.length > this.runtimeSettings.traces) path.shift(); // remove oldest points
             if (pathIdx < 0) this._ppaths.push(path); // add new path
             else this._ppaths[pathIdx] = path; // update existing path
-            // else this._ppaths.splice(pathIdx, 1, path); // remove old path and add new path
             if (isLeader) {
                 this._geoCoords = [t.lon, t.lat, t.alt]; // update geo coords
                 this._attitude = [t.roll, t.pitch, t.yaw]; // update attitude
