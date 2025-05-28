@@ -16,4 +16,7 @@ export class GeoHelper {
         if (len === 0) return [0, 0, 0] as T; // avoid division by zero
         return [v[0] / len, v[1] / len, v[2] / len] as T;
     }
+    public static Equals<T extends [number, number, number]>(a: T, b: T): boolean {
+        return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+    }
 }
