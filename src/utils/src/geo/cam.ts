@@ -33,67 +33,49 @@ export class GeoCam { // a camera on Earth
             this.update();
         }
     }
+    private _pfAxesMat: Mat3 = Mat3.I; // matrix representing the local tangent frame axes in ECEF coordinates
+    public get pfAxesMat() : Mat3 { // public read-only getter for the local tangent frame axes matrix
+        return this._pfAxesMat;
+    }
     private _posEcef : CartesianCoords3D = [0, 0, 0]; // ECEF coordinates of the camera
     public get posEcef() : CartesianCoords3D { return this._posEcef; }
-    private _qEcefToCf: Quaternion = Quaternion.I; // quaternion representing the rotation from ECEF frame to camera frame
-    private _qCfToEcef: Quaternion = Quaternion.I; // quaternion representing the rotation from camera frame to ECEF frame
+    private _qEcefToCam: Quaternion = Quaternion.I; // quaternion representing the rotation from ECEF frame to camera frame
+    private _qCamToEcef: Quaternion = Quaternion.I; // quaternion representing the rotation from camera frame to ECEF frame
+    private static getPfMat(posEcef: CartesianCoords3D, coordsType: CoordsFrameType = CoordsFrameType.ENU): Mat3 {
+        const n       = Vec3.New(0, 0, 1);            // global north vector in ecef frame
+        const refUp   = Vec3.FromArray(posEcef).Norm(); // local up vector in ecef frame: radially outward
+        const refEast = n.Cross(refUp).Norm(); // local east vector in ecef frame
+        const refNorth = refUp.Cross(refEast).Norm(); // local north vector in ecef frame
+        if (coordsType === CoordsFrameType.ENU) {
+            return Mat3.FromRows([refEast, refNorth, refUp]); // ENU
+        } else if (coordsType === CoordsFrameType.NED) {
+            return Mat3.FromRows([refNorth, refEast, refUp.Neg()]); // NED
+        }
+        return Mat3.I; // ECEF
+    }
+    private static getCamQuat(axes: Mat3, attitude: Attitude): Quaternion {
+        const qEcefToPf = Quaternion.FromMat3(axes).Norm(); // quaternion representing the rotation from ECEF frame to local tangent frame
+        const qPfToCam = Quaternion.FromEuler(...attitude); // quaternion representing the rotation from local tangent frame to camera frame
+        return qPfToCam.Mul(qEcefToPf).Norm(); // (Cam←PF)·(PF←ECEF)
+    }
     constructor(posGeodetic: GeodeticCoords, attitude: Attitude, coordsType: CoordsFrameType = CoordsFrameType.ENU) {
         this._posGeodetic = posGeodetic;
         this._attitude = attitude;
         this._coordsType = coordsType;
         this.update();
     }
-    private update() {
-        this._posEcef = geodeticToECEF(...this._posGeodetic); // update ECEF coordinates
-        const qEcefToPf = GeoCam.buildLocalFrameQuat(Vec3.New(...this._posEcef), this._coordsType); // quaternion representing the rotation from ECEF frame to local tangent frame
-        const qPfToCam = GeoCam.buildAttitudeQuat(this._attitude, this._coordsType); // quaternion representing the rotation from local tangent frame to camera frame
-        this._qEcefToCf = qPfToCam.Mul(qEcefToPf).Norm();       // (Cam←PF)·(PF←ECEF)
-        this._qCfToEcef = this._qEcefToCf.Inv();                // cached inverse
+    private update(): void {
+        this._posEcef = geodeticToECEF(...this._posGeodetic); // convert geodetic to ECEF coordinates
+        this._pfAxesMat = GeoCam.getPfMat(this._posEcef, this._coordsType); // get local tangent frame axes in ECEF coordinates
+        this._qEcefToCam = GeoCam.getCamQuat(this._pfAxesMat, this._attitude); // quaternion from ECEF to camera frame
+        this._qCamToEcef = this._qEcefToCam.Inv();                // cached inverse
     }
     public ecefToCamFrame(pEcef: CartesianCoords3D, isPos: boolean = true): CartesianCoords3D {
         const local: Vec3 = isPos ? Vec3.New(...GeoHelper.Minus(pEcef, this.posEcef)) : Vec3.New(...pEcef); // local position in fixed frame
-        return this._qEcefToCf.RotateV(local).ToRectangularCoords(); // local position in camera frame
+        return this._qEcefToCam.RotateV(local).ToRectangularCoords(); // local position in camera frame
     }
     public camFrameToEcef(pCf: CartesianCoords3D, isPos: boolean = true): CartesianCoords3D {
-        const local: Vec3 = this._qCfToEcef.RotateV(Vec3.New(...pCf)); // local position in fixed frame
+        const local: Vec3 = this._qCamToEcef.RotateV(Vec3.New(...pCf)); // local position in fixed frame
         return isPos ? GeoHelper.Plus(local.ToRectangularCoords(), this.posEcef) : local.ToRectangularCoords(); // local position in ECEF
-    }
-    private static buildLocalFrameQuat(posEcef: Vec3, type: CoordsFrameType): Quaternion {
-        if (type === CoordsFrameType.ECEF) return Quaternion.I;
-        const up    = posEcef.Norm();           // local up vector in ecef frame: radially outward
-        const n     = Vec3.New(0, 0, 1);        // global north vector in ecef frame
-        const east  = n.Cross(up).Norm();       // local east vector in ecef frame
-        const north = up.Cross(east).Norm();    // local north vector in ecef frame
-        let x: Vec3, y: Vec3, z: Vec3;
-        if (type === CoordsFrameType.ENU) {
-            x = east;  y = north;  z = up;           // ENU
-        } else {
-            x = north; y = east;   z = up.Neg();     // NED
-        }
-        /* ---- convert basis → quaternion (one Mat3, then discard) */
-        const tmp = Mat3.FromRows([x, y, z]); // PF axes in ECEF in row order as Quaternion.FromMat3 expects a row matrix
-        return Quaternion.FromMat3(tmp).Norm();     // ECEF→PF
-    }
-    private static buildAttitudeQuat(attitude: Attitude, type: CoordsFrameType): Quaternion {
-        const [roll, pitch, yaw] = attitude; // attitude angles in radians
-        const xPF = Vec3.New(1, 0, 0); // PF X axis
-        const yPF = Vec3.New(0, 1, 0); // PF Y axis
-        const zPF = type === CoordsFrameType.ENU ? Vec3.New(0, 0, 1) : Vec3.New(0, 0, -1); // PF Z axis UP
-        /* ---- intrinsic yaw (ψ) about current Z ---------------- */
-        let q: Quaternion = (yaw !== 0) ? Quaternion.FromAxisAngle(zPF, yaw) : Quaternion.I;
-        /* ---- pitch (θ) about *new* Y -------------------------- */
-        if (pitch !== 0) {
-            const yAfterYaw = q.RotateV(yPF);                       // axis after ψ
-            const p = type === CoordsFrameType.ENU ? pitch : -pitch; // pitch is negative in NED
-            const qPitch    = Quaternion.FromAxisAngle(yAfterYaw, p);
-            q = qPitch.Mul(q);                                      // θ after ψ
-        }
-        /* ---- roll (φ) about *new* X --------------------------- */
-        if (roll !== 0) {
-            const xAfter = q.RotateV(xPF);                          // axis after ψ,θ
-            const qRoll  = Quaternion.FromAxisAngle(xAfter, -roll);
-            q = qRoll.Mul(q);                                       // φ after θ,ψ
-        }
-        return q.Norm();   // PF→Cam
     }
 }
