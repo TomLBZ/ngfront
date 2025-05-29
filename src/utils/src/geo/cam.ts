@@ -14,12 +14,13 @@ export class GeoCam { // a camera on Earth
     }
     private _attitude : Attitude = [0, 0, 0]; // attitude of the camera
     public get attitude() : Attitude {
-        return this._attitude;
+        return this.invertAttitude(this._attitude); // return attitude in the correct frame
     }
     public set attitude(v : Attitude) {
-        const [roll, pitch, yaw] = this._attitude;
-        if (v[0] !== roll || v[1] !== pitch || v[2] !== yaw) {
-            this._attitude = v;
+        const [roll, pitch, yaw] = this._attitude; // existing attitude
+        const [newr, newp, newy] = this.invertAttitude(v); // inverted attitude based on coords type
+        if (newr !== roll || newp !== pitch || newy !== yaw) {
+            this._attitude = [newr, newp, newy] as Attitude; // set new attitude (inverted)
             this.update();
         }
     }
@@ -60,9 +61,17 @@ export class GeoCam { // a camera on Earth
     }
     constructor(posGeodetic: GeodeticCoords, attitude: Attitude, coordsType: CoordsFrameType = CoordsFrameType.ENU) {
         this._posGeodetic = posGeodetic;
-        this._attitude = attitude;
         this._coordsType = coordsType;
+        this.attitude = attitude; // use setter to invert attitude based on coords type
         this.update();
+    }
+    private invertAttitude(att: Attitude): Attitude {
+        const r = this._coordsType === CoordsFrameType.ENU ? -att[0] : 
+                this._coordsType === CoordsFrameType.NED ? -att[0] :
+                att[0]; // roll is inverted for ENU and NED
+        const p = this._coordsType === CoordsFrameType.NED ? -att[1] : att[1]; // pitch is inverted for NED
+        const y = att[2]; // yaw is not inverted
+        return [r, p, y] as Attitude; // return attitude in the correct frame
     }
     private update(): void {
         this._posEcef = geodeticToECEF(...this._posGeodetic); // convert geodetic to ECEF coordinates
