@@ -34,7 +34,7 @@ export class Quaternion {
      * @returns Quaternion
      * @see https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
      */
-    public static FromEuler(roll: number, pitch: number, yaw: number): Quaternion {
+    public static FromExtrinsicEuler(roll: number, pitch: number, yaw: number): Quaternion {
         const hR = roll / 2;
         const hP = pitch / 2;
         const hY = yaw / 2;
@@ -50,6 +50,29 @@ export class Quaternion {
             cr * cp * sy - sr * sp * cy,
             cr * cp * cy + sr * sp * sy
         );
+    }
+    /**
+     * Build a quaternion from roll–pitch–yaw applied **intrinsically** about the body’s own axes.
+     * @param roll  rotation about local X
+     * @param pitch rotation about new local Y
+     * @param yaw   rotation about new local Z
+     * @param axes  (optional) initial body axes in world coords; default is identity
+     */
+    public static FromIntrinsicEuler(roll: number, pitch: number, yaw: number, axes: Mat3 = Mat3.I): Quaternion {
+        // 1) pull out the three starting axes (columns of the Mat3)
+        const x0 = Vec3.FromArray(axes.getColAt(0));
+        const y0 = Vec3.FromArray(axes.getColAt(1));
+        const z0 = Vec3.FromArray(axes.getColAt(2));
+        // 2) roll about the body’s X
+        const qRoll  = Quaternion.FromAxisAngle(x0, roll).Norm();
+        // 3) pitch about the **new** body Y
+        const y1      = qRoll.RotateV(y0).Norm();
+        const qPitch = Quaternion.FromAxisAngle(y1, pitch).Norm();
+        // 4) yaw about the **new** body Z
+        const z2    = qPitch.Mul(qRoll).RotateV(z0).Norm();
+        const qYaw  = Quaternion.FromAxisAngle(z2, yaw).Norm();
+        // 5) compose: roll first, then pitch, then yaw
+        return qYaw.Mul(qPitch).Mul(qRoll).Norm();
     }
     /**
      * Initializes a quaternion from a rotation matrix.
