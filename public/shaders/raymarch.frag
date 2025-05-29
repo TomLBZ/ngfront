@@ -75,7 +75,21 @@ vec3 colorEarth(vec3 intersection, vec3 normal, int iter, float dist) { // no is
     // return normal * 0.5 + 0.5; // mix normal and color based on distance
     float distfrac = dist / MAX_DIST; // distance fraction
     float iterfrac = float(iter) / float(MAX_ITER); // iteration fraction
-    return vec3(distfrac , iterfrac * iterfrac, 0.0); // color based on distance and iteration
+    vec3 normColor = normal * 0.5 + 0.5; // normal color in range [0, 1]
+    vec3 iterColor = vec3(0.0, iterfrac * iterfrac, 0.0); // iteration color in range [0, 1]
+    // get specular reflection of the sun on the surface
+    vec3 viewrayDir = normalize(intersection);
+    vec3 sunDir = normalize(u_sundir);
+    vec3 reflected = reflect(sunDir, normal); // reflection of the sun direction
+    float specAngle = max(dot(viewrayDir, reflected), 0.0); // angle between view direction and reflected sun direction
+    if (specAngle < 0.0) specAngle = 0.0; // clamp angle to [0, 1]
+    specAngle = pow(specAngle, 16.0); // specular highlight sharpness
+    vec3 specularColor = SUNC * specAngle; // specular color based on sun direction and normal
+    vec3 surfaceColor = mix(normColor, specularColor, 0.5); // mix normal color and specular color based on iteration fraction
+    vec3 color = mix(surfaceColor, iterColor, iterfrac); // mix normal color and iteration color based on iteration fraction
+    color = clamp(color, O3, I3); // clamp color to [0, 1]
+    // return vec3(distfrac , iterfrac * iterfrac, 0.0); // color based on distance and iteration
+    return color; // return the final color
 }
 vec3 c3d(vec3 m, vec3 rd, float errFactor) {
     float dist = m.x;
