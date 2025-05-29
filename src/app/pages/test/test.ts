@@ -82,6 +82,21 @@ export class TestPage implements AfterViewInit, OnDestroy {
             const globalUniforms: UniformRecord = {
                 "u_scale": scale,
             };
+            const attitude = [
+                (cam.attitude[0] / Math.PI * 1.5) + 0.5, // roll +-60 degrees normalized to [0, 1]
+                (cam.attitude[1] / Math.PI * 1.5) + 0.5, // pitch +-60 degrees normalized to [0, 1]
+                (cam.attitude[2] / Math.PI * 0.5) + 0.5, // yaw +-180 degrees normalized to [0, 1]
+            ]
+            const state = [
+                0.5, // throttle not set, use 0.5
+                (cam.attitude[1] / Math.PI * 1.5) + 0.5, // elevator use pitch
+                (cam.attitude[0] / Math.PI * 1.5) + 0.5, // aileron use roll
+                (cam.attitude[2] / Math.PI * 0.5) + 0.5, // rudder use yaw
+            ]
+            const telemetry = [
+                0.5, // speed not set, use 0.5
+                cam.posGeodetic[2] / 10000, // altitude normalized to [0, 1] assuming max altitude of 10,000m
+            ]
             const uniforms: Record<string, UniformRecord> = {
                 "raymarch": {
                     "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
@@ -89,7 +104,12 @@ export class TestPage implements AfterViewInit, OnDestroy {
                     "u_sundir": sundir, // sun direction in observer frame
                     "u_epos": epos, // earth position in observer frame
                     "u_escale": 1e-6, // scale factors for earth and sun
-                },
+                }, // uniforms for raymarching
+                "hud2d": {
+                    "u_attitude": attitude, // attitude: roll, pitch, yaw
+                    "u_state": state, // aircraft state: throttle, elevator, aileron, rudder
+                    "u_telemetry": telemetry, // telemetry: speed, altitude
+                }, // uniforms for 2D HUD rendering
             };
             this._pipeline.setGlobalUniforms(globalUniforms);
             this._pipeline.renderAll(uniforms);
@@ -100,8 +120,8 @@ export class TestPage implements AfterViewInit, OnDestroy {
     }
     private controllerUpdate(): void {
         // update attitude based on key presses
-        if (this._svc.keyCtrl.getKeyState("q")) this._attitude[2] += 0.01; // yaw left
-        if (this._svc.keyCtrl.getKeyState("e")) this._attitude[2] -= 0.01; // yaw right
+        if (this._svc.keyCtrl.getKeyState("q")) this._attitude[2] -= 0.01; // yaw left
+        if (this._svc.keyCtrl.getKeyState("e")) this._attitude[2] += 0.01; // yaw right
         if (this._svc.keyCtrl.getKeyState("w")) this._attitude[1] += 0.01; // pitch up
         if (this._svc.keyCtrl.getKeyState("s")) this._attitude[1] -= 0.01; // pitch down
         if (this._svc.keyCtrl.getKeyState("a")) this._attitude[0] -= 0.01; // roll left
@@ -111,8 +131,8 @@ export class TestPage implements AfterViewInit, OnDestroy {
         if (this._svc.keyCtrl.getKeyState("ArrowDown")) this._geoCoords[1] -= 0.1; // move south
         if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geoCoords[0] += 0.1; // move west
         if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geoCoords[0] -= 0.1; // move east
-        if (this._svc.keyCtrl.getKeyState("Shift")) this._geoCoords[2] -= 1000; // move down
-        if (this._svc.keyCtrl.getKeyState(" ")) this._geoCoords[2] += 1000; // move up
+        if (this._svc.keyCtrl.getKeyState("Shift")) this._geoCoords[2] -= 10; // move down
+        if (this._svc.keyCtrl.getKeyState(" ")) this._geoCoords[2] += 10; // move up
     }
     private fixedFloats(arr: number[], digits: number = 4): string[] {
         return arr.map((v) => v.toFixed(digits));
