@@ -113,7 +113,7 @@ export interface MissionSettings {
     fg_enable: boolean;
 }
 export interface Joystick {
-    roll: number;
-    pitch: number;
+    aileron: number;
+    elevator: number;
     throttle: number;
 }
