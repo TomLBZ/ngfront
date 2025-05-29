@@ -55,7 +55,7 @@ export class GeoCam { // a camera on Earth
     }
     private static getCamQuat(axes: Mat3, attitude: Attitude): Quaternion {
         const qEcefToPf = Quaternion.FromMat3(axes).Norm(); // quaternion representing the rotation from ECEF frame to local tangent frame
-        const qPfToCam = Quaternion.FromEuler(...attitude); // quaternion representing the rotation from local tangent frame to camera frame
+        const qPfToCam = Quaternion.FromIntrinsicEuler(...attitude); // quaternion representing the rotation from local tangent frame to camera frame
         return qPfToCam.Mul(qEcefToPf).Norm(); // (Cam←PF)·(PF←ECEF)
     }
     constructor(posGeodetic: GeodeticCoords, attitude: Attitude, coordsType: CoordsFrameType = CoordsFrameType.ENU) {
