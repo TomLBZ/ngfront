@@ -25,20 +25,20 @@
                             [isEmphasized]="false"
                             (valueChanged)="onThrottleChanged($event)"
                         ></slider>
-                        <span>Pitch</span>
+                        <span>Elevator</span>
                         <slider
                             [minValue]="-9600"
                             [maxValue]="9600"
-                            [value]="joystick.pitch"
+                            [value]="joystick.elevator"
                             [isDraggable]="true"
                             [isEmphasized]="false"
                             (valueChanged)="onPitchChanged($event)"
                         ></slider>
-                        <span>Roll</span>
+                        <span>Aileron</span>
                         <slider
                             [minValue]="-9600"
                             [maxValue]="9600"
-                            [value]="joystick.roll"
+                            [value]="joystick.aileron"
                             [isDraggable]="true"
                             [isEmphasized]="false"
                             (valueChanged)="onRollChanged($event)"

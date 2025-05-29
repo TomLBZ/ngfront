@@ -73,11 +73,16 @@ export class MonitorPage implements OnInit, OnDestroy {
     private _lastIntFps: number = 0;
     private _geoCoords: GeodeticCoords = [0, 0, 1000]; // longitude, latitude, altitude
     private _attitude: Attitude = [0, 0, 0]; // roll, pitch, yaw
+    private _speed: number = 0; // speed value
     private fpsText: string = "FPS: 0.00";
-    private attText: string = "Attitude: [0, 0, 0]";
-    private coordsText: string = "Coords: [0, 0, 0]";
+    private attText: string = "Attitude: -";
+    private coordsText: string = "Coords: -";
+    private teleText: string = "Tele: -";
+    private get joystickStr() {
+        return `Aileron: ${this.joystick.aileron}, Elevator: ${this.joystick.elevator}, Throttle: ${this.joystick.throttle}`;
+    }
     public get Text(): string {
-        return this.fpsText + "\n" + this.attText + "\n" + this.coordsText;
+        return this.fpsText + "\n" + this.attText + "\n" + this.coordsText + "\n" + this.teleText;
     }
     public get healthStr(): string {
         const header = "=== System Health ===\n";
@@ -112,7 +117,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public selectedMission?: Mission = undefined;
     public resetNeeded: boolean = false;
     public waiting: boolean = false;
-    public joystick: Joystick = { roll: 500, pitch: 1000, throttle: 5000 };
+    public joystick: Joystick = { aileron: 500, elevator: 1000, throttle: 5000 };
     private isValidMission(m: any): boolean {
         return StructValidator.hasNonEmptyFields(m, ["id", "name", "description", "lead_id", "lead_path", "follower_ids"]);
     }
@@ -161,6 +166,7 @@ export class MonitorPage implements OnInit, OnDestroy {
             if (isLeader) {
                 this._geoCoords = [t.lon, t.lat, t.alt]; // update geo coords
                 this._attitude = [t.roll, t.pitch, t.yaw]; // update attitude
+                this._speed = t.speed; // update speed
             }
         });
     }
@@ -220,8 +226,12 @@ export class MonitorPage implements OnInit, OnDestroy {
     private updateJoystick() {
         this._svc.callAPI("sim/joystick", (d: any) => {
             if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Failed to update joystick: Invalid Response!");
-            else if (!(d as APIResponse).success) alert(`Failed to update joystick!\n${d.msg}`);
-        }, { id: this.selectedMission!.lead_id, joystick: this.joystick }, this.alert);
+            else if (!(d as APIResponse).success) alert(`Failed to update joystick with ${this.joystickStr}!\n${d.msg}`);
+        }, { id: this.selectedMission!.lead_id, joystick: {
+            throttle: this.joystick.throttle,
+            roll    : this.joystick.aileron,
+            pitch   : this.joystick.elevator,
+        } }, this.alert);
     }
     private keyUpdated(key: string) {
         if (!this.launchSettings.joystick_enable) return; // skip when joystick is disabled
@@ -233,16 +243,16 @@ export class MonitorPage implements OnInit, OnDestroy {
                 this.joystick.throttle = Math.max(this.joystick.throttle - 100, 0);
                 break;
             case "a":
-                this.joystick.roll = Math.max(this.joystick.roll - 100, -9600);
+                this.joystick.aileron = Math.max(this.joystick.aileron - 100, -9600);
                 break;
             case "d":
-                this.joystick.roll = Math.min(this.joystick.roll + 100, 9600);
+                this.joystick.aileron = Math.min(this.joystick.aileron + 100, 9600);
                 break;
             case "q":
-                this.joystick.pitch = Math.max(this.joystick.pitch - 100, -9600);
+                this.joystick.elevator = Math.max(this.joystick.elevator - 100, -9600);
                 break;
             case "e":
-                this.joystick.pitch = Math.min(this.joystick.pitch + 100, 9600);
+                this.joystick.elevator = Math.min(this.joystick.elevator + 100, 9600);
                 break;
             default:
                 return; // skip when key is not valid
@@ -281,6 +291,21 @@ export class MonitorPage implements OnInit, OnDestroy {
             const sunData = dateToSunData(new Date(Date.now()));
             const sunVec = sunDataToSunPositionVectorEcef(sunData);
             const sundir = GeoHelper.Normalize(cam.ecefToCamFrame(sunVec, false)); // sun direction in camera frame
+            const attitude = [
+                (this._attitude[0] / Math.PI * 1.5) + 0.5, // roll +-60 deg normalized to [0, 1]
+                (this._attitude[1] / Math.PI * 1.5) + 0.5, // pitch +-60 deg normalized to [0, 1]
+                (this._attitude[2] / Math.PI * 0.5) + 0.5, // yaw += 180 deg normalized to [0, 1]
+            ]
+            const state = [ // throttle, elevator, aileron, rudder
+                this.joystick.throttle / 9600, // normalized to [0, 1]
+                this.joystick.elevator / 19200 + 0.5, // normalized to [0, 1]
+                this.joystick.aileron / 19200 + 0.5, // normalized to [0, 1]
+                0.5 // rudder is not used, set to 0.5
+            ]
+            const telemetry = [ // telemetry: speed, altitude
+                this._speed / 50, // speed 0-50m/s normalized to [0, 1]
+                this._geoCoords[2] / 10000, // altitude 0-10000m normalized to [0, 1]
+            ]
             const globalUniforms: UniformRecord = {
                 "u_scale": scale,
             };
@@ -291,7 +316,12 @@ export class MonitorPage implements OnInit, OnDestroy {
                     "u_sundir": sundir, // sun direction in observer frame
                     "u_epos": epos, // earth position in observer frame
                     "u_escale": 1e-6, // scale factors for earth and sun
-                },
+                }, // uniforms for raymarching
+                "hud2d": {
+                    "u_attitude": attitude, // attitude: roll, pitch, yaw
+                    "u_state": state, // aircraft state: throttle, elevator, aileron, rudder
+                    "u_telemetry": telemetry, // telemetry: speed, altitude
+                }, // uniforms for 2D HUD rendering
             };
             this._pipeline.setGlobalUniforms(globalUniforms);
             this._pipeline.renderAll(uniforms);
@@ -316,8 +346,11 @@ export class MonitorPage implements OnInit, OnDestroy {
             this._lastIntFps = intfps;
             this.fpsText = `FPS: ${fps.toFixed(2)}`;
         }
-        this.coordsText = `Coords: [${this.fixedFloats(this._geoCoords).join(", ")}]`;
-        this.attText = `Attitude: [${this.toDegs(this._attitude).join(", ")}]`;
+        const fCoords = this.fixedFloats(this._geoCoords);
+        this.coordsText = `Lng: ${fCoords[0]}°\nLat: ${fCoords[1]}°\nAlt: ${fCoords[2]}m`;
+        const sAtts = this.toDegs(this._attitude);
+        this.attText = `Roll: ${sAtts[0]}\nPitch: ${sAtts[1]}\nYaw: ${sAtts[2]}`;
+        this.teleText = `Speed: ${this._speed.toFixed(2)}m/s`;
     }
     private onGlLoaded(gl: WebGL2RenderingContext): void {
         this._gl = gl;
@@ -470,15 +503,15 @@ export class MonitorPage implements OnInit, OnDestroy {
     }
     onPitchChanged(newPitch: number) {
         newPitch = Math.floor(newPitch);
-        if (newPitch !== this.joystick.pitch) {
-            this.joystick.pitch = newPitch;
+        if (newPitch !== this.joystick.elevator) {
+            this.joystick.elevator = newPitch;
             this.updateJoystick();
         }
     }
     onRollChanged(newRoll: number) {
         newRoll = Math.floor(newRoll);
-        if (newRoll !== this.joystick.roll) {
-            this.joystick.roll = newRoll;
+        if (newRoll !== this.joystick.aileron) {
+            this.joystick.aileron = newRoll;
             this.updateJoystick();
         }
     }
