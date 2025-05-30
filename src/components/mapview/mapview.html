@@ -14,7 +14,7 @@
         @for (path of paths; track path.id) {
             @let pathID = "path" + path.id.toString();
             <mgl-geojson-source [id]="pathID">
-                @for (segment of path.segments; track segment.hash) {
+                @for (segment of path.segments; track segment.hash + $index) {
                     <mgl-feature
                         [geometry]="{
                             type: 'LineString',
