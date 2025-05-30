@@ -5,7 +5,6 @@ import { Attitude, GeodeticCoords, CoordsFrameType, GeoHelper } from "../../../u
 import { AppService } from "../../app.service";
 import { GeoCam } from "../../../utils/src/geo/cam";
 import { dateToSunData, sunDataToSunPositionVectorEcef } from "../../../utils/src/geo/astro";
-
 @Component({
     selector: 'page-test',
     templateUrl: 'test.html'
@@ -48,10 +47,12 @@ export class TestPage implements AfterViewInit, OnDestroy {
             this.drawFrame();
         });
         // TODO: port to webgpu
-        // if (!navigator.gpu) {
-        //     console.error("WebGPU not supported");
-        //     return;
-        // }
+        if (!navigator.gpu) {
+            console.error("WebGPU not supported");
+            return;
+        } else {
+            console.warn("WebGPU is not implemented yet, this page will only work with WebGL2.");
+        }
     }
     ngOnDestroy(): void {
         this._glRunning = false;
