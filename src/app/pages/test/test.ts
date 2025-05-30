@@ -47,6 +47,11 @@ export class TestPage implements AfterViewInit, OnDestroy {
             this._glRunning = true;
             this.drawFrame();
         });
+        // TODO: port to webgpu
+        // if (!navigator.gpu) {
+        //     console.error("WebGPU not supported");
+        //     return;
+        // }
     }
     ngOnDestroy(): void {
         this._glRunning = false;
