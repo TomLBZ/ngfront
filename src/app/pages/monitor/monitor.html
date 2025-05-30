@@ -15,41 +15,47 @@
         <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_tint bold ft_huge centcont justcent">
             @if (telemetryEnabled && launchSettings.joystick_enable) {
                 <div class="flex ft_norm pad5 centcont">
-                    <div class="flexc px_w200 px_h150 pad5 justcent centcont bd_dsh pad5 bd_r5">
-                        <span>Throttle</span>
-                        <slider
-                            [minValue]="0"
-                            [maxValue]="9600"
-                            [value]="joystick.throttle"
-                            [isDraggable]="true"
-                            [isEmphasized]="false"
-                            (valueChanged)="onThrottleChanged($event)"
-                        ></slider>
-                        <span>Elevator</span>
-                        <slider
-                            [minValue]="-9600"
-                            [maxValue]="9600"
-                            [value]="joystick.elevator"
-                            [isDraggable]="true"
-                            [isEmphasized]="false"
-                            (valueChanged)="onPitchChanged($event)"
-                        ></slider>
-                        <span>Aileron</span>
-                        <slider
-                            [minValue]="-9600"
-                            [maxValue]="9600"
-                            [value]="joystick.aileron"
-                            [isDraggable]="true"
-                            [isEmphasized]="false"
-                            (valueChanged)="onRollChanged($event)"
-                        ></slider>
+                    <div class="flexc px_w200 px_h150 pad5 justcent centcont">
+                        <div class="flexc c_dtint justcent centcont">
+                            <span> {{ replaying ? "Replaying:" : "Manual Control:" }} </span>
+                            <span class="ft_smal"> Lead ID = {{ selectedMission?.lead_id || runtimeSettings.lead_id }} </span>
+                        </div>
+                        <div class="flexc bd_dsh pad5 mar5 bd_r5 justcent centcont">
+                            <span>Throttle</span>
+                            <slider
+                                [minValue]="0"
+                                [maxValue]="9600"
+                                [value]="joystick.throttle"
+                                [isDraggable]="!replaying"
+                                [isEmphasized]="false"
+                                (valueChanged)="onThrottleChanged($event)"
+                            ></slider>
+                            <span class="pad5top">Elevator</span>
+                            <slider
+                                [minValue]="-9600"
+                                [maxValue]="9600"
+                                [value]="joystick.elevator"
+                                [isDraggable]="!replaying"
+                                [isEmphasized]="false"
+                                (valueChanged)="onPitchChanged($event)"
+                            ></slider>
+                            <span class="pad5top">Aileron</span>
+                            <slider
+                                [minValue]="-9600"
+                                [maxValue]="9600"
+                                [value]="joystick.aileron"
+                                [isDraggable]="!replaying"
+                                [isEmphasized]="false"
+                                (valueChanged)="onRollChanged($event)"
+                            ></slider>
+                        </div>
                     </div>
                     <div class="flex px_h300">
                         <div class="p_full pos_rel">
                             <div class="bgc_ltint c_dtint pad5 mar5 bd_r5 pos_abs top0 rht0 z1 sh5_tint txt_prewrap ft_smal norm">{{ Text }}</div>    
                             <canvas
                                 #canvasgl
-                                class="p_full"
+                                class="p_full bdc_ltint bd_dsh"
                             ></canvas>
                         </div>
                     </div>

@@ -98,6 +98,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public get resumable(): boolean { return ["STOPPED"].includes(this._health.mstatus); }
     public get restartable(): boolean { return ["COMPLETED", "ERROR"].includes(this._health.mstatus); }
     public get launchable(): boolean { return ["EXITED", "COMPLETED", "ERROR"].includes(this._health.mstatus) && this.selectedMission !== undefined; }
+    public get replaying(): boolean { return this._health.sim && this._health.mstatus === "REPLAY"; }
     public get stoppable(): boolean { return this._health.sim; } // can stop simulator when running
     public get telemetryEnabled(): boolean { return this._health.sim && this._health.mstatus !== "EXITED" && this.selectedMission !== undefined; }
     public get markerGroups(): Array<MarkerGroup> { return [this._wpGrp, this._planeMgrp]; }
@@ -235,6 +236,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     }
     private keyUpdated(key: string) {
         if (!this.launchSettings.joystick_enable) return; // skip when joystick is disabled
+        if (this.replaying) return; // skip when replaying
         switch (key) {
             case "w":
                 this.joystick.throttle = Math.min(this.joystick.throttle + 100, 9600);
