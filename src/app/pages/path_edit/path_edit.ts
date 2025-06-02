@@ -29,7 +29,12 @@ export class PathEditPage implements OnInit, OnDestroy {
     private readonly _plColor: Color = Color.blend(Color.Blue, Color.Cyan, 0.5);
     private readonly _flColor: Color = Color.Green;
     private readonly _ldColor: Color = Color.Red;
-    private readonly _newMission: Mission = { id: -1, name: "", description: "", lead_id: -1, lead_path: [], follower_ids: [], mission_status: "EXITED", lead_mission_type: "AUTOPILOT" };
+    private readonly _newMission: Mission = { 
+        id: -1, name: "", description: "", 
+        lead_id: -1, lead_path: [], follower_ids: [], 
+        mission_status: "EXITED", lead_mission_type: "AUTOPILOT",
+        joystick_input: { roll: 500, pitch: 1000, throttle: 5000 }
+    } as Mission; // new mission template
     private readonly void: Callback = () => {};
     private get isCtrlPressed(): boolean { return this._svc.keyCtrl.getKeyState("Control"); }
     private get isAltPressed(): boolean { return this._svc.keyCtrl.getKeyState("Alt"); }

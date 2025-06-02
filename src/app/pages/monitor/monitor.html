@@ -34,19 +34,19 @@
                             <slider
                                 [minValue]="-9600"
                                 [maxValue]="9600"
-                                [value]="joystick.elevator"
+                                [value]="joystick.pitch"
                                 [isDraggable]="!replaying"
                                 [isEmphasized]="false"
-                                (valueChanged)="onPitchChanged($event)"
+                                (valueChanged)="onElevatorChanged($event)"
                             ></slider>
                             <span class="pad5top">Aileron</span>
                             <slider
                                 [minValue]="-9600"
                                 [maxValue]="9600"
-                                [value]="joystick.aileron"
+                                [value]="joystick.roll"
                                 [isDraggable]="!replaying"
                                 [isEmphasized]="false"
-                                (valueChanged)="onRollChanged($event)"
+                                (valueChanged)="onAileronChanged($event)"
                             ></slider>
                         </div>
                     </div>
