@@ -37,6 +37,7 @@ export interface Mission {
     follower_ids: Array<number>;
     mission_status: string;
     lead_mission_type: string;
+    joystick_input: Joystick;
 }
 export interface StartPos {
     lat: number;
@@ -113,7 +114,7 @@ export interface MissionSettings {
     fg_enable: boolean;
 }
 export interface Joystick {
-    aileron: number;
-    elevator: number;
+    roll: number;
+    pitch: number;
     throttle: number;
 }
