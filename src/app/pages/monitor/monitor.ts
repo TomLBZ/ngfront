@@ -79,7 +79,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     private coordsText: string = "Coords: -";
     private teleText: string = "Tele: -";
     private get joystickStr() {
-        return `Aileron: ${this.joystick.aileron}, Elevator: ${this.joystick.elevator}, Throttle: ${this.joystick.throttle}`;
+        return `Aileron: ${this.joystick.roll}, Elevator: ${this.joystick.pitch}, Throttle: ${this.joystick.throttle}`;
     }
     public get Text(): string {
         return this.fpsText + "\n" + this.attText + "\n" + this.coordsText + "\n" + this.teleText;
@@ -118,7 +118,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     public selectedMission?: Mission = undefined;
     public resetNeeded: boolean = false;
     public waiting: boolean = false;
-    public joystick: Joystick = { aileron: 500, elevator: 1000, throttle: 5000 };
+    public joystick: Joystick = { roll: 500, pitch: 1000, throttle: 5000 };
     private isValidMission(m: any): boolean {
         return StructValidator.hasNonEmptyFields(m, ["id", "name", "description", "lead_id", "lead_path", "follower_ids"]);
     }
@@ -215,6 +215,7 @@ export class MonitorPage implements OnInit, OnDestroy {
                     this.runtimeSettings.lead_id = m.lead_id;
                     this.launchSettings.joystick_enable = m.lead_mission_type === "JOYSTICK";
                     this.launchSettings = { ...this.launchSettings }; // trigger change detection
+                    this.joystick = m.joystick_input ?? { roll: 500, pitch: 1000, throttle: 5000 }; // update joystick input
                     if (this.websocket === undefined) this.startTelemetry();
                 }
             }, undefined, this.void);
@@ -228,11 +229,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         this._svc.callAPI("sim/joystick", (d: any) => {
             if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Failed to update joystick: Invalid Response!");
             else if (!(d as APIResponse).success) alert(`Failed to update joystick with ${this.joystickStr}!\n${d.msg}`);
-        }, { id: this.selectedMission!.lead_id, joystick: {
-            throttle: this.joystick.throttle,
-            roll    : this.joystick.aileron,
-            pitch   : this.joystick.elevator,
-        } }, this.alert);
+        }, { id: this.selectedMission!.lead_id, joystick: this.joystick }, this.alert);
     }
     private keyUpdated(key: string) {
         if (!this.launchSettings.joystick_enable) return; // skip when joystick is disabled
@@ -245,16 +242,16 @@ export class MonitorPage implements OnInit, OnDestroy {
                 this.joystick.throttle = Math.max(this.joystick.throttle - 100, 0);
                 break;
             case "a":
-                this.joystick.aileron = Math.max(this.joystick.aileron - 100, -9600);
+                this.joystick.roll = Math.max(this.joystick.roll - 100, -9600);
                 break;
             case "d":
-                this.joystick.aileron = Math.min(this.joystick.aileron + 100, 9600);
+                this.joystick.roll = Math.min(this.joystick.roll + 100, 9600);
                 break;
             case "q":
-                this.joystick.elevator = Math.max(this.joystick.elevator - 100, -9600);
+                this.joystick.pitch = Math.max(this.joystick.pitch - 100, -9600);
                 break;
             case "e":
-                this.joystick.elevator = Math.min(this.joystick.elevator + 100, 9600);
+                this.joystick.pitch = Math.min(this.joystick.pitch + 100, 9600);
                 break;
             default:
                 return; // skip when key is not valid
@@ -300,8 +297,8 @@ export class MonitorPage implements OnInit, OnDestroy {
             ]
             const state = [ // throttle, elevator, aileron, rudder
                 this.joystick.throttle / 9600, // normalized to [0, 1]
-                this.joystick.elevator / 19200 + 0.5, // normalized to [0, 1]
-                this.joystick.aileron / 19200 + 0.5, // normalized to [0, 1]
+                this.joystick.pitch / 19200 + 0.5, // normalized to [0, 1]
+                this.joystick.roll / 19200 + 0.5, // normalized to [0, 1]
                 0.5 // rudder is not used, set to 0.5
             ]
             const telemetry = [ // telemetry: speed, altitude
@@ -503,17 +500,17 @@ export class MonitorPage implements OnInit, OnDestroy {
             this.updateJoystick();
         }
     }
-    onPitchChanged(newPitch: number) {
+    onElevatorChanged(newPitch: number) {
         newPitch = Math.floor(newPitch);
-        if (newPitch !== this.joystick.elevator) {
-            this.joystick.elevator = newPitch;
+        if (newPitch !== this.joystick.pitch) {
+            this.joystick.pitch = newPitch;
             this.updateJoystick();
         }
     }
-    onRollChanged(newRoll: number) {
+    onAileronChanged(newRoll: number) {
         newRoll = Math.floor(newRoll);
-        if (newRoll !== this.joystick.aileron) {
-            this.joystick.aileron = newRoll;
+        if (newRoll !== this.joystick.roll) {
+            this.joystick.roll = newRoll;
             this.updateJoystick();
         }
     }
