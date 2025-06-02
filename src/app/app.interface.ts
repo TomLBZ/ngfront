@@ -118,3 +118,7 @@ export interface Joystick {
     pitch: number;
     throttle: number;
 }
+export interface AircraftMaxParams {
+    max_speed: number;
+    max_altitude: number;
+}
