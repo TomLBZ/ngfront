@@ -9,7 +9,7 @@ import { RTOS } from '../../../utils/src/ctrl/rtos';
 import { KeyControlMode, MissedDeadlinePolicy } from '../../../utils/ctrl';
 import { AppService } from '../../app.service';
 import { DropSelectComponent } from '../../../components/dropselect/dropselect';
-import { APIResponse, Joystick } from '../../app.interface';
+import { AircraftMaxParams, APIResponse, Joystick } from '../../app.interface';
 import { Marker } from '../../../utils/src/graphics/marker';
 import { ObjEditorComponent } from '../../../components/obj_editor/obj_editor';
 import { Path, PathStyle } from '../../../utils/graphics';
@@ -78,6 +78,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     private attText: string = "Attitude: -";
     private coordsText: string = "Coords: -";
     private teleText: string = "Tele: -";
+    private _maxParams: AircraftMaxParams = { max_altitude: 0, max_speed: 0 }; // max params for aircraft
     private get joystickStr() {
         return `Aileron: ${this.joystick.roll}, Elevator: ${this.joystick.pitch}, Throttle: ${this.joystick.throttle}`;
     }
@@ -218,6 +219,15 @@ export class MonitorPage implements OnInit, OnDestroy {
                     this.joystick = m.joystick_input ?? { roll: 500, pitch: 1000, throttle: 5000 }; // update joystick input
                     if (this.websocket === undefined) this.startTelemetry();
                 }
+                if (this.telemetryEnabled && this.launchSettings.joystick_enable) {
+                    this._svc.callAPI("aircraft/maxparams", (d: any) => {
+                        if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
+                        const dd = d as APIResponse;
+                        if (!dd.success) return; // skip when failed
+                        if (!StructValidator.hasNonEmptyFields(dd.data, ["max_altitude", "max_speed"])) return; // invalid data
+                        this._maxParams = dd.data as AircraftMaxParams; // update max params
+                    }, m.lead_id, this.void);
+                }
             }, undefined, this.void);
         }, undefined, this.void);
         if (!this._glRunning) {
@@ -302,8 +312,8 @@ export class MonitorPage implements OnInit, OnDestroy {
                 0.5 // rudder is not used, set to 0.5
             ]
             const telemetry = [ // telemetry: speed, altitude
-                this._speed / 50, // speed 0-50m/s normalized to [0, 1]
-                this._geoCoords[2] / 10000, // altitude 0-10000m normalized to [0, 1]
+                this._speed / this._maxParams.max_speed, // speed 0-50m/s normalized to [0, 1]
+                this._geoCoords[2] / this._maxParams.max_altitude, // altitude 0-10000m normalized to [0, 1]
             ]
             const globalUniforms: UniformRecord = {
                 "u_scale": scale,
@@ -329,12 +339,6 @@ export class MonitorPage implements OnInit, OnDestroy {
         if (this._glRunning) requestAnimationFrame(() => this.drawFrame());
         else this._pipeline.dispose();
     }
-    private fixedFloats(arr: number[], digits: number = 4): string[] {
-        return arr.map((v) => v.toFixed(digits));
-    }
-    private toDegs(arr: number[]): string[] {
-        return arr.map((v) => (v * 180 / Math.PI).toFixed(2) + "°");
-    }
     private updateText(): void {
         const now = Date.now();
         this._frameTimeQ.enqueue(now - this._lastFrameTime);
@@ -345,10 +349,9 @@ export class MonitorPage implements OnInit, OnDestroy {
             this._lastIntFps = intfps;
             this.fpsText = `FPS: ${fps.toFixed(2)}`;
         }
-        const fCoords = this.fixedFloats(this._geoCoords);
-        this.coordsText = `Lng: ${fCoords[0]}°\nLat: ${fCoords[1]}°\nAlt: ${fCoords[2]}m`;
-        const sAtts = this.toDegs(this._attitude);
-        this.attText = `Roll: ${sAtts[0]}\nPitch: ${sAtts[1]}\nYaw: ${sAtts[2]}`;
+        this.coordsText = `Lng: ${this._geoCoords[0].toFixed(4)}°\nLat: ${this._geoCoords[1].toFixed(4)}°\nAlt: ${this._geoCoords[2].toFixed(2)}m`;
+        const attStrs = this._attitude.map((v) => (v * 180 / Math.PI).toFixed(2) + "°");
+        this.attText = `Roll: ${attStrs[0]}\nPitch: ${attStrs[1]}\nYaw: ${attStrs[2]}`;
         this.teleText = `Speed: ${this._speed.toFixed(2)}m/s`;
     }
     private onGlLoaded(gl: WebGL2RenderingContext): void {
