@@ -20,35 +20,37 @@
                             <span> {{ replaying ? "Replaying:" : "Manual Control:" }} </span>
                             <span class="ft_smal"> Lead ID = {{ selectedMission?.lead_id || runtimeSettings.lead_id }} </span>
                         </div>
-                        <div class="flexc bd_dsh pad5 mar5 bd_r5 justcent centcont">
-                            <span>Throttle</span>
-                            <slider
-                                [minValue]="0"
-                                [maxValue]="9600"
-                                [value]="joystick.throttle"
-                                [isDraggable]="!replaying"
-                                [isEmphasized]="false"
-                                (valueChanged)="onThrottleChanged($event)"
-                            ></slider>
-                            <span class="pad5top">Elevator</span>
-                            <slider
-                                [minValue]="-9600"
-                                [maxValue]="9600"
-                                [value]="joystick.pitch"
-                                [isDraggable]="!replaying"
-                                [isEmphasized]="false"
-                                (valueChanged)="onElevatorChanged($event)"
-                            ></slider>
-                            <span class="pad5top">Aileron</span>
-                            <slider
-                                [minValue]="-9600"
-                                [maxValue]="9600"
-                                [value]="joystick.roll"
-                                [isDraggable]="!replaying"
-                                [isEmphasized]="false"
-                                (valueChanged)="onAileronChanged($event)"
-                            ></slider>
-                        </div>
+                        @if (!replaying) {
+                            <div class="flexc bd_dsh pad5 mar5 bd_r5 justcent centcont">
+                                <span>Throttle</span>
+                                <slider
+                                    [minValue]="0"
+                                    [maxValue]="9600"
+                                    [value]="joystick.throttle"
+                                    [isDraggable]="!replaying"
+                                    [isEmphasized]="false"
+                                    (valueChanged)="onThrottleChanged($event)"
+                                ></slider>
+                                <span class="pad5top">Elevator</span>
+                                <slider
+                                    [minValue]="-9600"
+                                    [maxValue]="9600"
+                                    [value]="joystick.pitch"
+                                    [isDraggable]="!replaying"
+                                    [isEmphasized]="false"
+                                    (valueChanged)="onElevatorChanged($event)"
+                                ></slider>
+                                <span class="pad5top">Aileron</span>
+                                <slider
+                                    [minValue]="-9600"
+                                    [maxValue]="9600"
+                                    [value]="joystick.roll"
+                                    [isDraggable]="!replaying"
+                                    [isEmphasized]="false"
+                                    (valueChanged)="onAileronChanged($event)"
+                                ></slider>
+                            </div>
+                        }
                     </div>
                     <div class="flex px_h300">
                         <div class="p_full pos_rel">
