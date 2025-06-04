@@ -10,8 +10,10 @@ export class FileOpComponent {
     @Input() title: string = "Download";
     @Input() multiple: boolean = false; // allow multiple files to be downloaded
     @Input() items: Array<any> = [];
+    @Input() selectedIndices: Array<number> = [];
     @Input() representation: Function = (item: any) => item;
     @Input() buttonsShown: Array<string> = ["download", "upload", "apply", "rename", "duplicate", "delete"];
+    @Input() applyBusy: boolean = false;
     @Output() selectionChanged  = new EventEmitter<Array<any>>();
     @Output() downloadClicked   = new EventEmitter<Array<any>>();
     @Output() uploadClicked     = new EventEmitter<void>();

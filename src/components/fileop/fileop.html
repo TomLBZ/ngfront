@@ -5,6 +5,7 @@
             [title]="title"
             [hoverMode]="true"
             [multiSelect]="multiple"
+            [defaultIndices]="selectedIndices"
             [representation]="representation"
             (selectionChanged)="onSelectionChanged($event)"
         ></dropselect>
@@ -15,7 +16,11 @@
             <button class="pad5 mar5" (click)="onUpload()">Upload</button>
         }
         @if (buttonsShown.includes("apply")) {
-            <button class="pad5 mar5" [disabled]="!itemSelected" (click)="onApply()">Apply</button>
+            <button class="pad5 mar5" [disabled]="!itemSelected" (click)="onApply()">
+                @if (applyBusy) {
+                    <span class="spinner centcont"></span>
+                } @else { Apply }
+            </button>
         }
         @if (buttonsShown.includes("rename")) {
             <button class="pad5 mar5" [disabled]="!itemSelected" (click)="onRename()">Rename</button>
