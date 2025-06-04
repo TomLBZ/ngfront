@@ -26,6 +26,22 @@ export class DropSelectComponent {
             }
         }
     }
+    private _defaultIndices: number[] = [];
+    get defaultIndices() { return this._defaultIndices; }
+    @Input() set defaultIndices(indices: number[]) {
+        if (!this.multiSelect) { // if not multi-select, ensure only one default index
+            indices = indices.length > 0 ? [indices[0]] : [];
+        }
+        this._defaultIndices = indices;
+        if (indices.length > 0) {
+            this.selectedIndices = indices.filter((i: number) => i < this.items.length);
+            if (this.selectedIndices.length === 0 && this.items.length > 0) {
+                this.selectedIndices = [0]; // select first item if no valid indices
+            }
+        } else {
+            this.selectedIndices = [];
+        }
+    }
     @Input() representation: Function = (a: any) => a;
     @Input() indexMode: boolean = false;
     @Input() hoverMode: boolean = false;
