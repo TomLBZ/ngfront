@@ -23,6 +23,7 @@ export class AeroBridge extends ApiBridge {
         "aircraft/compile": (data?: any) => this.getSetupSimulation(data),
         "aircraft/maxparams": (data?: any) => this.getAircraftMaxParams(data),
         "files/all": (data?: any) => this.getSimulationFilesConfig(data),
+        "files/current": (data?: any) => this.getMissionSettings(data),
         "files/upload": (data?: any) => this.postUploadNewSimulationFile(data),
         "files/download": (data?: any) => this.getDownloadSimulationFile(data),
         "files/delete": (data?: any) => this.deleteSimulationFile(data),
@@ -95,6 +96,9 @@ export class AeroBridge extends ApiBridge {
     }
     private getAircraftMaxParams(id: number): Promise<any> {
         return this.get(`${this.url}/plane${id}/max_alt_speed`);
+    }
+    private getMissionSettings(_: any): Promise<any> {
+        return this.get(`${this.url}/mission_settings`);
     }
     // PUTs
     private putMissionConfiguration(data: Mission): Promise<any> {
