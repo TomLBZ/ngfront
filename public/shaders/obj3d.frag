@@ -12,9 +12,9 @@ uniform vec3 u_sundir; // sun direction vector
 // a uniform of 16 vec3s is used to pass in the next 16 waypoints
 uniform vec3 u_wps[16]; // waypoint vectors
 
-const float WPRAD = 5.0                                 ; // radius of the waypoint test sphere
-const float WPSCALE = 0.1                               ; // scale of the waypoint test sphere
-const float MAX_DIST = 1024.0                           ;
+const float WPRAD = 0.05                                ; // radius of the waypoint test sphere
+const float WPSCALE = 1e-3                              ; // scale of the waypoint test sphere
+const float MAX_DIST = 32.0                             ; // maximum distance to march the ray
 const int MAX_ITER  = 64                                ;
 const vec3 O3       = vec3(0.0)                ; // color of zero vector
 const vec3 I3       = vec3(1.0, 1.0, 1.0)  ; // color of identity vector
@@ -84,7 +84,7 @@ vec4 colorWps(vec3 intersection, vec3 normal, int iter, float dist, vec4 prevc) 
     vec3 surfaceColor = WPCOLOR * (1.0 - distfrac) + I3 * iterfrac; // surface color based on distance and iteration
     vec3 color = surfaceColor + specularColor; // combine surface color and specular color
     color = clamp(color, O3, I3); // clamp color to [0, 1]
-    vec4 color4 = mix(prevc, vec4(color, 1.0), sqrt(distfrac)); // mix with previous color
+    vec4 color4 = mix(prevc, vec4(color, 1.0), pow(distfrac, 0.2)); // mix with previous color
     return color4; // return the final color
 }
 vec4 prev() {
