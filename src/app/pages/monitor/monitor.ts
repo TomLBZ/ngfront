@@ -24,6 +24,8 @@ import { Queue } from '../../../utils/ds';
 import { Attitude, CoordsFrameType, GeodeticCoords, GeoHelper } from '../../../utils/geo';
 import { GeoCam } from '../../../utils/src/geo/cam';
 import { dateToSunData, sunDataToSunPositionVectorEcef } from '../../../utils/src/geo/astro';
+import { geodeticToECEF } from '../../../utils/src/geo/earth';
+import { Angles } from '../../../utils/math';
 interface LaunchSettings {
     fg_enable: boolean;
     joystick_enable: boolean;
@@ -59,6 +61,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         sim: false,
         algo: false
     }
+    private readonly r90deg: number = Math.PI / 2; // 90 degrees in radians
     private readonly _telemetries: Array<Telemetry> = [];
     private readonly _visibleTelemetryIndices: Array<number> = [];
     private websocket?: WebSocket;
@@ -73,6 +76,7 @@ export class MonitorPage implements OnInit, OnDestroy {
     private _lastIntFps: number = 0;
     private _geoCoords: GeodeticCoords = [0, 0, 1000]; // longitude, latitude, altitude
     private _attitude: Attitude = [0, 0, 0]; // roll, pitch, yaw
+    private _yawN: number = 0; // heading in radians
     private _speed: number = 0; // speed value
     private fpsText: string = "FPS: 0.00";
     private attText: string = "Attitude: -";
@@ -167,7 +171,8 @@ export class MonitorPage implements OnInit, OnDestroy {
             else this._ppaths[pathIdx] = path; // update existing path
             if (isLeader) {
                 this._geoCoords = [t.lon, t.lat, t.alt]; // update geo coords
-                this._attitude = [t.roll, t.pitch, t.yaw]; // update attitude
+                this._attitude = [t.roll, t.pitch, Angles.wrapRadPi(t.yaw - this.r90deg)]; // update attitude
+                this._yawN = t.yaw; // update yaw from north
                 this._speed = t.speed; // update speed
             }
         });
@@ -315,6 +320,14 @@ export class MonitorPage implements OnInit, OnDestroy {
                 this._speed / this._maxParams.max_speed, // speed 0-50m/s normalized to [0, 1]
                 this._geoCoords[2] / this._maxParams.max_altitude, // altitude 0-10000m normalized to [0, 1]
             ]
+            const missionWps: Array<number[]> = (this.selectedMission?.lead_path ?? [])
+                .map((wp: Waypoint) => [wp.lon, wp.lat, wp.alt] as GeodeticCoords)
+                .map((wp: GeodeticCoords) => cam.ecefToCamFrame(geodeticToECEF(...wp)));
+            if (missionWps.length > 16) missionWps.length = 16; // limit to 16 waypoints
+            const wpsArray = new Float32Array(16 * 3); // 16 waypoints, each with 3 coordinates
+            missionWps.forEach((wp: number[], i: number) => {
+                wpsArray.set(wp, i * 3); // set waypoint coordinates in the array
+            });
             const globalUniforms: UniformRecord = {
                 "u_scale": scale,
             };
@@ -331,6 +344,12 @@ export class MonitorPage implements OnInit, OnDestroy {
                     "u_state": state, // aircraft state: throttle, elevator, aileron, rudder
                     "u_telemetry": telemetry, // telemetry: speed, altitude
                 }, // uniforms for 2D HUD rendering
+                "obj3d": {
+                    "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
+                    "u_minres": minres, // minimum resolution
+                    "u_sundir": sundir, // sun direction in observer frame
+                    "u_wps": wpsArray, // waypoints in camera frame
+                }, // uniforms for 3D object rendering
             };
             this._pipeline.setGlobalUniforms(globalUniforms);
             this._pipeline.renderAll(uniforms);
@@ -351,7 +370,7 @@ export class MonitorPage implements OnInit, OnDestroy {
         }
         this.coordsText = `Lng: ${this._geoCoords[0].toFixed(4)}°\nLat: ${this._geoCoords[1].toFixed(4)}°\nAlt: ${this._geoCoords[2].toFixed(2)}m`;
         const attStrs = this._attitude.map((v) => (v * 180 / Math.PI).toFixed(2) + "°");
-        this.attText = `Roll: ${attStrs[0]}\nPitch: ${attStrs[1]}\nYaw: ${attStrs[2]}`;
+        this.attText = `Roll: ${attStrs[0]}\nPitch: ${attStrs[1]}\nYaw: ${(this._yawN * 180 / Math.PI).toFixed(2)}°`;
         this.teleText = `Speed: ${this._speed.toFixed(2)}m/s`;
     }
     private onGlLoaded(gl: WebGL2RenderingContext): void {
