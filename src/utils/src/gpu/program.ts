@@ -182,6 +182,11 @@ export class ShaderProgram {
                 case 4: return UniformType.VEC4;
                 case 9: return UniformType.MAT3;
                 case 16: return UniformType.MAT4;
+                default:
+                    if (value.length % 3 === 0) {
+                        return UniformType.VEC3; // assume 3-component vector for lengths like 6, 12, etc.
+                    }
+                    else return undefined; // cannot infer
             }
         }
         if (value instanceof Int32Array) {
@@ -189,6 +194,11 @@ export class ShaderProgram {
                 case 2: return UniformType.IVEC2;
                 case 3: return UniformType.IVEC3;
                 case 4: return UniformType.IVEC4;
+                default:
+                    if (value.length % 3 === 0) {
+                        return UniformType.IVEC3; // assume 3-component vector for lengths like 6, 12, etc.
+                    }
+                    else return undefined; // cannot infer
             }
         }
         if (value instanceof Uint32Array) {
@@ -196,6 +206,11 @@ export class ShaderProgram {
                 case 2: return UniformType.UVEC2;
                 case 3: return UniformType.UVEC3;
                 case 4: return UniformType.UVEC4;
+                default:
+                    if (value.length % 3 === 0) {
+                        return UniformType.UVEC3; // assume 3-component vector for lengths like 6, 12, etc.
+                    }
+                    else return undefined; // cannot infer
             }
         }
         if (Array.isArray(value)) {
@@ -205,6 +220,11 @@ export class ShaderProgram {
                 case 4: return UniformType.VEC4;
                 case 9: return UniformType.MAT3;
                 case 16: return UniformType.MAT4;
+                default:
+                    if (value.length % 3 === 0) {
+                        return UniformType.VEC3; // assume 3-component vector for lengths like 6, 12, etc.
+                    }
+                    else return undefined; // cannot infer
             }
         }
         return undefined;
