@@ -13,11 +13,16 @@
                 <span>5. You can select and Delete a non-default config file</span>
                 <span>6. You can select and Download any config file</span>
                 <span>7. If launch failed and you don't know the culprit:</span>
-                <button class="pad2v px_minw100 px_maxw200 centself" (click)="onReset()">
-                    @if (waiting) {
-                        <span class="spinner centcont"></span>
-                    } @else { Reset All Configs }
-                </button>
+                <div class="flex justarnd centcont">
+                    <button class="px_minw100 px_maxw200 centself" (click)="onRefreshFiles()">
+                        Refresh Config Lists
+                    </button>
+                    <button class="px_minw100 px_maxw200 centself" (click)="onReset()">
+                        @if (waiting) {
+                            <span class="spinner centcont"></span>
+                        } @else { Reset All Configs }
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -28,12 +33,15 @@
                 <fileop class="flexc p_quartw pad10"
                     [title]="numToName(numType)"
                     [items]="fileDict[numType]"
+                    [selectedIndices]="[selectedIdxDict[numType]]"
                     [representation]="repr"
                     [buttonsShown]="['download', 'upload', 'apply', 'delete']"
+                    [applyBusy]="applying && applyingType === numType"
                     (downloadClicked)="onFileOpDownloadClicked($event)"
                     (uploadClicked)="onFileOpUploadClicked(numType)"
                     (applyClicked)="onFileOpApplyClicked($event)"
                     (deleteClicked)="onFileOpDeleteClicked($event)"
+                    (selectionChanged)="onFileOpSelectionChanged($event)"
                 ></fileop>
             }
         </div>
@@ -43,11 +51,14 @@
         <fileop class="flexc p_quartw pad10"
             title="Flocking Algorithm"
             [items]="fileDict[F]"
+            [selectedIndices]="[selectedIdxDict[F]]"
             [representation]="repr"
             [buttonsShown]="['upload', 'apply', 'delete']"
+            [applyBusy]="applying && applyingType === F"
             (uploadClicked)="onFileOpUploadClicked(F)"
             (applyClicked)="onFileOpApplyClicked($event)"
             (deleteClicked)="onFileOpDeleteClicked($event)"
+            (selectionChanged)="onFileOpSelectionChanged($event)"
         ></fileop>
     </div>
 </div>
