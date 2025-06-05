@@ -18,6 +18,7 @@ const float PI      = 3.1415926535897932384626433832795 ;
 // hud scale
 const float MAXNUM  = 1000.0                            ; // max number for scale
 const float linew = 0.01;
+const float hlinew = 0.5 * linew; // half line width
 const float ulen = 0.8; // length of scale
 const float hulen = 0.5 * ulen; // half length of scale
 const float scfrseg = 0.1 * ulen; // front segment length for scale
@@ -30,10 +31,9 @@ const vec2 prs = vec2(ulen, 0.0); // right scale pos
 const vec2 pts = vec2(0.0, ulen); // top scale pos
 const vec2 pbs = vec2(0.0, -ulen); // bottom scale pos
 const vec2 o2 = vec2(0.0, 0.0);
-const vec3 hudc = vec3(0.0, 1.0, 0.75);
-const vec3 wpc = vec3(1.0, 0.6, 0.25); // text color
-const vec3 o3 = vec3(0.0, 0.0, 0.0); // zero vector
-const vec3 i3 = vec3(1.0, 1.0, 1.0); // identity vector
+const vec4 hudc = vec4(1.0, 1.0, 0.5, 1.0);
+const vec4 wpc = vec4(0.5, 1.0, 0.4, 1.0); // text color
+const vec4 o4 = vec4(0.0, 0.0, 0.0, 0.0); // zero vector in vec4
 // letters
 const float ltsize = 1.0; // letter size
 const float ultw = 0.05 * ulen; // width of letter
@@ -413,14 +413,13 @@ vec4 prev() {
 // dummy main that colors square in the center of the screen with a gradient
 void main() {
     float hudd = hud(v_p);
-    float hudmask = 1.0 - smoothstep(-linew, linew, hudd); // smooth step for hud mask
+    float hudmask = 1.0 - smoothstep(0.0, hlinew, hudd); // smooth step for hud mask
     float wpd = wpText(v_p);
-    float wpmask = 1.0 - smoothstep(-linew * 2.0, linew * 2.0, wpd); // smooth step for waypoint text mask
+    float wpmask = 1.0 - smoothstep(0.0, linew, wpd); // smooth step for waypoint text mask
     wpmask = wpmask * (1.0 - hudmask); // text mask only if hud mask is not present
     float uimask = max(hudmask, wpmask); // combined mask for hud and waypoint text
-    vec3 wpColor = mix(i3, wpc, wpmask); // waypoint text color
-    vec3 hudColor = mix(i3, hudc, hudmask); // hud text color
-    vec3 bg = prev().xyz; // background color from previous pass
-    vec3 uic = wpColor * hudColor; // final color for hud and waypoint text
-    outColor = vec4(mix(bg, uic, uimask), 1.0); // mix background and foreground based on mask
+    vec4 wpColor = mix(o4, wpc, wpmask); // waypoint text color
+    vec4 hudColor = mix(o4, hudc, hudmask); // hud text color
+    vec4 bg = prev() * (1.0 - uimask); // background color from previous pass
+    outColor = bg + hudColor + wpColor; // mix background with hud and waypoint text colors
 }
