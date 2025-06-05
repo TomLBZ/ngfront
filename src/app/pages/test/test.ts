@@ -143,7 +143,8 @@ export class TestPage implements AfterViewInit, OnDestroy {
                 0.5, // speed not set, use 0.5
                 cam.posGeodetic[2] / 10000, // altitude normalized to [0, 1] assuming max altitude of 10,000m
             ]
-            const missionWps: Array<number[]> = this.wps.map((wp: GeodeticCoords) => cam.ecefToCamFrame(geodeticToECEF(...wp)));
+            const missionWps: Array<number[]> = this.wps.map((wp: GeodeticCoords) => cam.ecefToCamFrame(geodeticToECEF(...wp)))
+                .map((wp: number[]) => [wp[0] / 1000, wp[1] / 1000, wp[2] / 1000]); // convert unit to km
             if (missionWps.length > 16) missionWps.length = 16; // limit to 16 waypoints
             const wpsArray = new Float32Array(16 * 3); // 16 waypoints, each with 3 coordinates
             missionWps.forEach((wp: number[], i: number) => {

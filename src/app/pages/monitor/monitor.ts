@@ -322,7 +322,8 @@ export class MonitorPage implements OnInit, OnDestroy {
             ]
             const missionWps: Array<number[]> = (this.selectedMission?.lead_path ?? [])
                 .map((wp: Waypoint) => [wp.lon, wp.lat, wp.alt] as GeodeticCoords)
-                .map((wp: GeodeticCoords) => cam.ecefToCamFrame(geodeticToECEF(...wp)));
+                .map((wp: GeodeticCoords) => cam.ecefToCamFrame(geodeticToECEF(...wp)))
+                .map((wp: number[]) => [wp[0] / 1000, wp[1] / 1000, wp[2] / 1000]); // convert unit to km
             if (missionWps.length > 16) missionWps.length = 16; // limit to 16 waypoints
             const wpsArray = new Float32Array(16 * 3); // 16 waypoints, each with 3 coordinates
             missionWps.forEach((wp: number[], i: number) => {
