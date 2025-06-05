@@ -59,7 +59,7 @@ export class PathEditPage implements OnInit, OnDestroy {
     public readonly wpGroup: MarkerGroup = new MarkerGroup(Icon.Circle(this._iconSize, this._wpColor), true, false, this._iconScale);
     public readonly plGroup: MarkerGroup = new MarkerGroup(Icon.Poly(this._iconSize, Icon.polyPlaneVecs, this._plColor), true, false, this._iconScale);
     public readonly mPath: Path = new Path(-1);
-    public readonly mIncludeFieldsFilter = (key: string) => { return key !== "lead_path"; }
+    public readonly mIncludeFieldsFilter = (key: string) => { return !["lead_path", "mission_status", "lead_mission_type", "joystick_input"].includes(key); }
     public readonly mReadOnlyFieldsFilter = (key: string) => { return key.includes("_id"); }
     public readonly plIncludeFieldsFilter = (key: string) => { return !key.includes("start_pos.alt"); }
     public get selectedMission(): Mission { return this.missions[this._selectedMissionIdx]; }
