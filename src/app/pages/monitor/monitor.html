@@ -12,69 +12,71 @@
             [localMapUrlBase]="localMapUrlBase"
             [maxZoom]="16"
         ></mapview>   
-        <div class="flexc px_h300 bd_r5 bd_dbl bdc_tint c_tint bold ft_huge centcont justcent">
-            @if (telemetryEnabled && launchSettings.joystick_enable) {
-                <div class="flex ft_norm pad5 centcont">
-                    <div class="flexc px_w200 px_h150 pad5 justcent centcont">
-                        <div class="flexc c_dtint justcent centcont">
-                            <span> {{ replaying ? "Replaying:" : "Manual Control:" }} </span>
-                            <span class="ft_smal"> Lead ID = {{ selectedMission?.lead_id || runtimeSettings.lead_id }} </span>
-                        </div>
-                        @if (!replaying) {
-                            <div class="flexc bd_dsh pad5 mar5 bd_r5 justcent centcont">
-                                <span>Throttle</span>
-                                <slider
-                                    [minValue]="0"
-                                    [maxValue]="9600"
-                                    [value]="joystick.throttle"
-                                    [isDraggable]="!replaying"
-                                    [isEmphasized]="false"
-                                    (valueChanged)="onThrottleChanged($event)"
-                                ></slider>
-                                <span class="pad5top">Elevator</span>
-                                <slider
-                                    [minValue]="-9600"
-                                    [maxValue]="9600"
-                                    [value]="joystick.pitch"
-                                    [isDraggable]="!replaying"
-                                    [isEmphasized]="false"
-                                    (valueChanged)="onElevatorChanged($event)"
-                                ></slider>
-                                <span class="pad5top">Aileron</span>
-                                <slider
-                                    [minValue]="-9600"
-                                    [maxValue]="9600"
-                                    [value]="joystick.roll"
-                                    [isDraggable]="!replaying"
-                                    [isEmphasized]="false"
-                                    (valueChanged)="onAileronChanged($event)"
-                                ></slider>
-                            </div>
-                        }
-                    </div>
-                    <div class="flex px_h300">
-                        <div class="p_full pos_rel">
-                            <div class="bgc_ltint c_dtint pad5 mar5 bd_r5 pos_abs top0 rht0 z1 sh5_tint txt_prewrap ft_smal norm">{{ Text }}</div>    
-                            <canvas
-                                #canvasgl
-                                class="p_full bdc_ltint bd_dsh"
-                            ></canvas>
-                        </div>
-                    </div>
-                </div>
-            }
-            @else {
+        <div class="flex px_h300 bd_r5 bd_dbl bdc_tint c_tint bold ft_huge centcont justcent">
+            <div class="flexc px_minw200 px_w200 px_maxw200">
                 @if (launchSettings.joystick_enable) {
-                    <div class="flexc p_full bold c_tint ft_huge centcont justcent">
-                        <span>[Joystick]</span>
-                        <span>Not Running</span>
+                    <div class="flex ft_norm pad5 centcont">
+                        <div class="flexc px_w200 px_h150 pad5 justcent centcont">
+                            <div class="flexc c_dtint justcent centcont">
+                                <span> {{ replaying ? "Replaying:" : "Manual Control:" }} </span>
+                                <span class="ft_smal"> Lead ID = {{ selectedMission?.lead_id || runtimeSettings.lead_id }} </span>
+                            </div>
+                            @if (!replaying && telemetryEnabled) {
+                                <div class="flexc bd_dsh pad5 mar5 bd_r5 justcent centcont">
+                                    <span>Throttle</span>
+                                    <slider
+                                        [minValue]="0"
+                                        [maxValue]="9600"
+                                        [value]="joystick.throttle"
+                                        [isDraggable]="!replaying"
+                                        [isEmphasized]="false"
+                                        (valueChanged)="onThrottleChanged($event)"
+                                    ></slider>
+                                    <span class="pad5top">Elevator</span>
+                                    <slider
+                                        [minValue]="-9600"
+                                        [maxValue]="9600"
+                                        [value]="joystick.pitch"
+                                        [isDraggable]="!replaying"
+                                        [isEmphasized]="false"
+                                        (valueChanged)="onElevatorChanged($event)"
+                                    ></slider>
+                                    <span class="pad5top">Aileron</span>
+                                    <slider
+                                        [minValue]="-9600"
+                                        [maxValue]="9600"
+                                        [value]="joystick.roll"
+                                        [isDraggable]="!replaying"
+                                        [isEmphasized]="false"
+                                        (valueChanged)="onAileronChanged($event)"
+                                    ></slider>
+                                </div>
+                            }
+                        </div>
                     </div>
-                } @else {
+                }
+                @else {
                     <div class="flexc p_full bold c_tint ft_huge centcont justcent">
                         <span>[Joystick]</span>
                         <span>Disabled</span>
                     </div>
                 }
+            </div>
+            @if (telemetryEnabled) {
+                <div class="flex px_h300">
+                    <div class="p_full pos_rel">
+                        <div class="bgc_ltint c_dtint pad5 mar5 bd_r5 pos_abs top0 rht0 z1 sh5_tint txt_prewrap ft_smal norm">{{ Text }}</div>    
+                        <canvas
+                            #canvasgl
+                            class="p_full bdc_ltint bd_dsh"
+                        ></canvas>
+                    </div>
+                </div>
+            } @else {
+                <div class="flexc p_full bold c_tint ft_huge centcont justcent">
+                    <span>[Leader View]</span>
+                    <span>Not Running</span>
+                </div>
             }
         </div>
     </div>
