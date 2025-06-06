@@ -15,8 +15,6 @@ uniform vec3 u_wps[16]; // waypoint vectors
 const float WPRAD = 0.01                                ; // radius of the waypoint test sphere, in km
 const float MAX_DIST = 32.0                             ; // maximum distance to march the ray, in km
 const int MAX_ITER  = 64                                ;
-const vec3 O3       = vec3(0.0)                ; // color of zero vector
-const vec3 I3       = vec3(1.0, 1.0, 1.0)  ; // color of identity vector
 const vec3 SUNC     = vec3(1.0, 1.0, 0.5)  ; // sun color
 const vec3 WPCOLOR = vec3(1.0, 0.0, 1.0) ; // waypoint color
 
@@ -68,26 +66,6 @@ vec3 normAt(vec3 p, float err) {
     vec2 d = vec2(err, -err);
     return normalize(d.xyy * wps(p + d.xyy) + d.yyx * wps(p + d.yyx) + d.yxy * wps(p + d.yxy) + d.xxx * wps(p + d.xxx));
 }
-vec3 getSpecularColor(vec3 intersection, vec3 normal) {
-    vec3 viewrayDir = normalize(intersection); // view direction from camera to intersection point
-    vec3 sunDir = normalize(u_sundir); // sun direction vector
-    vec3 reflected = reflect(sunDir, normal); // reflection of the sun direction
-    float specAngle = max(dot(viewrayDir, reflected), 0.0); // angle between view direction and reflected sun direction
-    return SUNC * pow(specAngle, 16.0); // specular color based on sun direction and normal
-}
-vec4 colorWps(vec3 intersection, vec3 normal, int iter, float dist, vec4 prevc) { // no is the surface normal in object frame
-    vec3 specularColor = getSpecularColor(intersection, normal); // get specular color based on intersection and normal
-    // get surface color based on distance and iteration
-    float distfrac = dist / MAX_DIST; // distance fraction
-    float distcoeff = pow(distfrac, 0.2); // distance coefficient for color mixing
-    float iterfrac = float(iter) / float(MAX_ITER); // iteration fraction
-    float itercoeff = sqrt(iterfrac); // iteration coefficient for color mixing
-    vec3 surfaceColor = WPCOLOR * (1.0 - distfrac) + I3 * itercoeff; // surface color based on distance and iteration
-    vec3 color = surfaceColor + specularColor; // combine surface color and specular color
-    color = clamp(color, O3, I3); // clamp color to [0, 1]
-    vec4 color4 = mix(prevc, vec4(color, 1.0), distcoeff); // mix with previous color
-    return color4; // return the final color
-}
 vec4 prev() {
     return texture(u_prev, v_p / u_scale * 0.5 + 0.5);
 }
@@ -96,11 +74,16 @@ vec4 c3d(vec3 m, vec3 rd, float errFactor) {
     float dist = m.x;
     if (dist <= WPRAD) return prevc; // if distance is less than radius of waypoint sphere, return previous color
     if (m.z != 0.0) return prevc; // if inside object or no intersection, return previous color
-    vec3 its = rd * dist; // intersection in plane frame
     float err = errFactor * dist; // error in plane frame
+    vec3 its = rd * dist; // intersection in plane frame
     vec3 nrm = normAt(its, err); // normal in plane frame
-    int iter = int(m.y);
-    return colorWps(its, nrm, iter, dist, prevc);
+    float intensity = clamp(dot(nrm, u_sundir), 0.0, 1.0); // light intensity based on normal and sun direction
+    float distfrac = dist / MAX_DIST; // distance fraction
+    float distcoeff = pow(distfrac, 0.2); // distance coefficient for color mixing
+    vec3 diffuseColor = (intensity * 0.5 + 0.5) * WPCOLOR; // diffuse color based on normal and sun direction
+    vec3 specularColor = SUNC * pow(intensity, 12.0); // specular color based on normal and sun direction
+    vec3 color = diffuseColor + specularColor; // combine diffuse and specular color
+    return mix(prevc, vec4(color, 1.0), distcoeff); // mix with previous color based on distance
 }
 
 void main() {
