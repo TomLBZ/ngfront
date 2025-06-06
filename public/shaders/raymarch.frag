@@ -13,7 +13,7 @@ uniform float u_escale; // Earch scale factor and sun scale factor
 const vec3 O3       = vec3(0.0)                ;
 const vec3 I3       = vec3(1.0)                ;   
 const vec3 SUNC     = vec3(1.0, 1.0, 0.5)  ; // sun color
-const vec3 ETHC     = vec3(0.0, 0.3, 0.3)  ; // Earth color
+const vec3 ETHC     = vec3(0.0, 0.25, 0.25)  ; // Earth color
 const float E_R     = 6.371000000e+06                    ; // Earth radius in meters (average)
 const float RC4     = -1.42770400e-02                   ;
 const float RC3     = -1.53923793e+00                   ;
