@@ -13,8 +13,8 @@ uniform float u_escale; // Earch scale factor and sun scale factor
 const vec3 O3       = vec3(0.0)                ;
 const vec3 I3       = vec3(1.0)                ;   
 const vec3 SUNC     = vec3(1.0, 1.0, 0.5)  ; // sun color
-const vec3 ATMC     = vec3(0.05, 0.5, 1.0) ; // atmosphere color
-const float INTENSITY = 1.0 / length(SUNC + ATMC)    ; // intensity of the sun and atmosphere color
+const vec3 ETHC     = vec3(0.0, 0.3, 0.3)  ; // Earth color
+const float E_R     = 6.371000000e+06                    ; // Earth radius in meters (average)
 const float RC4     = -1.42770400e-02                   ;
 const float RC3     = -1.53923793e+00                   ;
 const float RC2     = -1.77213122e+02                   ;
@@ -22,7 +22,15 @@ const float RC1     = -2.12059191e+04                   ;
 const float RC0     = 6.37813700e+06                    ;
 const float MAX_DIST = 32.0                             ;
 const float COS_SUN_APP_RADIUS = 0.999988822575         ; // cos(0.5 * sun apparent radius)
-const float E_ATM_THK = 2.0e-1                          ; // Earth atmosphere thickness in million meters
+// atmosphere parameters
+const float E_ATM_THK = 2.0e5                           ; // Earth atmosphere thickness in meters
+const float E_ATM_R = E_R + E_ATM_THK                   ; // Earth atmosphere radius in meters
+const float OPT_DEPTH_PTS = 8.0                         ; // number of points for optical depth calculation
+const float IN_SCATT_PTS = 8.0                          ; // number of points for in-scattering calculation
+const float SCAT_INTENSITY = 0.22                        ; // scattering intensity (atmosphere thickness)
+const vec3 SCAT_COEFFS = vec3(700., 530., 440.); // scattering coefficients for red, green, blue channels
+const vec3 scatteringCoeffs = pow(400./SCAT_COEFFS, vec3(4.)) * SCAT_INTENSITY;
+
 const int MAX_ITER  = 64                                ;
 
 vec4 rayNerr() {
@@ -63,45 +71,86 @@ vec3 march(vec3 rd, float eps_c) { // returns (distance, iteration)
     }
     return vec3(MAX_DIST, MAX_ITER, minDist); // didn't hit earth
 }
-vec3 space(vec3 viewDir, vec3 lightSourceDir, float strength, float minDist) {
-    float cosAngle = dot(viewDir, lightSourceDir);
-    if (cosAngle > COS_SUN_APP_RADIUS) return I3; // if the light is too close to the view direction, return white
-    vec3 atmc = ATMC * (1.0 - clamp(minDist / E_ATM_THK, 0.0, 1.0)); // atmosphere color based on fraction
-    vec3 sky = atmc; // default sky color is atmosphere color
-    if (cosAngle > 0.0) sky += SUNC * pow(cosAngle, 1.0 / strength); // halo color based on fraction when the sun is not behind the view direction    
-    return INTENSITY * sky;
+// ray-sphere intersection returns the near and far intersection points, or a high value if no hit
+vec2 raySphereIntersect(vec3 ro, vec3 rd, float radius) {
+    vec3 offset = ro;
+    float a = 1.;
+    float b = 2. * dot(offset, rd);
+    float c = dot(offset, offset) - radius * radius;
+    float d = b*b - 4.*a*c;
+    if (d > 0.) {
+        float s = sqrt(d);
+        float dstNear = max(0., (-b-s)/(2.*a));
+        float dstFar = (-b+s)/(2.*a);
+        if (dstFar >= 0.) {
+            return vec2(dstNear, dstFar - dstNear);
+        }
+    }
+    return vec2(1e9);
 }
-vec3 colorEarth(vec3 intersection, vec3 normal, int iter, float dist) { // no is the surface normal in object frame
-    float distfrac = dist / MAX_DIST; // distance fraction
-    float iterfrac = float(iter) / float(MAX_ITER); // iteration fraction
-    vec3 normColor = normal * 0.5 + 0.5; // normal color in range [0, 1]
-    vec3 iterColor = vec3(0.0, iterfrac * iterfrac, 0.0); // iteration color in range [0, 1]
-    // get specular reflection of the sun on the surface
-    vec3 viewrayDir = normalize(intersection);
-    vec3 sunDir = normalize(u_sundir);
-    vec3 reflected = reflect(sunDir, normal); // reflection of the sun direction
-    float specAngle = max(dot(viewrayDir, reflected), 0.0); // angle between view direction and reflected sun direction
-    if (specAngle < 0.0) specAngle = 0.0; // clamp angle to [0, 1]
-    specAngle = pow(specAngle, 16.0); // specular highlight sharpness
-    vec3 specularColor = SUNC * specAngle; // specular color based on sun direction and normal
-    vec3 surfaceColor = mix(normColor, specularColor, 0.5); // mix normal color and specular color based on iteration fraction
-    vec3 color = mix(surfaceColor, iterColor, iterfrac); // mix normal color and iteration color based on iteration fraction
-    color = clamp(color, O3, I3); // clamp color to [0, 1]
-    // return vec3(distfrac , iterfrac * iterfrac, 0.0); // color based on distance and iteration
-    return color; // return the final color
+// Atmoshperic scattering functions, centering at earth center
+float densityAtAltitude(float alt) {
+    float heightFrac = alt / (E_ATM_THK * u_escale);
+    return exp(-heightFrac * 2.0) * (1. - heightFrac);
 }
+float opticalDepth(vec3 ro, vec3 rd, float rayLength) {
+    float stepSize = rayLength / (OPT_DEPTH_PTS - 1.);
+    float depth = 0.;
+    for (float i = 0.; i < IN_SCATT_PTS; i++) {
+        float density = densityAtAltitude((length(u_epos) - E_R) * u_escale);
+        depth += density * stepSize;
+        ro += rd * stepSize;
+    }
+    return depth;
+}
+vec3 calculateLight(vec3 ro, vec3 rd, float far, vec3 sunDir, vec3 color) {
+    float stepSize = far / (IN_SCATT_PTS - 1.);
+    vec3 scatterLight = vec3(0.);
+    float viewRayDepth = 0.;
+    for (float i = 0.; i < IN_SCATT_PTS; i++) {
+        viewRayDepth = opticalDepth(ro, -rd, stepSize * float(i));
+        float sunRayLength = raySphereIntersect(ro, sunDir, E_ATM_R * u_escale).y;
+        float sunRayDepth = opticalDepth(ro, sunDir, sunRayLength);
+        float density = densityAtAltitude((length(u_epos) - E_R) * u_escale);
+        vec3 transmittance = exp(-(sunRayDepth + viewRayDepth) * scatteringCoeffs);
+        scatterLight += density * transmittance * scatteringCoeffs * stepSize;
+        ro += rd * stepSize;
+    }
+    return color * exp(-viewRayDepth) + scatterLight;
+}  
 vec3 c3d(vec3 m, vec3 rd, float errFactor) {
     float dist = m.x;
-    int iter = int(m.y);
-    float minDist = m.z;
     if (dist < 0.0) return O3; // inside the object
-    if (minDist > 0.0) { // did not hit anything
-        return space(rd, u_sundir, 0.001, minDist);
-    }
-    vec3 its = rd * dist; // intersection in plane frame
+    float minDist = m.z;
+    vec3 color = O3; // default color is black
     float err = errFactor * dist; // error in plane frame
-    vec3 nrm = normAt(its, err); // normal in plane frame
-    return colorEarth(its, nrm, iter, dist);
+    vec3 sunmask = O3; // default sun mask is black
+    float viewAngle = dot(rd, u_sundir); // angle between view direction and sun direction
+    if (minDist != 0.0) { // if not inside an object or no intersection
+        if (viewAngle > COS_SUN_APP_RADIUS) sunmask = I3; // if the sun is too close to the view direction, return white
+        else if (viewAngle > 0.0) { // if the sun is not behind the view direction
+            float haloStrength = 0.001; // strength of the halo effect
+            sunmask = SUNC * pow(viewAngle, 1.0 / haloStrength); // halo color based on fraction when the sun is not behind the view direction
+        }    
+    } else { // some intersection with the scene
+        vec3 its = rd * dist; // intersection point in camera space
+        vec3 nrm = normAt(its, err); // normal in plane frame
+        float intensity = clamp(dot(nrm, u_sundir), 0.0, 1.0); // light intensity based on normal and sun direction
+        vec3 diffuseColor = (intensity * 0.5 + 0.5) * ETHC; // diffuse color based on normal and sun direction
+        vec3 specColor = SUNC * pow(intensity, 16.0); // specular color based on normal and sun direction
+        color = diffuseColor + specColor; // combine diffuse and specular color
+        color = clamp(color, O3, I3); // clamp color to [0, 1]
+    }
+    // Atmosphere intersection
+    vec2 hit = raySphereIntersect(O3, rd, E_ATM_R * u_escale); // ray-sphere intersection with atmosphere
+    float near = hit.x;
+    float far = min(hit.y, dist - near);
+    if (far > 0.) { 
+        // Ray hit atmosphere
+        vec3 nearPoint = rd * (near + err);
+        color = calculateLight(nearPoint, rd, far - err * 2., u_sundir, color);
+    } 
+    return color + sunmask; // return the final color
 }
 void main() {
     vec4 rayNerr = rayNerr(); // get the ray direction and error factor
