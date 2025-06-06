@@ -77,7 +77,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
         this._pipeline.loadPrograms([
             { name: "raymarch", vertex: "/shaders/twotrig.vert", fragment: "/shaders/raymarch.frag", url: true},
             { name: "obj3d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/obj3d.frag", url: true },
-            { name: "hud2d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/hud2d.frag", url: true },
+            { name: "hud2d", vertex: "/shaders/twotrigmed.vert", fragment: "/shaders/hud2d.frag", url: true },
         ]).then((p: RenderPipeline) => {
             this.setupPipeline(p);
             this._startTimeMs = Date.now();
@@ -116,7 +116,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
     private drawFrame(): void {
         if (this._pipeline) {
             const resolution = [this.canvasRef.nativeElement.clientWidth, this.canvasRef.nativeElement.clientHeight];
-            const minres = Math.min(...resolution);
+            const minres = Math.min(...resolution); // half pixel size in normalized coordinates
             const scale = [resolution[0] / minres, resolution[1] / minres];
             this.controllerUpdate(); // update attitude and geodetic coordinates based on key presses
             const cam = new GeoCam(this._geoCoords, this._attitude, CoordsFrameType.ENU);
@@ -126,7 +126,8 @@ export class TestPage implements AfterViewInit, OnDestroy {
             const sundir = GeoHelper.Normalize(cam.ecefToCamFrame(sunVec, false)); // sun direction in camera frame
             const globalUniforms: UniformRecord = {
                 "u_scale": scale,
-                "u_fov": [Math.PI / 3, Math.PI / 3], // field of view of 60 degrees
+                "u_tanhalffov": [Math.tan(Math.PI / 6), Math.tan(Math.PI / 6)], // tangent of half field of view (FoV is 60 degrees)
+                "u_halfpixel": 1.0 / minres, // half pixel size in normalized coordinates
             };
             const attitude = [
                 (cam.attitude[0] / Math.PI * 1.5) + 0.5, // roll +-60 degrees normalized to [0, 1]
@@ -152,21 +153,21 @@ export class TestPage implements AfterViewInit, OnDestroy {
             });
             const uniforms: Record<string, UniformRecord> = {
                 "raymarch": {
-                    "u_minres": minres, // minimum resolution
                     "u_sundir": sundir, // sun direction in observer frame
                     "u_epos": epos, // earth position in observer frame
                     "u_escale": 1e-6, // scale factors for earth and sun
                 }, // uniforms for raymarching
                 "obj3d": {
-                    "u_minres": minres, // minimum resolution
                     "u_sundir": sundir, // sun direction in observer frame
                     "u_wps": wpsArray, // waypoints in camera frame
+                    "u_nwps": missionWps.length, // number of waypoints
                 }, // uniforms for 3D object rendering
                 "hud2d": {
                     "u_attitude": attitude, // attitude: roll, pitch, yaw
                     "u_state": state, // aircraft state: throttle, elevator, aileron, rudder
                     "u_telemetry": telemetry, // telemetry: speed, altitude
                     "u_wps": wpsArray, // waypoints in camera frame
+                    "u_nwps": missionWps.length, // number of waypoints
                 }, // uniforms for 2D HUD rendering
             };
             this._pipeline.setGlobalUniforms(globalUniforms);
