@@ -51,7 +51,17 @@ const vec2 ltlc = vec2(-lthfb.x, 0.0); // letter left center
 const vec2 ltrc = vec2(lthfb.x, 0.0); // letter right center
 const vec2 ltbc = vec2(0.0, -lthfb.y); // letter bottom center
 const vec2 lttc = vec2(0.0, lthfb.y); // letter top center
-
+struct Segment {
+    vec2 a;       // endpoint A
+    vec2 ba;      // B – A
+    float invBA2; // 1.0 / dot(ba, ba)
+};
+const Segment tl_tr = Segment(
+    lttl, // A
+    lttr - lttl, // B - A
+    1.0 / dot(lttr - lttl, lttr - lttl) // 1.0 / dot(ba, ba)
+);
+// TODO: const segments
 vec2 wps2d(int i) {
     vec3 dir = normalize(u_wps[i]); // waypoint on screen
     return dir.x > 0.0 ? vec2(-dir.y, dir.z) / u_tanhalffov / dir.x : vec2(0.0);
@@ -61,6 +71,13 @@ float seg2d(vec2 p, vec2 a, vec2 b ) { // by iq
     float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
     return length( pa - ba*h );
 }
+float seg2d_precomp(vec2 p, Segment s) {
+    vec2 pa = p - s.a;
+    float h = clamp(dot(pa, s.ba) * s.invBA2, 0.0, 1.0);
+    vec2 diff = pa - s.ba * h;
+    return length(diff);
+}
+
 float box2d(vec2 p, vec2 b ) { // by iq
     vec2 d = abs(p)-b;
     return length(max(d,0.0)) + min(max(d.x,d.y),0.0);
@@ -87,6 +104,19 @@ vec2 place2d(vec2 p, vec2 o, float angle) {
     vec2 ro = vec2(o.x * ca - o.y * sa, o.x * sa + o.y * ca);
     return rp - ro;
 }
+vec2 place2d_0(vec2 p, vec2 o) { // 1) rotation = 0
+    return p - o; // cos=1, sin=0 → rp = (p.x, p.y), ro = (o.x, o.y)
+}
+vec2 place2d_p90(vec2 p, vec2 o) { // 2) rotation = +π/2
+    return vec2(-p.y + o.y, p.x - o.x); // cos=0, sin=1 → rp = (-p.y, p.x), ro = (-o.y, o.x)
+}
+vec2 place2d_180(vec2 p, vec2 o) { // 3) rotation = π
+    return vec2(-p.x + o.x, -p.y + o.y); // cos=-1, sin=0 → rp = (-p.x, -p.y), ro = (-o.x, -o.y)
+}
+vec2 place2d_m90(vec2 p, vec2 o) { // 4) rotation = -π/2
+    return vec2(p.y - o.y, -p.x + o.x); // cos=0, sin=-1 → rp = (p.y, -p.x), ro = (o.y, -o.x)
+}
+
 float letterT(vec2 p) {
     float seg1 = seg2d(p, lttl, lttr); // top segment
     float seg2 = seg2d(p, lttc, ltbc); // vertical segment
