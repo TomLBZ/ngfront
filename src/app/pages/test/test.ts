@@ -18,8 +18,8 @@ export class TestPage implements AfterViewInit, OnDestroy {
     private _lastFrameTime: number = Date.now();
     private _glRunning: boolean = false;
     private _lastIntFps: number = 0;
-    private _geoCoords: GeodeticCoords = [103.8310, 1.3480, 800]; // longitude, latitude, altitude
-    private _attitude: Attitude = [0, -9.74 / 180 * Math.PI, -111.15 / 180 * Math.PI]; // roll, pitch, yaw
+    private _geoCoords: GeodeticCoords = [103.8210, 1.3500, 800]; // longitude, latitude, altitude
+    private _attitude: Attitude = [0, -11.46 / 180 * Math.PI, -47.55 / 180 * Math.PI]; // roll, pitch, yaw
     private fpsText: string = "FPS: 0.00";
     private attText: string = "Attitude: [0, 0, 0]";
     private coordsText: string = "Coords: [0, 0, 0]";
@@ -187,10 +187,10 @@ export class TestPage implements AfterViewInit, OnDestroy {
         // update geodetic coordinates based on key presses
         if (this._svc.keyCtrl.getKeyState("ArrowUp")) this._geoCoords[1] += 0.001; // move north
         if (this._svc.keyCtrl.getKeyState("ArrowDown")) this._geoCoords[1] -= 0.001; // move south
-        if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geoCoords[0] += 0.001; // move west
-        if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geoCoords[0] -= 0.001; // move east
-        if (this._svc.keyCtrl.getKeyState("Shift")) this._geoCoords[2] -= 10; // move down
-        if (this._svc.keyCtrl.getKeyState(" ")) this._geoCoords[2] += 10; // move up
+        if (this._svc.keyCtrl.getKeyState("ArrowLeft")) this._geoCoords[0] += 0.1; // move west
+        if (this._svc.keyCtrl.getKeyState("ArrowRight")) this._geoCoords[0] -= 0.1; // move east
+        if (this._svc.keyCtrl.getKeyState("Shift")) this._geoCoords[2] -= 100; // move down
+        if (this._svc.keyCtrl.getKeyState(" ")) this._geoCoords[2] += 100; // move up
     }
     private fixedFloats(arr: number[], digits: number = 4): string[] {
         return arr.map((v) => v.toFixed(digits));
