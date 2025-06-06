@@ -1,16 +1,18 @@
 #version 300 es
-precision highp float;
+precision mediump float;
 
 in vec2 v_p; // Texture coordinate from the vertex shader.
 out vec4 outColor;
 
+uniform float u_halfpixel; // half pixel size in camera space
 uniform vec2 u_scale; // Scale of the texture coordinates.
-uniform vec2 u_fov; // Field of view in radians
+uniform vec2 u_tanhalffov; // Field of view in radians
 uniform sampler2D u_prev; // Previous pass texture.
 uniform vec3 u_attitude; // Attitude of the aircraft in radians (pitch, roll, yaw).
 uniform vec4 u_state; // Aircraft state (throttle, elevator, aileron, rudder).
 uniform vec2 u_telemetry; // Aircraft telemetry (speed, altitude).
 uniform vec3 u_wps[16]; // waypoint vectors
+uniform float u_nwps; // number of active waypoints (at least one waypoint must be active)
 
 // math
 const float EPS     = 1e-3                              ;
@@ -51,9 +53,8 @@ const vec2 ltbc = vec2(0.0, -lthfb.y); // letter bottom center
 const vec2 lttc = vec2(0.0, lthfb.y); // letter top center
 
 vec2 wps2d(int i) {
-    vec2 scalefactor = tan(u_fov * 0.5); // scale factor based on field of view
     vec3 dir = normalize(u_wps[i]); // waypoint on screen
-    return dir.x > 0.0 ? vec2(-dir.y, dir.z) / scalefactor / dir.x : vec2(0.0);
+    return dir.x > 0.0 ? vec2(-dir.y, dir.z) / u_tanhalffov / dir.x : vec2(0.0);
 }
 float seg2d(vec2 p, vec2 a, vec2 b ) { // by iq
     vec2 pa = p-a, ba = b-a;
@@ -385,7 +386,8 @@ float compassScale(vec2 p, float perc) { // COM scale
 }
 float wpText(vec2 p) {
     float d = MAXNUM;
-    for (int i = 0; i < 16; i++) {
+    int inwps = int(u_nwps); // number of waypoints
+    for (int i = 0; i < inwps; i++) {
         vec2 wp = wps2d(i); // waypoint position on screen
         if (length(wp) > EPS) {
             d = add(d, num(place2d(p, wp, 0.0), i)); // number for waypoint
