@@ -203,11 +203,6 @@ const Segment o2_rc = Segment(
     ltrc - o2, // B - A
     1.0 / dot(ltrc - o2, ltrc - o2) // 1.0 / dot(ba, ba)
 );
-struct ScaleEntry {
-    vec2 pos;
-    float perc;
-    int type; // 0 - throttle, 1 - elevator, 2 - aileron, 3 - rudder, 4 - speed, 5 - altimeter, 6 - compass
-};
 float seg2d(vec2 p, Segment s) {
     vec2 pa = p - s.a; // vector from A to P
     float h = clamp(dot(pa, s.ba) * s.invBA2, 0.0, 1.0); // projection of P on segment
