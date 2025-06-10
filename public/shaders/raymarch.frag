@@ -17,6 +17,8 @@ const vec3 ETHC     = vec3(0.0, 0.25, 0.25) ; // Earth color
 const float HALO_STRENGTH = 0.001                       ; // strength of the halo effect
 const float ROOT2 = 1.4142135623730951                  ; // square root of 2
 const float E_R     = 6.371000000e+06                   ; // Earth radius in meters (average)
+const float E_A = 6378137.0                             ;       // equatorial a
+const float E_B = 6356752.3                             ;       // polar      b
 const float RC4     = -1.42770400e-02                   ;
 const float RC3     = -1.53923793e+00                   ;
 const float RC2     = -1.77213122e+02                   ;
@@ -25,7 +27,7 @@ const float RC0     = 6.37813700e+06                    ;
 const float MAX_DIST = 32.0                             ;
 const float COS_SUN_APP_RADIUS = 0.999988822575         ; // cos(0.5 * sun apparent radius)
 const int MAX_ITER  = 64                                ; // maximum number of iterations for ray marching
-// atmosphere parameters (add if needed)
+// atmosphere parameters
 const float E_ATM_THK = 2.0e5                           ; // Earth atmosphere thickness in meters
 const float  PI          = 3.14159265358979323846;
 const float  HR          = 8.0e3;                 // Rayleigh scale height  (m)
@@ -37,6 +39,7 @@ const int    ATM_STEPS   = 8;                    // view-ray samples
 const int    SUN_STEPS   =  4;                    // light-ray samples
 const float  ATM_EXPOSE  = 0.5;                   // tonemap helper
 const float EXPOSURE = 20.0;             // ← try 10-50 for different times of day
+const float NIGHT_FLOOR = 0.15; // night floor for the Earth color, ≈ starlight + moon-light + city-glow
 vec4 rayNerr() {
     vec2 p = v_p * u_tanhalffov; // p is the pixel coordinate in camera space
     vec3 ray = vec3(1.0, -p.x, p.y); // ray direction
@@ -44,16 +47,56 @@ vec4 rayNerr() {
     float errfactor = ROOT2 * u_halfpixel * invLen; // error factor
     return vec4(ray * invLen, errfactor); // return normalized ray direction and error factor
 }
-float earth(vec3 p) { // the signed distance function for the Earth located at u_epos in camera space
-    vec3 pos = p - u_epos * u_escale;
+float ellipsoidSurfaceRadius(vec3 pos) { // pos in earth frame in WU, return value in WU
     float r = length(pos);          // length of pos vector
     float s2 = (pos.z * pos.z) / (r * r); // = sin(lat)^2
     float R = RC0 + s2 * (RC1 + s2 * (RC2 + s2 * (RC3 + s2 * RC4)));
-    return r - R * u_escale; // return value is in WU
+    return R * u_escale; // return value is in WU
+}
+float ellipsoidSurfaceRadiusExact(vec3 v)
+{
+    float a = E_A * u_escale;           // semi-major in WU
+    float b = E_B * u_escale;           // semi-minor in WU
+    float x2 = v.x*v.x + v.y*v.y;
+    float z2 = v.z*v.z;
+    float num = a*a*x2 + b*b*z2;
+    float den = x2 + z2;
+    return sqrt(num / den);             // ‖surface point‖ in WU
+}
+float earth(vec3 p) { // the signed distance function for the Earth located at u_epos in camera space
+    vec3 pos = p - u_epos * u_escale;
+    float R = ellipsoidSurfaceRadius(pos); // radius of the ellipsoid at point p
+    return length(pos) - R; // return value is in WU
 }
 vec3 normAt(vec3 p, float err) {
     vec2 d = vec2(err, -err);
     return normalize(d.xyy * earth(p + d.xyy) + d.yyx * earth(p + d.yyx) + d.yxy * earth(p + d.yxy) + d.xxx * earth(p + d.xxx));
+}
+float hitEarthSphere(vec3 rd)        // returns t, or 1e9 if miss
+{
+    vec3 EARTH_C = u_epos * u_escale; // Earth center in camera space (WU)
+    vec3  ro = -EARTH_C;             // camera → Earth-centre (WU)
+    float R  = RC0 * u_escale;       // mean radius in WU
+    float b  = dot(ro, rd);
+    float c  = dot(ro, ro) - R*R;
+    float h  = b*b - c;              // discriminant
+    if (h < 0.0) return 1e9;         // miss
+    return -b - sqrt(h);             // entry point ( > 0 if camera outside )
+}
+float hitEarthEllipsoid(vec3 rd)
+{
+    vec3 EARTH_C = u_epos * u_escale; // Earth center in camera space (WU)
+    float a = E_A * u_escale;                 // WU
+    float b = E_B * u_escale;
+    vec3 roS = (-EARTH_C) / vec3(a, a, b);    // origin in scaled space
+    vec3 rdS = rd           / vec3(a, a, b);  // direction in scaled space
+    float A = dot(rdS, rdS);
+    float B = 2.0 * dot(roS, rdS);
+    float C = dot(roS, roS) - 1.0;
+    float disc = B*B - 4.0*A*C;
+    if (disc < 0.0) return 1e9;               // no hit
+    float t = (-B - sqrt(disc)) / (2.0*A);
+    return (t > 0.0) ? t : 1e9;               // only the front hit
 }
 vec3 march(vec3 rd, float eps_c) { // returns (distance, iteration)
     float t = 0.0; // distance along ray
@@ -73,6 +116,8 @@ vec3 march(vec3 rd, float eps_c) { // returns (distance, iteration)
         if (t > MAX_DIST) break; // max distance reached
         pos = rd * t; // update camera position along ray
     }
+    float tEll = hitEarthEllipsoid(rd);
+    if (tEll < MAX_DIST) return vec3(tEll, float(MAX_ITER), 0.0);
     return vec3(MAX_DIST, MAX_ITER, minDist); // didn't hit earth
 }
 vec3 tonemapReinhard(vec3 c) {
@@ -98,6 +143,13 @@ vec2 raySphereIntersect(vec3 ro, vec3 rd, float R) {
     if (h < 0.0) return vec2(-1.0);          // miss
     h = sqrt(h);
     return vec2(-b - h, -b + h);             // entry, exit
+}
+float sunVisibility(vec3 pCam) { /* ray from sample-point toward the Sun, expressed in camera space */
+    vec3 EARTH_C = u_epos * u_escale; // Earth center in camera space (WU)
+    float  E_R_WU      = E_R * u_escale;
+    vec3  ro = pCam - EARTH_C;                 // origin in Earth-centred frame (WU)
+    vec2  hit = raySphereIntersect(ro, u_sundir, E_R_WU);
+    return (hit.y < 0.0) ? 1.0 : 0.0;          // no hit ⇒ Sun is visible
 }
 vec3 atmosphere(vec3 rd, float maxDistWU) {
     float  SU          = u_escale;        // “scale unit”: 1 m = SU WU
@@ -153,12 +205,74 @@ vec3 atmosphere(vec3 rd, float maxDistWU) {
     }
     return clamp(radiance * ATM_EXPOSE, O3, I3);
 }
-
+vec4 integrateAtmosphere(vec3 rd, float maxDistWU)
+{
+    float  SU          = u_escale;        // “scale unit”: 1 m = SU WU
+    float  HR_WU       = HR * SU;
+    float  HM_WU       = HM * SU;
+    vec3   BETA_R_WU   = BETA_R / SU;     //  σ · length(WU)  ⇒  dimensionless
+    vec3   BETA_M_WU   = BETA_M / SU;
+    float  E_R_WU      = E_R * SU;
+    float  E_ATM_R_WU  = (E_R + E_ATM_THK) * SU;
+    vec3 EARTH_C = u_epos * u_escale; // Earth center in camera space (WU)
+    vec2 hit = raySphereIntersect(-EARTH_C, rd, E_ATM_R_WU);
+    if (hit.y < 0.0) return vec4(O3, 1.0);           // camera outside air
+    float t0 = max(hit.x, 0.0);
+    float t1 = min(hit.y, maxDistWU);
+    if (t1 <= t0) return vec4(O3, 1.0);
+    float stepWU  = (t1 - t0) / float(ATM_STEPS);
+    vec3  radiance= O3;
+    float odR     = 0.0;
+    float odM     = 0.0;
+    for (int i = 0; i < ATM_STEPS; ++i)
+    {
+        float t   = t0 + (float(i)+0.5)*stepWU;
+        vec3  pos = rd * t;
+        // float alt = length(pos - EARTH_C) - E_R_WU;
+        float alt = earth(pos); // altitude in WU
+        float rhoR= exp(-alt / HR_WU);
+        float rhoM= exp(-alt / HM_WU);
+        odR += rhoR * stepWU;
+        odM += rhoM * stepWU;
+        float vis = sunVisibility(pos);
+        float odR_light = 0.0;
+        float odM_light = 0.0;
+        if (vis > 0.0) { // light optical depth only if Sun is visible
+            vec2  sunHit   = raySphereIntersect(pos - EARTH_C,
+                                                u_sundir,
+                                                E_ATM_R_WU);
+            float segWU   = max(sunHit.y, 0.0);
+            float sStepWU = segWU / float(SUN_STEPS);
+            vec3  sunP    = pos;
+            for (int j = 0; j < SUN_STEPS; ++j)
+            {
+                sunP += u_sundir * sStepWU;
+                // float altS = length(sunP - EARTH_C) - E_R_WU;
+                float altS = earth(sunP); // altitude in WU
+                odR_light += exp(-altS / HR_WU) * sStepWU;
+                odM_light += exp(-altS / HM_WU) * sStepWU;
+            }
+        }
+        float mu     = dot(rd, u_sundir);
+        float mu2    = mu*mu;
+        float phaseR = (3.0/(16.0*PI))*(1.0+mu2);
+        float g2     = MIE_G*MIE_G;
+        float phaseM = (3.0/(8.0*PI))*(1.0-g2)*(1.0+mu2) /
+                       pow(1.0+g2-2.0*MIE_G*mu, 1.5);
+        vec3  T_light= exp(-(BETA_R_WU*odR_light + BETA_M_WU*odM_light));
+        vec3  scatter= vis * (phaseR*BETA_R_WU*rhoR + phaseM*BETA_M_WU*rhoM)
+                           * T_light;
+        vec3  T_view = exp(-(BETA_R_WU*odR       + BETA_M_WU*odM));
+        radiance += scatter * T_view * stepWU;
+    }
+    vec3  T_final = exp(-(BETA_R_WU*odR + BETA_M_WU*odM));
+    return vec4(radiance, T_final.r);   // any channel is fine for T
+}
 vec3 c3d(vec3 m, vec3 rd, float errFactor) {
     float dist = m.x;
     if (dist < 0.0) return O3; // inside the object
     float minDist = m.z;
-    vec3 color = O3; // default color is black
+    vec3 surface = O3; // default color is black
     float err = errFactor * dist; // error in plane frame
     vec3 sunmask = O3; // default sun mask is black
     float viewAngle = dot(rd, u_sundir); // angle between view direction and sun direction
@@ -169,18 +283,28 @@ vec3 c3d(vec3 m, vec3 rd, float errFactor) {
         }    
     } else { // some intersection with the scene
         vec3 its = rd * dist; // intersection point in camera space
-        vec3 nrm = normAt(its, err); // normal in plane frame
+        float aWU = E_A * u_escale;
+        float bWU = E_B * u_escale;
+        vec3 nrm = (minDist == 0.0)
+           ? normAt(its, err)                               // usual case, sdf normal
+           : normalize(vec3(its.x/(aWU*aWU),
+                            its.y/(aWU*aWU),
+                            its.z/(bWU*bWU)));              // fallback, analytic normal
+        // vec3 nrm = normAt(its, err); // normal in plane frame
         float intensity = clamp(dot(nrm, u_sundir), 0.0, 1.0); // light intensity based on normal and sun direction
         vec3 diffuseColor = (intensity * 0.3 + 0.7) * ETHC; // diffuse color based on normal and sun direction
         vec3 specColor = SUNC * pow(intensity, 16.0); // specular color based on normal and sun direction
-        color = diffuseColor + specColor; // combine diffuse and specular color
-        color = clamp(color, O3, I3); // clamp color to [0, 1]
+        surface = diffuseColor + specColor; // combine diffuse and specular color
+        surface = clamp(surface, O3, I3); // clamp color to [0, 1]
+        surface = ETHC;
     }
-    // Atmosphere calculation (TO BE ADDED)
-    vec3 atmColor = atmosphere(rd, dist); // calculate atmosphere color
-    color += tonemapReinhard(atmColor);
-    color += sunmask; // add atmosphere color to the final color
-    return gamma22(color); // return the final color
+    // Atmosphere calculation
+    vec4 atm = integrateAtmosphere(rd, dist); // integrate atmosphere along the ray
+    float trans = max(atm.a, NIGHT_FLOOR); // atmosphere transmittance, clamped to night floor
+    vec3 color = surface * trans + tonemapReinhard(atm.rgb); // attenuate base color and add scattered light
+    // vec3 atmColor = atmosphere(rd, dist); // calculate atmosphere color
+    // vec3 color = surface + tonemapReinhard(atmColor);
+    return gamma22(color + sunmask); // return the final color
 }
 void main() {
     vec4 rayNerr = rayNerr(); // get the ray direction and error factor
