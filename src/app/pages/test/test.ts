@@ -79,7 +79,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
         this._pipeline.loadPrograms([
             { name: "raymarch", vertex: "/shaders/twotrig.vert", fragment: "/shaders/raymarch.frag", url: true},
             { name: "obj3d", vertex: "/shaders/twotrig.vert", fragment: "/shaders/obj3d.frag", url: true },
-            // { name: "hud2d", vertex: "/shaders/twotrigmed.vert", fragment: "/shaders/hud2d.frag", url: true },
+            { name: "hud2d", vertex: "/shaders/twotrigmed.vert", fragment: "/shaders/hud2d.frag", url: true },
         ]).then((p: RenderPipeline) => {
             this.setupPipeline(p);
             this._startTimeMs = Date.now();
@@ -102,7 +102,7 @@ export class TestPage implements AfterViewInit, OnDestroy {
         p.setPasses([
             { name: "raymarch" }, // render to texture
             { name: "obj3d" }, // render to texture
-            // { name: "hud2d" }, // render to canvas
+            { name: "hud2d" }, // render to canvas
         ], true);
         p.setAttribute("a_position", {
             buffer: RenderHelper.createBuffer(this._gl, new Float32Array([
@@ -164,13 +164,13 @@ export class TestPage implements AfterViewInit, OnDestroy {
                     "u_wps": wpsArray, // waypoints in camera frame
                     "u_nwps": missionWps.length, // number of waypoints
                 }, // uniforms for 3D object rendering
-                // "hud2d": {
-                //     "u_attitude": attitude, // attitude: roll, pitch, yaw
-                //     "u_state": state, // aircraft state: throttle, elevator, aileron, rudder
-                //     "u_telemetry": telemetry, // telemetry: speed, altitude
-                //     "u_wps": wpsArray, // waypoints in camera frame
-                //     "u_nwps": missionWps.length, // number of waypoints
-                // }, // uniforms for 2D HUD rendering
+                "hud2d": {
+                    "u_attitude": attitude, // attitude: roll, pitch, yaw
+                    "u_state": state, // aircraft state: throttle, elevator, aileron, rudder
+                    "u_telemetry": telemetry, // telemetry: speed, altitude
+                    "u_wps": wpsArray, // waypoints in camera frame
+                    "u_nwps": missionWps.length, // number of waypoints
+                }, // uniforms for 2D HUD rendering
             };
             this._pipeline.setGlobalUniforms(globalUniforms);
             this._pipeline.renderAll(uniforms);
