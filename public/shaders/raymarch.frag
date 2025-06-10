@@ -35,7 +35,7 @@ const float  HM          = 1.2e3;                 // Mie      scale height  (m)
 const vec3   BETA_R      = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Rayleigh σs(λ)
 const vec3   BETA_M      = vec3(21.0e-6);         // Mie σs   (assume grey)
 const float  MIE_G       = 0.76;                  // Henyey-Greenstein g
-const int    BASE_STEPS   = 8;                    // view-ray samples
+const int    VIEW_STEPS   = 8;                    // view-ray samples
 const int    SUN_STEPS   =  4;                    // light-ray samples
 const float EXPOSURE = 20.0;             // ← try 10-50 for different times of day
 const float NIGHT_FLOOR = 0.15; // night floor for the Earth color, ≈ starlight + moon-light + city-glow
@@ -66,18 +66,6 @@ vec2 rayEllipsoidIntersect(vec3 ro, vec3 rd, float a, float b) {
     float s = sqrt(D);
     return vec2((-B - s) / (2.0*A),         // entry
                 (-B + s) / (2.0*A));        // exit
-}
-float sunVisibility(vec3 pCam)
-{
-    vec3 EARTH_C = u_epos * u_escale; // Earth center in camera space (WU)
-    float aE =  E_A * u_escale;
-    float bE =  E_B * u_escale;
-    vec3  ro  = pCam - EARTH_C;                   // ray origin (WU)
-    vec2  hit = rayEllipsoidIntersect(ro, u_sundir, aE, bE);
-    if (hit.x == MISS) return 1.0;                // no hit → lit
-    if (hit.x <= 0.0) return 1.0;                 // Earth behind sample
-    float softWU = SOFT_EDGE_KM * 1000.0 * u_escale;
-    return smoothstep(0.0, softWU, hit.x);        // 0…softWU → 0…1
 }
 // ray marching
 vec4 rayNerr() {
@@ -141,11 +129,11 @@ vec4 integrateAtmosphere(vec3 rd, float maxDistWU)
     float t0 = max(hit.x, 0.0);
     float t1 = min(hit.y, maxDistWU);
     if (t1 <= t0) return vec4(O3, 1.0);
-    float stepWU  = (t1 - t0) / float(BASE_STEPS);
+    float stepWU  = (t1 - t0) / float(VIEW_STEPS);
     vec3  radiance= O3;
     float odR     = 0.0;
     float odM     = 0.0;
-    for (int i = 0; i < BASE_STEPS; ++i) {
+    for (int i = 0; i < VIEW_STEPS; ++i) {
         float t   = t0 + (float(i)+0.5)*stepWU;
         vec3 pos = rd * t;
         float alt = earth(pos); // altitude in WU
@@ -153,19 +141,16 @@ vec4 integrateAtmosphere(vec3 rd, float maxDistWU)
         float rhoM = exp(-alt / HM_WU);
         odR += rhoR * stepWU;
         odM += rhoM * stepWU;
-        float vis = sunVisibility(pos);
         float odR_sun = 0.0, odM_sun = 0.0;
-        if (vis > 0.0) {
-            vec2 sunHit = rayEllipsoidIntersect(pos - EARTH_C, u_sundir, aO, bO);
-            float segWU  = max(sunHit.y, 0.0);
-            float sStep  = segWU / float(SUN_STEPS);
-            vec3  sunP   = pos;
-            for (int j = 0; j < SUN_STEPS; ++j) {
-                sunP += u_sundir * sStep;
-                float altS = earth(sunP); // altitude in WU
-                odR_sun += exp(-altS / HR_WU) * sStep;
-                odM_sun += exp(-altS / HM_WU) * sStep;
-            }
+        vec2 sunHit = rayEllipsoidIntersect(pos - EARTH_C, u_sundir, aO, bO);
+        float segWU  = max(sunHit.y, 0.0);
+        float sStep  = segWU / float(SUN_STEPS);
+        vec3  sunP   = pos;
+        for (int j = 0; j < SUN_STEPS; ++j) {
+            sunP += u_sundir * sStep;
+            float altS = earth(sunP); // altitude in WU
+            odR_sun += exp(-altS / HR_WU) * sStep;
+            odM_sun += exp(-altS / HM_WU) * sStep;
         }
         float mu     = dot(rd, u_sundir);
         float mu2    = mu * mu;
@@ -174,7 +159,7 @@ vec4 integrateAtmosphere(vec3 rd, float maxDistWU)
         float phaseM = (3.0/(8.0*PI))*(1.0-g2)*(1.0+mu2) /
                     pow(1.0+g2-2.0*MIE_G*mu, 1.5);
         vec3 T_light = exp(-(BETA_R_WU*odR_sun + BETA_M_WU*odM_sun));
-        vec3 scatter = vis * (phaseR*BETA_R_WU*rhoR +
+        vec3 scatter = (phaseR*BETA_R_WU*rhoR +
                             phaseM*BETA_M_WU*rhoM) * T_light;
         vec3 T_view  = exp(-(BETA_R_WU*odR + BETA_M_WU*odM));
         radiance    += scatter * T_view * stepWU;
