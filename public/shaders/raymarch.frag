@@ -40,7 +40,6 @@ const int    SUN_STEPS   =  4;                    // light-ray samples
 const float EXPOSURE = 20.0;             // ← try 10-50 for different times of day
 const float NIGHT_FLOOR = 0.15; // night floor for the Earth color, ≈ starlight + moon-light + city-glow
 const float MISS = 1e9;
-const float SOFT_EDGE_KM = 50.0;                  // tweak to taste
 // helpers
 vec3 tonemapReinhard(vec3 c) {
     c *= EXPOSURE;           // photographic exposure
