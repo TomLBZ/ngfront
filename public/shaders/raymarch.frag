@@ -7,8 +7,8 @@ out vec4 outColor;
 uniform float u_halfpixel; // Min Viewport resolution: min side length in pixels of the view port
 uniform vec2 u_tanhalffov; // Tangent of half field of view in radians
 uniform vec3 u_sundir; // The direction from the camera origin to the sun
-uniform vec3 u_epos; // Earth position in camera space.
-uniform float u_escale; // Earch scale factor and sun scale factor
+uniform vec3 u_epos; // Earth position in camera space (WU). 1 meter = u_escale WU.
+uniform float u_escale; // Earch scale factor and sun scale factor, is 1e-6 by default.
 
 const vec3 O3       = vec3(0.0)                ;
 const vec3 I3       = vec3(1.0)                ;   
@@ -25,17 +25,18 @@ const float RC0     = 6.37813700e+06                    ;
 const float MAX_DIST = 32.0                             ;
 const float COS_SUN_APP_RADIUS = 0.999988822575         ; // cos(0.5 * sun apparent radius)
 const int MAX_ITER  = 64                                ; // maximum number of iterations for ray marching
-// atmosphere parameters
+// atmosphere parameters (add if needed)
 const float E_ATM_THK = 2.0e5                           ; // Earth atmosphere thickness in meters
-const float E_ATM_R = E_R + E_ATM_THK                   ; // Earth atmosphere radius in meters
-const int VIEW_SAMPLES = 6                              ; // number of samples along the view ray, must be >= 2
-const int SUN_SAMPLES = 4                               ; // number of samples along the sun ray, must be even
-const float MID = 0.5                                   ; // midpoint
-const float RAYLEIGH_H = 8.0e3                          ;       // Rayleigh scale height  (metres)
-const float MIE_H      = 1.2e3                          ;       // Mie      scale height
-const vec3  RAYLEIGH_BETA =             // λ⁻⁴ scaled to RGB  (m⁻¹)
-          pow(400.0 / vec3(700.0, 530.0, 440.0), vec3(4.0)) * 5.802e-6;
-const vec3  MIE_BETA   = vec3(2.0e-5)            ; // grey-ish mie coeff  (m⁻¹)
+const float  PI          = 3.14159265358979323846;
+const float  HR          = 8.0e3;                 // Rayleigh scale height  (m)
+const float  HM          = 1.2e3;                 // Mie      scale height  (m)
+const vec3   BETA_R      = vec3(5.8e-6, 13.5e-6, 33.1e-6); // Rayleigh σs(λ)
+const vec3   BETA_M      = vec3(21.0e-6);         // Mie σs   (assume grey)
+const float  MIE_G       = 0.76;                  // Henyey-Greenstein g
+const int    ATM_STEPS   = 8;                    // view-ray samples
+const int    SUN_STEPS   =  4;                    // light-ray samples
+const float  ATM_EXPOSE  = 0.5;                   // tonemap helper
+const float EXPOSURE = 20.0;             // ← try 10-50 for different times of day
 vec4 rayNerr() {
     vec2 p = v_p * u_tanhalffov; // p is the pixel coordinate in camera space
     vec3 ray = vec3(1.0, -p.x, p.y); // ray direction
@@ -43,12 +44,12 @@ vec4 rayNerr() {
     float errfactor = ROOT2 * u_halfpixel * invLen; // error factor
     return vec4(ray * invLen, errfactor); // return normalized ray direction and error factor
 }
-float earth(vec3 p) {
+float earth(vec3 p) { // the signed distance function for the Earth located at u_epos in camera space
     vec3 pos = p - u_epos * u_escale;
     float r = length(pos);          // length of pos vector
     float s2 = (pos.z * pos.z) / (r * r); // = sin(lat)^2
     float R = RC0 + s2 * (RC1 + s2 * (RC2 + s2 * (RC3 + s2 * RC4)));
-    return r - R * u_escale;
+    return r - R * u_escale; // return value is in WU
 }
 vec3 normAt(vec3 p, float err) {
     vec2 d = vec2(err, -err);
@@ -74,81 +75,85 @@ vec3 march(vec3 rd, float eps_c) { // returns (distance, iteration)
     }
     return vec3(MAX_DIST, MAX_ITER, minDist); // didn't hit earth
 }
-vec2 raySphereIntersect(vec3 ro, vec3 rd, vec3 center, float radius) { // in camera space, world units
-    vec3  oc = ro - center;               // shift to sphere coords
-    float b  = dot(oc, rd);               // = ½ of the usual quadratic 'b'
-    float c  = dot(oc, oc) - radius*radius;
-    float h  = b*b - c;                   // discriminant /4  (since a=1)
-    if (h <= 0.0) return vec2(1e9);       // miss
-    float s  = sqrt(h);
-    float tNear = -b - s;
-    float tFar  = -b + s;
-    if (tFar < 0.0) return vec2(1e9);     // sphere behind ray
-    if (tNear < 0.0) tNear = 0.0;
-    return vec2(tNear, tFar - tNear);     // (entry, thickness)
+vec3 tonemapReinhard(vec3 c) {
+    c *= EXPOSURE;           // photographic exposure
+    return c / (1.0 + c);    // simple Reinhard curve
 }
-vec3  fastExpNeg(vec3 v)           { return 1.0/(1.0 + v*(1.0 + 0.5*v)); }
-float altitude(vec3 p)             { return earth(p); }   // from sdf code
-float densRayleigh(float h)        { 
-    float rayleighH_WU = RAYLEIGH_H * u_escale; // Rayleigh scale height in world units
-    return exp(-h / rayleighH_WU); 
+vec3 gamma22(vec3 c) { // gamma correction
+    return pow(clamp(c, 0.0, 1.0), vec3(1.0/2.2));
 }
-float densMie(float h)             { 
-    float mieH_WU = MIE_H * u_escale; // Mie scale height in world units
-    return exp(-h / mieH_WU); 
+vec3 tonemapACES(vec3 x) {
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    x *= EXPOSURE;
+    return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
 }
-vec3 betaR() { return RAYLEIGH_BETA / u_escale; } // Rayleigh scattering coefficients in world units
-vec3 betaM() { return MIE_BETA / u_escale; } // Mie scattering coefficients in world units 
-vec3 fastScatter(vec3 ro, vec3 rd, float far, vec3 sunDir, vec3 baseColor) {
-    float viewStep = far / float(VIEW_SAMPLES);
-    vec3  L        = vec3(0.0);
-    float tauR = 0.0, tauM = 0.0;                   // along view ray
-    float t = viewStep * MID;                       // first midpoint
-    vec3 uBetaR = betaR(); // Rayleigh scattering coefficients in world units
-    vec3 uBetaM = betaM(); // Mie scattering coefficients in world units
-    vec3 center = u_epos * u_escale; // Earth center in world units
-    for (int i = 0; i < VIEW_SAMPLES; ++i)
+vec2 raySphereIntersect(vec3 ro, vec3 rd, float R) {
+    float b = dot(ro, rd);
+    float c = dot(ro, ro) - R*R;
+    float h = b*b - c;
+    if (h < 0.0) return vec2(-1.0);          // miss
+    h = sqrt(h);
+    return vec2(-b - h, -b + h);             // entry, exit
+}
+vec3 atmosphere(vec3 rd, float maxDistWU) {
+    float  SU          = u_escale;        // “scale unit”: 1 m = SU WU
+    float  HR_WU       = HR * SU;
+    float  HM_WU       = HM * SU;
+    vec3   BETA_R_WU   = BETA_R / SU;     //  σ · length(WU)  ⇒  dimensionless
+    vec3   BETA_M_WU   = BETA_M / SU;
+    float  E_R_WU      = E_R * SU;
+    float  E_ATM_R_WU  = (E_R + E_ATM_THK) * SU;
+    vec3 EARTH_C = u_epos * u_escale; // Earth center in camera space (WU)
+    vec2 hit = raySphereIntersect(-EARTH_C, rd, E_ATM_R_WU);
+    if (hit.y < 0.0) return O3; // no intersection with the atmosphere
+    float t0 = max(hit.x, 0.0);
+    float t1 = min(hit.y, maxDistWU);
+    if (t1 <= t0) return O3; // no intersection with the atmosphere
+    vec3  radiance   = O3;
+    float odR_view   = 0.0;
+    float odM_view   = 0.0;
+    float stepWU     = (t1 - t0) / float(ATM_STEPS);
+    for (int i = 0; i < ATM_STEPS; ++i)
     {
-        vec3  p   = ro + rd * t;
-        float hWU = altitude(p);                    // earth(p) in WU
-        float dR  = densRayleigh(hWU);
-        float dM  = densMie(hWU);
-        float atmLenWU   = raySphereIntersect(p, sunDir, center, 
-                                   E_ATM_R * u_escale).y;
-        float planetLenWU= raySphereIntersect(p, sunDir, center, 
-                                   E_R * u_escale).y;
-        float sunFade = smoothstep(-2000.0 * u_escale,
-                                    2000.0 * u_escale,
-                                    atmLenWU - planetLenWU);
-        float sunTauR = 0.0, sunTauM = 0.0;
-        if (sunFade > 0.001)
+        float t    = t0 + (float(i) + 0.5) * stepWU;
+        vec3  pos  = rd * t;
+        float alt  = length(pos - EARTH_C) - E_R_WU;     // altitude in WU
+        float rhoR = exp(-alt / HR_WU);
+        float rhoM = exp(-alt / HM_WU);
+        odR_view  += rhoR * stepWU;
+        odM_view  += rhoM * stepWU;
+        vec2 sunHit  = raySphereIntersect(pos - EARTH_C, u_sundir, E_ATM_R_WU); // sun path in WU
+        float sunSegWU  = max(sunHit.y, 0.0);
+        float sunStepWU = sunSegWU / float(SUN_STEPS);
+        float odR_sun = 0.0;
+        float odM_sun = 0.0;
+        vec3  sunP    = pos;
+        for (int j = 0; j < SUN_STEPS; ++j)
         {
-            float sunStep = atmLenWU / float(SUN_SAMPLES);
-            for (int j = 0; j <= SUN_SAMPLES; ++j)
-            {
-                float w = (j==0||j==SUN_SAMPLES) ? 1.0
-                        : ((j & 1)==1 ? 4.0 : 2.0);
-                vec3 sp = p + sunDir * (sunStep*(float(j)+MID));
-                float shWU = altitude(sp);
-                sunTauR += w * densRayleigh(shWU);
-                sunTauM += w * densMie(shWU);
-            }
-            float norm = sunStep / 3.0 * sunFade;
-            sunTauR *= norm;
-            sunTauM *= norm;
+            sunP += u_sundir * sunStepWU;
+            float altS = length(sunP - EARTH_C) - E_R_WU;
+            odR_sun   += exp(-altS / HR_WU) * sunStepWU;
+            odM_sun   += exp(-altS / HM_WU) * sunStepWU;
         }
-        tauR += dR * viewStep;
-        tauM += dM * viewStep;
-        vec3 tau = (tauR + sunTauR) * uBetaR +
-                    (tauM + sunTauM) * uBetaM;
-        vec3 trans = fastExpNeg(tau);               // ≈exp(-τ)
-        L += (dR * uBetaR + dM * uBetaM) *
-             trans * viewStep;
-        t += viewStep;
+        float mu    = dot(rd, u_sundir);
+        float mu2   = mu * mu;
+        float phaseR= (3.0/(16.0*PI))*(1.0+mu2);
+        float g2    = MIE_G*MIE_G;
+        float phaseM= (3.0/(8.0*PI))*(1.0-g2)*(1.0+mu2) /
+                      pow(1.0+g2-2.0*MIE_G*mu, 1.5);
+        vec3  T_view = exp(-(BETA_R_WU*odR_view + BETA_M_WU*odM_view));
+        vec3  T_sun  = exp(-(BETA_R_WU*odR_sun  + BETA_M_WU*odM_sun));
+        vec3  scatter = (phaseR * BETA_R_WU * rhoR +
+                         phaseM * BETA_M_WU * rhoM) * T_sun;
+        radiance += scatter * T_view * stepWU;
     }
-    vec3 T_eye = fastExpNeg(tauR*uBetaR + tauM*uBetaM);
-    return baseColor * T_eye + L;
+    return clamp(radiance * ATM_EXPOSE, O3, I3);
 }
+
 vec3 c3d(vec3 m, vec3 rd, float errFactor) {
     float dist = m.x;
     if (dist < 0.0) return O3; // inside the object
@@ -171,18 +176,11 @@ vec3 c3d(vec3 m, vec3 rd, float errFactor) {
         color = diffuseColor + specColor; // combine diffuse and specular color
         color = clamp(color, O3, I3); // clamp color to [0, 1]
     }
-    // Atmosphere intersection
-    vec3 center = u_epos * u_escale; // Earth center in camera space
-    vec2 hit = raySphereIntersect(O3, rd, center, E_ATM_R * u_escale); // ray-sphere intersection with atmosphere
-    float near = hit.x;
-    float throughLen = min(hit.y, dist - near);
-    if (throughLen > 0.0) { 
-        // Ray hit atmosphere
-        vec3 nearPoint = rd * (near + errFactor * near); // near intersection point in camera space
-        // color = calculateLightFast(nearPoint, rd, throughLen - errFactor * throughLen, color);
-        color = fastScatter(nearPoint, rd, throughLen - errFactor * throughLen, u_sundir, color); // calculate light scattering along the ray
-    }
-    return color + sunmask; // return the final color
+    // Atmosphere calculation (TO BE ADDED)
+    vec3 atmColor = atmosphere(rd, dist); // calculate atmosphere color
+    color += tonemapReinhard(atmColor);
+    color += sunmask; // add atmosphere color to the final color
+    return gamma22(color); // return the final color
 }
 void main() {
     vec4 rayNerr = rayNerr(); // get the ray direction and error factor
