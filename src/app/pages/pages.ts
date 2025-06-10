@@ -20,7 +20,7 @@ export class PagesComponent implements OnInit {
         {label: 'Configurations', path: 'configs'},
         {label: 'Mission Editor', path: 'path-edit'},
         {label: 'Logs', path: 'logs'},
-        {label: 'Test', path: 'test'},
+        // {label: 'Test', path: 'test'},
     ];
     selectedTabPath = this.tabs[0].path;
     private helpStrMultiline = `Help
