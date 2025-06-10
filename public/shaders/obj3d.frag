@@ -14,7 +14,7 @@ uniform vec3 u_sundir; // sun direction vector
 uniform vec3 u_wps[16]; // waypoint vectors
 
 const float ROOT2 = 1.4142135623730951; // square root of 2
-const float WPRAD = 0.1                                ; // radius of the waypoint test sphere, in km
+const float WPRAD = 0.01                                ; // radius of the waypoint test sphere, in km
 const float MAX_DIST = 32.0                             ; // maximum distance to march the ray, in km
 const int MAX_ITER  = 64                                ; // maximum number of iterations for ray marching
 const vec3 SUNC     = vec3(1.0, 1.0, 0.5)  ; // sun color
