@@ -40,28 +40,20 @@ const int    SUN_STEPS   =  4;                    // light-ray samples
 const float EXPOSURE = 20.0;             // ← try 10-50 for different times of day
 const float NIGHT_FLOOR = 0.15; // night floor for the Earth color, ≈ starlight + moon-light + city-glow
 const float MISS = 1e9;
-vec4 rayNerr() {
-    vec2 p = v_p * u_tanhalffov; // p is the pixel coordinate in camera space
-    vec3 ray = vec3(1.0, -p.x, p.y); // ray direction
-    float invLen = inversesqrt(dot(ray, ray)); // inverse length of ray
-    float errfactor = ROOT2 * u_halfpixel * invLen; // error factor
-    return vec4(ray * invLen, errfactor); // return normalized ray direction and error factor
+const float SOFT_EDGE_KM = 50.0;                  // tweak to taste
+// helpers
+vec3 tonemapReinhard(vec3 c) {
+    c *= EXPOSURE;           // photographic exposure
+    return c / (1.0 + c);    // simple Reinhard curve
+}
+vec3 gamma22(vec3 c) { // gamma correction
+    return pow(clamp(c, 0.0, 1.0), vec3(1.0/2.2));
 }
 float ellipsoidSurfaceRadius(vec3 pos) { // pos in earth frame in WU, return value in WU
     float r = length(pos);          // length of pos vector
     float s2 = (pos.z * pos.z) / (r * r); // = sin(lat)^2
     float R = RC0 + s2 * (RC1 + s2 * (RC2 + s2 * (RC3 + s2 * RC4)));
     return R * u_escale; // return value is in WU
-}
-float earth(vec3 p) { // the signed distance function for the Earth located at u_epos in camera space
-    vec3 pos = p - u_epos * u_escale;
-    float R = ellipsoidSurfaceRadius(pos); // radius of the ellipsoid at point p
-    // return length(pos) - R; // return value is in WU
-    return length(pos) - E_R * u_escale; // debug: sphere
-}
-vec3 normAt(vec3 p, float err) {
-    vec2 d = vec2(err, -err);
-    return normalize(d.xyy * earth(p + d.xyy) + d.yyx * earth(p + d.yyx) + d.yxy * earth(p + d.yxy) + d.xxx * earth(p + d.xxx));
 }
 vec2 rayEllipsoidIntersect(vec3 ro, vec3 rd, float a, float b) {
     vec3 roS = ro / vec3(a, a, b);          // scale → unit sphere
@@ -74,6 +66,36 @@ vec2 rayEllipsoidIntersect(vec3 ro, vec3 rd, float a, float b) {
     float s = sqrt(D);
     return vec2((-B - s) / (2.0*A),         // entry
                 (-B + s) / (2.0*A));        // exit
+}
+float sunVisibility(vec3 pCam)
+{
+    vec3 EARTH_C = u_epos * u_escale; // Earth center in camera space (WU)
+    float aE =  E_A * u_escale;
+    float bE =  E_B * u_escale;
+    vec3  ro  = pCam - EARTH_C;                   // ray origin (WU)
+    vec2  hit = rayEllipsoidIntersect(ro, u_sundir, aE, bE);
+    if (hit.x == MISS) return 1.0;                // no hit → lit
+    if (hit.x <= 0.0) return 1.0;                 // Earth behind sample
+    float softWU = SOFT_EDGE_KM * 1000.0 * u_escale;
+    return smoothstep(0.0, softWU, hit.x);        // 0…softWU → 0…1
+}
+// ray marching
+vec4 rayNerr() {
+    vec2 p = v_p * u_tanhalffov; // p is the pixel coordinate in camera space
+    vec3 ray = vec3(1.0, -p.x, p.y); // ray direction
+    float invLen = inversesqrt(dot(ray, ray)); // inverse length of ray
+    float errfactor = ROOT2 * u_halfpixel * invLen; // error factor
+    return vec4(ray * invLen, errfactor); // return normalized ray direction and error factor
+}
+float earth(vec3 p) { // the signed distance function for the Earth located at u_epos in camera space
+    vec3 pos = p - u_epos * u_escale;
+    float R = ellipsoidSurfaceRadius(pos); // radius of the ellipsoid at point p
+    // return length(pos) - R; // return value is in WU
+    return length(pos) - E_R * u_escale; // debug: sphere
+}
+vec3 normAt(vec3 p, float err) {
+    vec2 d = vec2(err, -err);
+    return normalize(d.xyy * earth(p + d.xyy) + d.yyx * earth(p + d.yyx) + d.yxy * earth(p + d.yxy) + d.xxx * earth(p + d.xxx));
 }
 vec3 march(vec3 rd, float eps_c) { // returns (distance, iteration)
     float t = 0.0; // distance along ray
@@ -101,21 +123,7 @@ vec3 march(vec3 rd, float eps_c) { // returns (distance, iteration)
     if (tEll < MAX_DIST && tEll > 0.0) return vec3(tEll, float(MAX_ITER), 0.0);
     return vec3(MAX_DIST, MAX_ITER, minDist); // didn't hit earth
 }
-vec3 tonemapReinhard(vec3 c) {
-    c *= EXPOSURE;           // photographic exposure
-    return c / (1.0 + c);    // simple Reinhard curve
-}
-vec3 gamma22(vec3 c) { // gamma correction
-    return pow(clamp(c, 0.0, 1.0), vec3(1.0/2.2));
-}
-float sunVisibility(vec3 pCam) { /* ray from sample-point toward the Sun, expressed in camera space */
-    vec3 EARTH_C = u_epos * u_escale; // Earth center in camera space (WU)
-    float aE =  E_A * u_escale;
-    float bE =  E_B * u_escale;
-    vec3  ro = pCam - EARTH_C;                 // origin in Earth-centred frame (WU)
-    vec2  hit = rayEllipsoidIntersect(ro, u_sundir, aE, bE);
-    return (hit.x > 0.0 && hit.x < MISS) ? 0.0 : 1.0;
-}
+// color computation
 vec4 integrateAtmosphere(vec3 rd, float maxDistWU)
 {
     float  SU          = u_escale;        // “scale unit”: 1 m = SU WU
@@ -123,7 +131,6 @@ vec4 integrateAtmosphere(vec3 rd, float maxDistWU)
     float  HM_WU       = HM * SU;
     vec3   BETA_R_WU   = BETA_R / SU;     //  σ · length(WU)  ⇒  dimensionless
     vec3   BETA_M_WU   = BETA_M / SU;
-    float  E_ATM_R_WU  = (E_R + E_ATM_THK) * SU;
     vec3 EARTH_C = u_epos * u_escale; // Earth center in camera space (WU)
     // vec2 hit = raySphereIntersect(-EARTH_C, rd, E_ATM_R_WU);
     float aO = (E_A + E_ATM_THK) * u_escale;   // outer semi-axes (WU)
