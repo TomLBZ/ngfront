@@ -1,4 +1,4 @@
-FROM node:lts-bookworm
+FROM node:lts-bookworm-slim
 SHELL [ "/bin/bash", "-c" ]
 ARG UNAME=lbz
 ARG GNAME=lbz
