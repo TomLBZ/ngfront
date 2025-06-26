@@ -18,6 +18,11 @@ export class ConfigsPage {
         if (!StructValidator.hasFields(d, ['success', 'msg'])) alert(`Invalid Response:\n${JSON.stringify(d, null, 2)}`);
         else alert(`${d.success ? "Success" : "Failure"}: ${d.msg}\n${JSON.stringify(d.data ?? "No Data", null, 2)}`);
     }
+    private readonly _defaultConfigFile: ConfigFile = {
+        id: -1,
+        name: "[Default] Flocking Algorithm",
+        type: { file_type: "flocking_algo", airframe_type: -1 }
+    }
     public readonly repr: Function = (cfg: ConfigFile) => cfg.id < 0 ? "[Default]" : `${cfg.id}: ${cfg.name}`;
     public readonly D_JSB = 0;
     public readonly C_JSB = 1;
@@ -64,7 +69,11 @@ export class ConfigsPage {
             return;
         }
         for (const key in this.fileDict) this.fileDict[key].length = 0;
-        (res.data.simulation_files_config as Array<ConfigFile>).forEach((cfg: ConfigFile) => this.fileDict[this.typeToNumber(cfg.type)].push(cfg));
+        (res.data.simulation_files_config as Array<ConfigFile>).forEach((cfg: ConfigFile) => 
+            this.fileDict[this.typeToNumber(cfg.type)].push(
+                StructValidator.buildStruct<ConfigFile>(cfg, this._defaultConfigFile)
+            )
+        );
         for (const key in this.fileDict) {
             const k: number = parseInt(key);
             const file: ConfigFile = {
@@ -146,11 +155,13 @@ export class ConfigsPage {
             for (let i = 0; i < files.length; i++) {
                 formDataEntries.push({ name: ffieldName, value: files[i] });
             }
-            this._svc.callAPI("files/upload", this._res2str, { type: this.numberToType(numType) }, console.error, 'json', ...formDataEntries);
+            this._svc.callAPI("files/upload", (d: APIResponse) => {
+                this._res2str(d); // show success message
+                this.fetchFiles(); // refresh files after upload
+            }, { type: this.numberToType(numType) }, console.error, 'json', ...formDataEntries);
         };
         input.click();
         input.remove();
-        this.fetchFiles(); // refresh files after upload
     }
     onFileOpApplyClicked(items: Array<ConfigFile>) {
         if (items.length === 1 && items[0].id < 0) {
@@ -171,10 +182,12 @@ export class ConfigsPage {
             alert("The default configuration is a reference for download only, it cannot be deleted!");
             return;
         }
-        this._svc.callAPI("files/delete", this._res2str, items[0]);
+        this._svc.callAPI("files/delete", (d: APIResponse) => {
+            this._res2str(d); // show success message
+            this.fetchFiles(); // refresh files after deletion
+        }, items[0]);
         const type = this.typeToNumber(items[0].type);
         this.fileDict[type] = this.fileDict[type].filter((cfg: ConfigFile) => cfg.id !== items[0].id);
-        this.fetchFiles(); // refresh files after deletion
     }
     onReset() {
         if (this.waiting) return; // skip when waiting
@@ -184,10 +197,10 @@ export class ConfigsPage {
             if (!StructValidator.hasFields(d, ["success", "msg"])) alert("Failed to reset simulator configs: Invalid Response!");
             else if (!(d as APIResponse).success) alert(`Failed to reset simulator configs!\n${d.msg}`);
             else alert("Simulator configs reset successfully!");
+            this.fetchCurrentFiles(); // refresh current files after reset
         }, undefined, (e: any) => {
             this.waiting = false; // stop waiting
             alert(`Failed to reset simulator: ${e}`);
         });
-        this.fetchCurrentFiles(); // refresh current files after reset
     }
 }
