@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { TableViewComponent } from "../../../components/tableview/tableview";
 import { AppService } from "../../app.service";
-import { LogEntry, LogMetadataQuery, MissionMetadata } from "../../app.interface";
+import { LogEntry, LogMetadataQuery, MissionMetadata, ReplayData } from "../../app.interface";
 import { DateSelectComponent } from "../../../components/dateselect/dateselect";
 import { DropSelectComponent } from "../../../components/dropselect/dropselect";
 import { DictS, Nullable, Pair } from "../../../utils/types";
@@ -207,13 +207,13 @@ export class LogsPage implements OnInit {
         this.replaySettings = settings;
     }
     onReplayMissionLogs() {
-        const repData = {
+        const repData: ReplayData = {
             date: this._selectedDateStr,
             name: this._selectedMissionName,
             time: this._selectedMissionTime,
             fg_enable: this.replaySettings.fg_enable,
             delay: this.replaySettings.delay
-        } as ReplaySettings;
+        } as ReplayData;
         this.replayStarting = true;
         this._svc.callAPI("logs/replay", (d: any) => {
             this.replayStarting = false;
