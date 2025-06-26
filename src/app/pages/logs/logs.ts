@@ -138,7 +138,6 @@ export class LogsPage implements OnInit {
                             });
                             return obj;
                         });
-                        console.log(headerText);
                         this.previewLogList = data as Array<LogEntry>;
                     }
                     reader.readAsText(d.body);
