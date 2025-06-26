@@ -138,6 +138,7 @@ export class LogsPage implements OnInit {
                             });
                             return obj;
                         });
+                        console.log(headerText);
                         this.previewLogList = data as Array<LogEntry>;
                     }
                     reader.readAsText(d.body);
@@ -145,7 +146,7 @@ export class LogsPage implements OnInit {
             } else alert("Download failed: Empty Data Response!");
             this.downloading = false;
         }, 
-        { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime, id: this._selectedAircraftId } as LogMetadataQuery, 
+        { date: this._selectedDateStr, name: this._selectedMissionName, time: this._selectedMissionTime, id: this._selectedAircraftId, include_flocking_logs: true } as LogMetadataQuery, 
         () => this.downloading = false, "blob");
     }
     private deleteMissionLogs(date: string = "", name: string = "", time: string = "") {

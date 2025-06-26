@@ -80,6 +80,7 @@ export interface LogMetadataQuery {
     name?: string;
     time?: string;
     id?: number;
+    include_flocking_logs?: boolean;
 }
 export interface ReplayData {
     date: string;

@@ -87,7 +87,7 @@ export class AeroBridge extends ApiBridge {
     );
     }
     private getDownloadMissionLog(data: LogMetadataQuery): Promise<any> {
-        const params = { ac_id: data.id ? data.id : 0 };
+        const params = { ac_id: data.id ? data.id : 0, include_flocking_logs: data.include_flocking_logs ? data.include_flocking_logs : false };
         return this.get(`${this.url}/download_mission_log/${data.date}/${data.name}/${data.time}`, params);
     }
     private getReplayMissionLog(data: ReplayData): Promise<any> {
