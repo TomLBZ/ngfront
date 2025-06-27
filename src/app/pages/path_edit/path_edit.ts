@@ -13,7 +13,6 @@ import { AppService } from "../../app.service";
 import { APIResponse, Mission, Aircraft, Waypoint } from "../../app.interface";
 import { Callback, DictS } from "../../../utils/types";
 import { StructValidator } from "../../../utils/src/ds/validate";
-import { Flag } from "../../../utils/src/ds/flag";
 
 @Component({
     selector: "page-path-edit",
@@ -45,11 +44,11 @@ export class PathEditPage implements OnInit, OnDestroy {
     private startAlt: number = -1;
     private leaderPrevColor: Color = Color.Transparent;
     private readonly _aircraftsChanged: DictS<Array<Aircraft>> = {"create": [], "update": [], "delete": []};
-    private readonly _aircraftChangeFlags: Flag = new Flag(["create", "update", "delete", "started", "failed"]);
     public aircrafts: Array<Aircraft> = [];
     public isAircraftsValid: boolean = false;
     public isAircraftsCompiled: boolean = false;
     public compiling: boolean = false;
+    public planesUpdating: boolean = false;
     public readonly apiKey = env.mapKey;
     public readonly mapUrlBase = env.mapUrlBase;
     public readonly localMapUrlBase = env.localMapUrlBase;
@@ -64,7 +63,6 @@ export class PathEditPage implements OnInit, OnDestroy {
     public readonly plIncludeFieldsFilter = (key: string) => { return !key.includes("start_pos.alt"); }
     public get selectedMission(): Mission { return this.missions[this._selectedMissionIdx]; }
     public get existingMission(): boolean { return this._selectedMissionIdx > 0; }
-    public get planesUpdating(): boolean { return this._aircraftChangeFlags.get("started"); }
 
     constructor(svc: AppService) { 
         this._svc = svc; 
@@ -90,7 +88,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         return true;
     }
     private apiLoop() {
-        this.updateAircrafts();
+        this.updateAllAircrafts();
         if (this._pendingMissionUpdate) {
             this._svc.callAPI("mission/all", (d: any) => {
                 if (this.validateResponse(d, "missions_config")) {
@@ -120,50 +118,67 @@ export class PathEditPage implements OnInit, OnDestroy {
             }, undefined, this.void);
         }
     }
-    private updateAircrafts() {
-        const ops = ["delete", "create", "update"]; // order matters
-        const len = ops.reduce((acc, op) => acc + this._aircraftsChanged[op].length, 0);
-        if (len > 0) {
-            this._aircraftChangeFlags.set("started"); // start updating
-            ops.forEach((op) => this.updateAircraftByOp(op));
-        } else if (this._aircraftChangeFlags.get("started")) {
-            const done = ops.reduce((acc, op) => acc && this._aircraftChangeFlags.get(op), true);
-            if (done) { // all operations are done
-                const failed = this._aircraftChangeFlags.get("failed");
-                this._aircraftChangeFlags.clear(); // clear all flags
-                if (failed) alert("Failed to update some of the aircrafts, please edit and try again.");
-                else {
-                    alert("Plane instances up to date!"); // notify user
-                    this.isAircraftsValid = true; // assume true if no error
-                }
-            }
-        }
-    }
-    private updateAircraftByOp(op: string) {
-        if (this._aircraftsChanged[op].length > 0) {
-            const ac = this._aircraftsChanged[op].pop(); // remove aircraft from list
-            if (ac === undefined) { // no aircraft to update
-                this._aircraftChangeFlags.set(op); // set to true
-                return;
-            }
-            this._aircraftChangeFlags.unset(op); // set to false
-            this._aircraftChangeFlags.unset("failed"); // set to false
-            console.log(`${op} ${ac.name}`);
+    private updateSingleAircraft(op: string, ac: Aircraft): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
             this._svc.callAPI(`aircraft/${op}`, (d: any) => {
-                this._aircraftChangeFlags.set(op); // got result, set to true
                 if (StructValidator.hasFields(d, ["success", "msg"])) {
                     if ((d as APIResponse).success) { // updated successfully
-                        this._pendingAircraftUpdate = true; // force update
+                        resolve(true);
                     } else {
-                        this._aircraftChangeFlags.set("failed"); // set to true
-                        alert(`Failed to ${op} aircraft: ` + (d as APIResponse).msg); // update failed
+                        console.warn(`${op} aircraft ${ac.id} failed with message:\n${d.msg}`);
+                        resolve(false); // update failed
                     }
                 } else {
-                    this._aircraftChangeFlags.set("failed"); // set to true
-                    alert(`Failed to ${op} aircraft: invalid response\n${JSON.stringify(d)}`); // invalid response
+                    reject(new Error(`Invalid response for ${op} aircraft:\n${JSON.stringify(d)}`));
                 }
             }, op === "delete" ? ac.id : ac, this.void);
-        } else this._aircraftChangeFlags.set(op); // no aircraft to update, set to true
+        });
+    }
+    private updateAircraftsByOp(op: string): Promise<boolean> {
+        const localChangedAircrafts = [...this._aircraftsChanged[op]]; // copy the array to avoid mutation during iteration
+        this._aircraftsChanged[op].length = 0; // clear the array for next updates
+        return new Promise<boolean>((resolve, reject) => {
+            if (localChangedAircrafts.length > 0) {
+                const promises: Array<Promise<boolean>> = [];
+                localChangedAircrafts.forEach((ac) => {
+                    promises.push(this.updateSingleAircraft(op, ac));
+                });
+                Promise.all(promises).then((results) => {
+                    const failedAircrafts: Array<Aircraft> = results
+                        .map((result, idx) => result ? null : idx)
+                        .filter(idx => idx !== null)
+                        .map(idx => localChangedAircrafts[idx]);
+                    if (failedAircrafts.length > 0) {
+                        this._aircraftsChanged[op].push(...failedAircrafts); // push failed aircrafts back to the list
+                        console.warn(`Failed to ${op} aircrafts: ${failedAircrafts.map(ac => ac.name).join(", ")}\nPlease edit and try again.`);
+                        resolve(false); // some aircrafts failed to update
+                    } else {
+                        resolve(true);
+                    }
+                }).catch(reject); // reject if any of the promises failed
+            } else {
+                resolve(true);
+            }
+        });
+    }
+    private updateAllAircrafts() {
+        const ops = ["delete", "create", "update"];
+        const promises: Array<Promise<boolean>> = [];
+        ops.forEach((op) => {
+            if (this._aircraftsChanged[op].length > 0) {
+                promises.push(this.updateAircraftsByOp(op));
+            }
+        });
+        if (promises.length === 0) return; // do nothing if no aircrafts to update
+        this.planesUpdating = true;
+        Promise.all(promises).then(() => {
+            this._pendingAircraftUpdate = true; // force update
+            this.planesUpdating = false;
+        }).catch((err) => {
+            console.error(err);
+            alert(`Failed to update aircrafts:\n${err.message}`);
+            this.planesUpdating = false;
+        });
     }
     private setLeader(mId: number) {
         if (mId < 0) {
@@ -293,7 +308,7 @@ export class PathEditPage implements OnInit, OnDestroy {
         return "";
     }
     private getAircraftValidityMessage(): string {
-        if (this.aircrafts.length === 0) return "No aircraft added, please add aircraft by Alt+Left clicking on the map.";
+        if (this.aircrafts.length === 0) return "[]";
         const ids = this.aircrafts.map((a) => a.id);
         const names = this.aircrafts.map((a) => a.name);
         for (const a of this.aircrafts) {
@@ -332,7 +347,13 @@ export class PathEditPage implements OnInit, OnDestroy {
         if (this.planesUpdating) return; // already started updating
         this.isAircraftsValid = false; // assume false first
         const msg = this.getAircraftValidityMessage();
-        if (msg.length > 0) { alert(msg); return; } // check failed
+        if (msg.length > 0) {  // check failed
+            if (msg !== "[]") { // empty array is valid
+                alert(msg);
+                return; 
+            }
+            alert("Warning: no aircrafts in list. This will remove all existing aircrafts (if any).");
+        }
         this._svc.callAPI("aircraft/all", (d: any) => {
             if (this.validateResponse(d, "instances_config")) {
                 const aircrafts_old = (d as APIResponse).data.instances_config as Array<Aircraft>;
@@ -352,7 +373,15 @@ export class PathEditPage implements OnInit, OnDestroy {
                         isModified = true;
                     }
                 });
-                aircrafts_old.forEach((a) => { isModified = true; this._aircraftsChanged["delete"].push(a); }); // remaining aircrafts are deleted
+                aircrafts_old.forEach((a) => { 
+                    this._aircraftsChanged["delete"].push(a); 
+                    isModified = true; 
+                }); // remaining aircrafts are deleted
+                for (const op of ["create", "update", "delete"]) {
+                    if (this._aircraftsChanged[op].length > 0) {
+                        console.log(`${op} IDs:`, this._aircraftsChanged[op].map((a) => a.id).join(", "));
+                    }
+                }
                 if (!isModified) {
                     alert("Already updated, no plane instance modified!");
                     this.isAircraftsValid = true; // assume true if no error
