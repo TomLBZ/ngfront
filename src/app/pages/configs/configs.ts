@@ -108,7 +108,9 @@ export class ConfigsPage {
             const idx: number = this.fileDict[type].findIndex((c: ConfigFile) => c.id === cfg.id);
             if (idx >= 0) this.selectedIdxDict[type] = idx; // set selected id if found
             else {
-                console.warn(`Config file with id ${cfg.id} not found in type ${type}!`);
+                const typeString = cfg.type.file_type === "jsbsim" ? "JSBSim" : (cfg.type.file_type === "pprz" ? "PPRZ" : "Flocking Algorithm");
+                const airframeString = cfg.type.file_type === "flocking_algo" ? "" : cfg.type.airframe_type === 0 ? " (Default Model)" : " (Custom Model)";
+                alert(`Mission Settings out of sync because some files were deleted.\nPlease re-apply config files for ${typeString}${airframeString}!`);
                 this.selectedIdxDict[type] = 0; // reset to 0 if not found
             }
         });
@@ -164,10 +166,6 @@ export class ConfigsPage {
         input.remove();
     }
     onFileOpApplyClicked(items: Array<ConfigFile>) {
-        if (items.length === 1 && items[0].id < 0) {
-            alert("The default configuration is a reference for download only, it cannot be applied!");
-            return;
-        }
         this.applying = true; // set applying flag
         this.applyingType = this.typeToNumber(items[0].type); // set applying type
         this._svc.callAPI("files/apply", (d: APIResponse) => {
