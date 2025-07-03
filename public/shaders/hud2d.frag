@@ -556,11 +556,12 @@ float hud(vec2 p) {
     float llsc = throttleScale(p, u_state.x); // throttle scale
     float lsc = elevatorScale(p, u_state.y); // elevator scale (pitch)
     float tsc = aileronScale(p, u_state.z); // aileron scale (roll)
-    float bsc = rudderScale(p, u_state.w); // rudder scale (yaw)
+    // float bsc = rudderScale(p, u_state.w); // rudder scale (yaw)
     float lrsc = speedScale(p, u_telemetry.x); // speed scale
     float rsc = altimeterScale(p, u_telemetry.y); // altimeter scale
     float ltsc = compassScale(p, u_attitude.z); // compass scale (yaw)
-    float inner = min(min(lsc, rsc), min(tsc, bsc));
+    // float inner = min(min(lsc, rsc), min(tsc, bsc));
+    float inner = min(min(lsc, rsc), tsc);
     float outer = min(min(llsc, lrsc), ltsc);
     return min(rhom, min(inner, outer));
 }
