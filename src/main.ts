@@ -2,25 +2,21 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
 
-// document.addEventListener('DOMContentLoaded', () => {
-//     // Get the value of `devicePixelRatio`
-//     const dpr = window.devicePixelRatio;
-//     // If the value is 1, return early
-//     if (dpr === 1) return;
-//     // Define the base zoom
-//     const baseZoom = 1;
-//     // Calculate the zoom scaling
-//     const zoom = baseZoom / dpr;
-//     // Create a style element
-//     const styleElement = document.createElement('style');
-//     // Add CSS rule to the style element
-//     styleElement.innerHTML = `@media (-webkit-device-pixel-ratio: ${dpr}) {
-//     :root {
-//     zoom: ${zoom};
-//     }
-// }`;
-//     // Add the style element to the document
-//     document.head.appendChild(styleElement);
-// });
+// This code applies a zoom fix for high DPI screens by scaling the body element.
+// It ensures that the application appears at a consistent size regardless of the device's pixel ratio.
+document.addEventListener('DOMContentLoaded', () => {
+    const dpr = window.devicePixelRatio || 1;
+    if (dpr !== 1) {
+        const scale = 1 / dpr;
+        // Apply transform scale to the entire body
+        document.body.style.transformOrigin = 'top left';
+        document.body.style.transform = `scale(${scale})`;
+        // Adjust the body dimensions so that it still fills the full viewport
+        document.body.style.width = `${100 * dpr}%`;
+        document.body.style.height = `${100 * dpr}%`;
+        document.body.style.overflow = 'hidden'; // Prevent scrollbars due to scaling
+        console.log(`Zoom fix applied for DPR ${dpr}`);
+    }
+});
 
 bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
