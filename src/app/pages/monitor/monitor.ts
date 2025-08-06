@@ -64,6 +64,8 @@ export class MonitorPage implements OnInit, OnDestroy {
     private readonly r90deg: number = Math.PI / 2; // 90 degrees in radians
     private readonly _telemetries: Array<Telemetry> = [];
     private readonly _visibleTelemetryIndices: Array<number> = [];
+    private readonly _customMaxParams: AircraftMaxParams = { max_altitude: 4000, max_speed: 160 }; // custom max params
+    private readonly _defaultMaxParams: AircraftMaxParams = { max_altitude: 1000, max_speed: 24 }; // default max params
     private websocket?: WebSocket;
     private void: Callback = () => {};
     private alert: Callback = (e: any) => { this.waiting = false; alert(e); };
@@ -224,7 +226,16 @@ export class MonitorPage implements OnInit, OnDestroy {
                     this.joystick = m.joystick_input ?? { roll: 500, pitch: 1000, throttle: 5000 }; // update joystick input
                     if (this.websocket === undefined) this.startTelemetry();
                 }
-                if (this.telemetryEnabled) {
+                if (this.replaying) {
+                    this._svc.callAPI("aircraft/one", (d: any) => {
+                        if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
+                        const dd = d as APIResponse;
+                        if (!dd.success) return; // skip when failed
+                        if (!StructValidator.hasNonEmptyFields(dd.data, ["airframe_type"])) return; // invalid data
+                        const isDefault = dd.data.airframe_type === 0; // check if default aircraft
+                        this._maxParams = isDefault ? this._defaultMaxParams : this._customMaxParams; // set max params based on aircraft type
+                    }, { id: m.lead_id }, this.void);
+                } else if (this.telemetryEnabled) {
                     this._svc.callAPI("aircraft/maxparams", (d: any) => {
                         if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
                         const dd = d as APIResponse;
@@ -310,12 +321,12 @@ export class MonitorPage implements OnInit, OnDestroy {
                 (this._attitude[1] / Math.PI * 1.5) + 0.5, // pitch +-60 deg normalized to [0, 1]
                 (this._attitude[2] / Math.PI * 0.5) + 0.5, // yaw += 180 deg normalized to [0, 1]
             ]
-            const state = [ // throttle, elevator, aileron, rudder
+            const state = this.launchSettings.joystick_enable && !this.replaying ? [ // throttle, elevator, aileron, rudder
                 this.joystick.throttle / 9600, // normalized to [0, 1]
                 this.joystick.pitch / 19200 + 0.5, // normalized to [0, 1]
                 this.joystick.roll / 19200 + 0.5, // normalized to [0, 1]
                 0.5 // rudder is not used, set to 0.5
-            ]
+            ] : [0.0, 0.0, 0.0, 0.0]; // no joystick input or replaying, set to zero
             const telemetry = [ // telemetry: speed, altitude
                 this._speed / this._maxParams.max_speed, // speed 0-50m/s normalized to [0, 1]
                 this._geoCoords[2] / this._maxParams.max_altitude, // altitude 0-10000m normalized to [0, 1]
