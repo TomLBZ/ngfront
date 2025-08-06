@@ -33,7 +33,8 @@ const vec2 prs = vec2(ulen, 0.0); // right scale pos
 const vec2 pts = vec2(0.0, ulen); // top scale pos
 const vec2 pbs = vec2(0.0, -ulen); // bottom scale pos
 const vec2 o2 = vec2(0.0, 0.0);
-const vec4 hudc = vec4(1.0, 1.0, 0.5, 1.0);
+const vec4 ctrlc = vec4(0.6, 0.4, 0.4, 1.0); // control elements color
+const vec4 hudc = vec4(0.8, 1.0, 0.2, 1.0); // hud text color
 const vec4 wpc = vec4(0.5, 1.0, 0.4, 1.0); // text color
 const vec4 o4 = vec4(0.0, 0.0, 0.0, 0.0); // zero vector in vec4
 // letters
@@ -551,19 +552,19 @@ float wpText(vec2 p) {
     }
     return d;
 }
-float hud(vec2 p) {
-    float rhom = abs(box2d_base(place2d_p45(p, o2)));
+float ctrl(vec2 p) {
     float llsc = throttleScale(p, u_state.x); // throttle scale
     float lsc = elevatorScale(p, u_state.y); // elevator scale (pitch)
     float tsc = aileronScale(p, u_state.z); // aileron scale (roll)
     // float bsc = rudderScale(p, u_state.w); // rudder scale (yaw)
+    return min(min(llsc, lsc), tsc); // minimum distance to the control elements
+}
+float hud(vec2 p) {
+    float rhom = abs(box2d_base(place2d_p45(p, o2)));
     float lrsc = speedScale(p, u_telemetry.x); // speed scale
     float rsc = altimeterScale(p, u_telemetry.y); // altimeter scale
     float ltsc = compassScale(p, u_attitude.z); // compass scale (yaw)
-    // float inner = min(min(lsc, rsc), min(tsc, bsc));
-    float inner = min(min(lsc, rsc), tsc);
-    float outer = min(min(llsc, lrsc), ltsc);
-    return min(rhom, min(inner, outer));
+    return min(min(rhom, lrsc), min(rsc, ltsc)); // minimum distance to the hud elements
 }
 vec4 prev() {
     return texture(u_prev, v_p / u_scale * 0.5 + 0.5);
@@ -571,14 +572,18 @@ vec4 prev() {
 
 // dummy main that colors square in the center of the screen with a gradient
 void main() {
+    float ctrld = ctrl(v_p); // control elements distance
+    float ctrlmask = 1.0 - smoothstep(0.0, hlinew, ctrld); // smooth step for control mask
     float hudd = hud(v_p);
     float hudmask = 1.0 - smoothstep(0.0, hlinew, hudd); // smooth step for hud mask
     float wpd = wpText(v_p);
     float wpmask = 1.0 - smoothstep(0.0, linew, wpd); // smooth step for waypoint text mask
-    wpmask = wpmask * (1.0 - hudmask); // text mask only if hud mask is not present
-    float uimask = max(hudmask, wpmask); // combined mask for hud and waypoint text
+    wpmask = wpmask * (1.0 - hudmask) * (1.0 - ctrlmask); // text mask only if hud mask and ctrl mask are not present
+    float uimask = max(max(ctrlmask, hudmask), wpmask); // combined mask for hud and waypoint text
     vec4 wpColor = mix(o4, wpc, wpmask); // waypoint text color
+    vec4 ctrlColor = length(u_state) > 0.0 ? hudc : ctrlc; // if controls are in use, use hud color, otherwise use control elements color
+    ctrlColor = mix(o4, ctrlColor, ctrlmask); // control elements color
     vec4 hudColor = mix(o4, hudc, hudmask); // hud text color
     vec4 bg = prev() * (1.0 - uimask); // background color from previous pass
-    outColor = bg + hudColor + wpColor; // mix background with hud and waypoint text colors
+    outColor = bg + ctrlColor + hudColor + wpColor; // mix background with hud and waypoint text colors
 }
