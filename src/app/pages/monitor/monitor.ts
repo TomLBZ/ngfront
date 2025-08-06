@@ -224,7 +224,7 @@ export class MonitorPage implements OnInit, OnDestroy {
                     this.joystick = m.joystick_input ?? { roll: 500, pitch: 1000, throttle: 5000 }; // update joystick input
                     if (this.websocket === undefined) this.startTelemetry();
                 }
-                if (this.telemetryEnabled && this.launchSettings.joystick_enable) {
+                if (this.telemetryEnabled) {
                     this._svc.callAPI("aircraft/maxparams", (d: any) => {
                         if (!StructValidator.hasFields(d, ["success", "data"])) return; // invalid data
                         const dd = d as APIResponse;
