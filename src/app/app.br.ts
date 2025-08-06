@@ -16,6 +16,7 @@ export class AeroBridge extends ApiBridge {
         "sim/stop": (data?: any) => this.getStopSimulation(data),
         "sim/reset": (data?: any) => this.getResetSimulationConfigFiles(data),
         "sim/joystick": (data?: any) => this.postAircraftJoystick(data),
+        "aircraft/one": (data?: any) => this.getAircraftConfiguration(data),
         "aircraft/all": (data?: any) => this.getAircraftConfigurations(data),
         "aircraft/create": (data?: any) => this.postAircraftConfiguration(data),
         "aircraft/update": (data?: any) => this.putAircraftConfiguration(data),
@@ -58,6 +59,9 @@ export class AeroBridge extends ApiBridge {
     }
     private getResetSimulationConfigFiles(_: any): Promise<any> {
         return this.get(`${this.url}/reset_simulation_config_files`);
+    }
+    private getAircraftConfiguration(data: any): Promise<any> {
+        return this.get(`${this.url}/aircraft_configuration/${data.id}`);
     }
     private getAircraftConfigurations(_: any): Promise<any> {
         return this.get(`${this.url}/aircraft_configurations`);
